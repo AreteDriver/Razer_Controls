@@ -46,6 +46,8 @@ dev = [
 [project.scripts]
 razer-control-center = "apps.gui.main:main"
 razer-remap-daemon = "services.remap_daemon.main:main"
+razer-profile = "tools.profile_cli:main"
+razer-keymap = "tools.keymap_check:main"
 
 [project.urls]
 Homepage = "https://github.com/arete/razer-control-center"
@@ -66,3 +68,8 @@ select = ["E", "F", "W", "I", "UP"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
