@@ -1,9 +1,37 @@
 """OpenRazer bridge - discover and control Razer devices via DBus."""
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional
 
 from pydbus import SessionBus
+
+
+class LightingEffect(Enum):
+    """Available lighting effects."""
+    NONE = "none"
+    STATIC = "static"
+    SPECTRUM = "spectrum"
+    BREATHING = "breathing"
+    BREATHING_DUAL = "breathing_dual"
+    BREATHING_RANDOM = "breathing_random"
+    WAVE = "wave"
+    REACTIVE = "reactive"
+    STARLIGHT = "starlight"
+    RIPPLE = "ripple"
+
+
+class WaveDirection(Enum):
+    """Wave effect direction."""
+    LEFT = 1
+    RIGHT = 2
+
+
+class ReactiveSpeed(Enum):
+    """Reactive effect speed."""
+    SHORT = 1
+    MEDIUM = 2
+    LONG = 3
 
 
 @dataclass
@@ -19,14 +47,24 @@ class RazerDevice:
     has_brightness: bool = False
     has_dpi: bool = False
     has_battery: bool = False
+    has_poll_rate: bool = False
+    has_logo: bool = False
+    has_scroll: bool = False
+
+    # Supported lighting effects
+    supported_effects: list[str] = field(default_factory=list)
 
     # Current state (cached)
     brightness: int = 100
     dpi: tuple[int, int] = (800, 800)
     battery_level: int = -1
+    poll_rate: int = 500
+    is_charging: bool = False
 
-    # Available DPI stages
-    dpi_stages: list[int] = field(default_factory=list)
+    # Hardware info
+    firmware_version: str = ""
+    max_dpi: int = 16000
+    available_poll_rates: list[int] = field(default_factory=lambda: [125, 500, 1000])
 
 
 class OpenRazerBridge:
@@ -116,7 +154,7 @@ class OpenRazerBridge:
 
     def _detect_capabilities(self, dbus_dev, device: RazerDevice) -> None:
         """Detect device capabilities via DBus introspection."""
-        # Check for lighting
+        # Check for brightness/lighting
         try:
             device.brightness = dbus_dev.getBrightness()
             device.has_brightness = True
@@ -132,10 +170,69 @@ class OpenRazerBridge:
         except Exception:
             pass
 
+        # Check for max DPI
+        try:
+            device.max_dpi = dbus_dev.maxDPI()
+        except Exception:
+            pass
+
         # Check for battery
         try:
             device.battery_level = dbus_dev.getBattery()
             device.has_battery = True
+        except Exception:
+            pass
+
+        # Check for charging status
+        try:
+            device.is_charging = dbus_dev.isCharging()
+        except Exception:
+            pass
+
+        # Check for poll rate
+        try:
+            device.poll_rate = dbus_dev.getPollRate()
+            device.has_poll_rate = True
+        except Exception:
+            pass
+
+        # Check for firmware version
+        try:
+            device.firmware_version = dbus_dev.getFirmware()
+        except Exception:
+            pass
+
+        # Detect supported effects by introspecting available methods
+        effects = []
+        effect_checks = [
+            ("setStatic", "static"),
+            ("setSpectrum", "spectrum"),
+            ("setBreathSingle", "breathing"),
+            ("setBreathDual", "breathing_dual"),
+            ("setBreathRandom", "breathing_random"),
+            ("setWave", "wave"),
+            ("setReactive", "reactive"),
+            ("setStarlight", "starlight"),
+            ("setRipple", "ripple"),
+            ("setNone", "none"),
+        ]
+
+        for method_name, effect_name in effect_checks:
+            if hasattr(dbus_dev, method_name):
+                effects.append(effect_name)
+
+        device.supported_effects = effects
+
+        # Check for logo/scroll lighting
+        try:
+            dbus_dev.getLogoActive()
+            device.has_logo = True
+        except Exception:
+            pass
+
+        try:
+            dbus_dev.getScrollActive()
+            device.has_scroll = True
         except Exception:
             pass
 
@@ -209,7 +306,7 @@ class OpenRazerBridge:
             return False
 
     def set_breathing_effect(self, serial: str, r: int, g: int, b: int) -> bool:
-        """Set breathing effect with color."""
+        """Set breathing effect with single color."""
         device = self.get_device(serial)
         if not device or not device.has_lighting:
             return False
@@ -221,6 +318,249 @@ class OpenRazerBridge:
         except Exception as e:
             print(f"Error setting breathing: {e}")
             return False
+
+    def set_breathing_dual(self, serial: str, r1: int, g1: int, b1: int,
+                           r2: int, g2: int, b2: int) -> bool:
+        """Set breathing effect with two colors."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setBreathDual(r1, g1, b1, r2, g2, b2)
+            return True
+        except Exception as e:
+            print(f"Error setting breathing dual: {e}")
+            return False
+
+    def set_breathing_random(self, serial: str) -> bool:
+        """Set breathing effect with random colors."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setBreathRandom()
+            return True
+        except Exception as e:
+            print(f"Error setting breathing random: {e}")
+            return False
+
+    def set_wave_effect(self, serial: str, direction: WaveDirection = WaveDirection.RIGHT) -> bool:
+        """Set wave effect with direction."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setWave(direction.value)
+            return True
+        except Exception as e:
+            print(f"Error setting wave: {e}")
+            return False
+
+    def set_reactive_effect(self, serial: str, r: int, g: int, b: int,
+                            speed: ReactiveSpeed = ReactiveSpeed.MEDIUM) -> bool:
+        """Set reactive effect - lights up on keypress."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setReactive(r, g, b, speed.value)
+            return True
+        except Exception as e:
+            print(f"Error setting reactive: {e}")
+            return False
+
+    def set_starlight_effect(self, serial: str, r: int = 0, g: int = 255, b: int = 0,
+                             speed: ReactiveSpeed = ReactiveSpeed.MEDIUM) -> bool:
+        """Set starlight effect - random twinkling."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setStarlight(r, g, b, speed.value)
+            return True
+        except Exception as e:
+            print(f"Error setting starlight: {e}")
+            return False
+
+    def set_none_effect(self, serial: str) -> bool:
+        """Turn off lighting."""
+        device = self.get_device(serial)
+        if not device or not device.has_lighting:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setNone()
+            return True
+        except Exception as e:
+            print(f"Error turning off lighting: {e}")
+            return False
+
+    def set_poll_rate(self, serial: str, poll_rate: int) -> bool:
+        """Set device polling rate (125, 500, or 1000 Hz)."""
+        device = self.get_device(serial)
+        if not device or not device.has_poll_rate:
+            return False
+
+        if poll_rate not in [125, 500, 1000]:
+            print(f"Invalid poll rate: {poll_rate}. Use 125, 500, or 1000.")
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setPollRate(poll_rate)
+            device.poll_rate = poll_rate
+            return True
+        except Exception as e:
+            print(f"Error setting poll rate: {e}")
+            return False
+
+    def get_poll_rate(self, serial: str) -> Optional[int]:
+        """Get device polling rate."""
+        device = self.get_device(serial)
+        if not device or not device.has_poll_rate:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            rate = dev.getPollRate()
+            device.poll_rate = rate
+            return rate
+        except Exception as e:
+            print(f"Error getting poll rate: {e}")
+            return None
+
+    def get_dpi(self, serial: str) -> Optional[tuple[int, int]]:
+        """Get current DPI."""
+        device = self.get_device(serial)
+        if not device or not device.has_dpi:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dpi = dev.getDPI()
+            device.dpi = (dpi[0], dpi[1]) if len(dpi) >= 2 else (dpi[0], dpi[0])
+            return device.dpi
+        except Exception as e:
+            print(f"Error getting DPI: {e}")
+            return None
+
+    def get_brightness(self, serial: str) -> Optional[int]:
+        """Get current brightness."""
+        device = self.get_device(serial)
+        if not device or not device.has_brightness:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            brightness = dev.getBrightness()
+            device.brightness = brightness
+            return brightness
+        except Exception as e:
+            print(f"Error getting brightness: {e}")
+            return None
+
+    def get_battery(self, serial: str) -> Optional[dict]:
+        """Get battery info (level and charging status)."""
+        device = self.get_device(serial)
+        if not device or not device.has_battery:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            level = dev.getBattery()
+            device.battery_level = level
+
+            try:
+                charging = dev.isCharging()
+                device.is_charging = charging
+            except Exception:
+                charging = False
+
+            return {"level": level, "charging": charging}
+        except Exception as e:
+            print(f"Error getting battery: {e}")
+            return None
+
+    def set_logo_brightness(self, serial: str, brightness: int) -> bool:
+        """Set logo brightness (0-100)."""
+        device = self.get_device(serial)
+        if not device or not device.has_logo:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setLogoBrightness(brightness)
+            return True
+        except Exception as e:
+            print(f"Error setting logo brightness: {e}")
+            return False
+
+    def set_scroll_brightness(self, serial: str, brightness: int) -> bool:
+        """Set scroll wheel brightness (0-100)."""
+        device = self.get_device(serial)
+        if not device or not device.has_scroll:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setScrollBrightness(brightness)
+            return True
+        except Exception as e:
+            print(f"Error setting scroll brightness: {e}")
+            return False
+
+    def set_logo_static(self, serial: str, r: int, g: int, b: int) -> bool:
+        """Set logo to static color."""
+        device = self.get_device(serial)
+        if not device or not device.has_logo:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setLogoStatic(r, g, b)
+            return True
+        except Exception as e:
+            print(f"Error setting logo color: {e}")
+            return False
+
+    def set_scroll_static(self, serial: str, r: int, g: int, b: int) -> bool:
+        """Set scroll wheel to static color."""
+        device = self.get_device(serial)
+        if not device or not device.has_scroll:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setScrollStatic(r, g, b)
+            return True
+        except Exception as e:
+            print(f"Error setting scroll color: {e}")
+            return False
+
+    def refresh_device(self, serial: str) -> Optional[RazerDevice]:
+        """Refresh device state from hardware."""
+        device = self.get_device(serial)
+        if not device:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            self._detect_capabilities(dev, device)
+            return device
+        except Exception as e:
+            print(f"Error refreshing device: {e}")
+            return None
 
 
 def main():
