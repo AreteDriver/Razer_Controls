@@ -49,6 +49,7 @@ razer-remap-daemon = "services.remap_daemon.main:main"
 razer-profile = "tools.profile_cli:main"
 razer-keymap = "tools.keymap_check:main"
 razer-device = "tools.device_cli:main"
+razer-macro = "tools.macro_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/arete/razer-control-center"
