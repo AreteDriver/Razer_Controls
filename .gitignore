@@ -31,9 +31,10 @@ ENV/
 *.swp
 *.swo
 
-# Test files
-monitor_*.py
-test_*.py
+# Test files (in root only - not tests/ directory)
+/monitor_*.py
+/test_*.py
+!tests/
 
 # Archives (keep docs separate)
 *.zip
