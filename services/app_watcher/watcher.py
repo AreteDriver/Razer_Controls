@@ -4,8 +4,8 @@ import fnmatch
 import subprocess
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from crates.profile_schema import Profile, ProfileLoader
 
@@ -21,7 +21,10 @@ class ActiveWindowInfo:
         self.window_title = window_title
 
     def __repr__(self) -> str:
-        return f"ActiveWindowInfo(pid={self.pid}, process={self.process_name}, class={self.window_class})"
+        return (
+            f"ActiveWindowInfo(pid={self.pid}, process={self.process_name}, "
+            f"class={self.window_class})"
+        )
 
 
 class WindowBackend:
@@ -295,7 +298,10 @@ class AppWatcher:
 
         if matching_profile and matching_profile.id != self._current_profile_id:
             self._current_profile_id = matching_profile.id
-            print(f"Switching to profile: {matching_profile.name} (matched: {window_info.process_name})")
+            print(
+                f"Switching to profile: {matching_profile.name} "
+                f"(matched: {window_info.process_name})"
+            )
 
             if self.on_profile_change:
                 self.on_profile_change(matching_profile)

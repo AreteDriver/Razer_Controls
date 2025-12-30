@@ -559,7 +559,9 @@ Effects: static, spectrum, breathing, breathing_random, wave, reactive, starligh
     # effect
     sub_effect = subparsers.add_parser("effect", help="Set lighting effect")
     sub_effect.add_argument("device", help="Device serial, name, or index")
-    sub_effect.add_argument("effect", help="Effect name (spectrum, static, breathing, wave, reactive, off)")
+    sub_effect.add_argument(
+        "effect", help="Effect name (spectrum, static, breathing, wave, reactive, off)"
+    )
     sub_effect.add_argument("--color", "-c", help="Color for effect (hex or R,G,B)")
     sub_effect.add_argument("--direction", "-d", help="Direction for wave (left/right)")
     sub_effect.add_argument("--speed", "-s", help="Speed for reactive (short/medium/long)")

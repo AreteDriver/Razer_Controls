@@ -1,6 +1,6 @@
 """App matching widget for automatic profile switching."""
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -136,7 +136,9 @@ class AppMatcherWidget(QWidget):
 
         self.test_result = QLabel("Click to detect the currently focused application")
         self.test_result.setWordWrap(True)
-        self.test_result.setStyleSheet("color: #888888; padding: 8px; background: #1a1a1a; border-radius: 4px;")
+        self.test_result.setStyleSheet(
+            "color: #888888; padding: 8px; background: #1a1a1a; border-radius: 4px;"
+        )
         test_layout.addWidget(self.test_result)
 
         layout.addWidget(test_group)

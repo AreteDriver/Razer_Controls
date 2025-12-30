@@ -92,7 +92,8 @@ def cmd_show(args) -> int:
     # Layers
     print(f"\nLayers ({len(profile.layers)}):")
     for layer in profile.layers:
-        modifier = f" [hold: {layer.hold_modifier_input_code}]" if layer.hold_modifier_input_code else ""
+        hold_code = layer.hold_modifier_input_code
+        modifier = f" [hold: {hold_code}]" if hold_code else ""
         print(f"\n  {layer.name} (id: {layer.id}){modifier}")
         print(f"  {'-' * 40}")
 
@@ -341,7 +342,10 @@ def cmd_validate(args) -> int:
             for key in binding.output_keys:
                 valid, msg = validate_key(key)
                 if not valid:
-                    errors.append(f"Layer '{layer.name}' binding {binding.input_code}: output key {msg}")
+                    errors.append(
+                        f"Layer '{layer.name}' binding {binding.input_code}: "
+                        f"output key {msg}"
+                    )
 
             # Check macro references
             if binding.action_type == ActionType.MACRO and binding.macro_id:

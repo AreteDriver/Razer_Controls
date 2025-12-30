@@ -1,9 +1,10 @@
 """Tests for the app watcher service."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from services.app_watcher import ActiveWindowInfo, AppWatcher, X11Backend, GnomeWaylandBackend
+import pytest
+
+from services.app_watcher import ActiveWindowInfo, AppWatcher, GnomeWaylandBackend, X11Backend
 
 
 class TestActiveWindowInfo:
@@ -139,7 +140,8 @@ class TestGnomeWaylandBackend:
     def test_is_available_on_gnome_wayland(self):
         """Test availability on GNOME Wayland."""
         backend = GnomeWaylandBackend()
-        with patch.dict('os.environ', {'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'GNOME'}):
+        env = {'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'GNOME'}
+        with patch.dict('os.environ', env):
             assert backend.is_available() is True
 
     def test_is_available_on_x11(self):
@@ -151,7 +153,8 @@ class TestGnomeWaylandBackend:
     def test_is_available_on_kde(self):
         """Test availability on KDE."""
         backend = GnomeWaylandBackend()
-        with patch.dict('os.environ', {'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'KDE'}):
+        env = {'XDG_SESSION_TYPE': 'wayland', 'XDG_CURRENT_DESKTOP': 'KDE'}
+        with patch.dict('os.environ', env):
             assert backend.is_available() is False
 
 

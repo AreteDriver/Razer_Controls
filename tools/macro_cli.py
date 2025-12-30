@@ -585,7 +585,9 @@ Step formats for create:
     sub_create.add_argument("steps", nargs="+", help="Steps (key:A, delay:100, text:hello)")
     sub_create.add_argument("-o", "--output", help="Output file")
     sub_create.add_argument("-r", "--repeat", type=int, default=1, help="Repeat count")
-    sub_create.add_argument("--repeat-delay", type=int, default=0, help="Delay between repeats (ms)")
+    sub_create.add_argument(
+        "--repeat-delay", type=int, default=0, help="Delay between repeats (ms)"
+    )
     sub_create.set_defaults(func=cmd_create)
 
     args = parser.parse_args()
