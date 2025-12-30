@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **App Watcher Service** - Automatic profile switching based on active application
+  - X11 backend using xdotool
+  - GNOME Wayland backend using DBus
+  - Pattern matching with wildcards (e.g., `*.exe`, `steam*`)
+  - Case-insensitive and substring matching
+  - Enable with `--app-watcher` flag on daemon
+- 19 new unit tests for app watcher (62 total tests)
+
+### Usage
+Configure profiles with `match_process_names` to enable auto-switching:
+```json
+{
+  "name": "Gaming",
+  "match_process_names": ["steam", "*.exe", "lutris"],
+  "is_default": false
+}
+```
+
+Start daemon with app watcher:
+```bash
+razer-remap-daemon --app-watcher
+```
+
 ## [1.0.0] - 2025-12-30
 
 ### Added

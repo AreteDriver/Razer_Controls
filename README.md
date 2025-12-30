@@ -13,6 +13,7 @@ A Synapse-like control center for Razer devices on Linux. Configure button remap
 - **Macro Support**: Create and execute macro sequences with key presses, delays, and text input
 - **Multi-Layer Bindings**: Support for multiple binding layers with hold-to-shift (Hypershift-like)
 - **Profile Management**: Multiple profiles with per-application auto-switching
+- **App Watcher**: Automatic profile switching when applications gain focus (X11/GNOME Wayland)
 - **OpenRazer Integration**: Control RGB lighting, brightness, and DPI via OpenRazer
 - **Wayland Compatible**: Uses evdev/uinput for reliable input remapping under Wayland and X11
 
@@ -94,6 +95,42 @@ systemctl --user start razer-remap-daemon
    - `delay:100` - Wait 100ms
    - `text:hello` - Type "hello"
 
+### Automatic Profile Switching (App Watcher)
+
+The app watcher automatically switches profiles when you focus different applications.
+
+1. Add `match_process_names` to your profile JSON:
+   ```json
+   {
+     "name": "Gaming",
+     "match_process_names": ["steam", "*.exe", "lutris", "wine*"],
+     "is_default": false
+   }
+   ```
+
+2. Set one profile as default (fallback when no match):
+   ```json
+   {
+     "name": "Default",
+     "is_default": true
+   }
+   ```
+
+3. Start the daemon with app watcher enabled:
+   ```bash
+   razer-remap-daemon --app-watcher
+   ```
+
+Pattern matching supports:
+- Exact match: `firefox`
+- Wildcards: `*.exe`, `steam*`
+- Substring: `chrome` matches `com.google.chrome`
+- Case-insensitive: `Firefox` matches `firefox`
+
+**Supported backends:**
+- X11 (requires `xdotool`)
+- GNOME Wayland (uses DBus)
+
 ## Architecture
 
 ```
@@ -102,7 +139,8 @@ razer-control-center/
 ├── services/
 │   ├── remap_daemon/      # evdev->uinput remapping engine
 │   ├── openrazer_bridge/  # DBus communication with OpenRazer
-│   └── app_watcher/       # Per-app profile switching (future)
+│   ├── app_watcher/       # Per-app profile switching
+│   └── macro_engine/      # Macro recording and playback
 ├── crates/
 │   ├── profile_schema/    # Profile data model
 │   ├── device_registry/   # Stable device identification

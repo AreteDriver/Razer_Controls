@@ -9,6 +9,7 @@ from evdev import InputDevice, UInput, ecodes
 
 from crates.device_registry import DeviceRegistry
 from crates.profile_schema import Profile, ProfileLoader
+from services.app_watcher import AppWatcher
 
 from .engine import RemapEngine
 
@@ -16,7 +17,8 @@ from .engine import RemapEngine
 class RemapDaemon:
     """Main remap daemon - grabs input devices and remaps events."""
 
-    def __init__(self, config_dir: Path | None = None):
+    def __init__(self, config_dir: Path | None = None, enable_app_watcher: bool = False):
+        self.config_dir = config_dir
         self.profile_loader = ProfileLoader(config_dir)
         self.device_registry = DeviceRegistry(config_dir)
         self.engine: RemapEngine | None = None
@@ -24,6 +26,8 @@ class RemapDaemon:
         self.grabbed_devices: dict[str, InputDevice] = {}
         self.selector = selectors.DefaultSelector()
         self.running = False
+        self.enable_app_watcher = enable_app_watcher
+        self.app_watcher: AppWatcher | None = None
 
     def setup(self) -> bool:
         """Set up the daemon - load profile and create uinput."""
@@ -128,6 +132,10 @@ class RemapDaemon:
         signal.signal(signal.SIGTERM, handle_signal)
 
         self.running = True
+
+        # Start app watcher if enabled
+        self._start_app_watcher()
+
         print("Remap daemon running. Press Ctrl+C to stop.")
 
         try:
@@ -156,6 +164,9 @@ class RemapDaemon:
     def cleanup(self) -> None:
         """Clean up resources."""
         print("Cleaning up...")
+
+        # Stop app watcher
+        self._stop_app_watcher()
 
         # Release any held keys first (prevent stuck keys)
         if self.engine:
@@ -192,6 +203,38 @@ class RemapDaemon:
             self.engine.reload_profile(profile)
             print(f"Reloaded profile: {profile.name}")
 
+    def switch_profile(self, profile: Profile) -> None:
+        """Switch to a different profile."""
+        if not self.engine:
+            return
+
+        # Update the active profile
+        self.profile_loader.set_active_profile(profile.id)
+
+        # Reload the engine with new profile
+        self.engine.reload_profile(profile)
+        print(f"Switched to profile: {profile.name}")
+
+    def _start_app_watcher(self) -> None:
+        """Start the app watcher if enabled."""
+        if not self.enable_app_watcher:
+            return
+
+        self.app_watcher = AppWatcher(self.config_dir)
+        self.app_watcher.on_profile_change = self.switch_profile
+
+        if self.app_watcher.start():
+            print(f"App watcher enabled (backend: {self.app_watcher.backend_name})")
+        else:
+            print("App watcher could not start - no backend available")
+            self.app_watcher = None
+
+    def _stop_app_watcher(self) -> None:
+        """Stop the app watcher if running."""
+        if self.app_watcher:
+            self.app_watcher.stop()
+            self.app_watcher = None
+
 
 def main():
     """Main entry point for the remap daemon."""
@@ -207,6 +250,11 @@ def main():
         "--list-devices",
         action="store_true",
         help="List available input devices and exit",
+    )
+    parser.add_argument(
+        "--app-watcher",
+        action="store_true",
+        help="Enable automatic profile switching based on active application",
     )
     args = parser.parse_args()
 
@@ -229,7 +277,7 @@ def main():
             print()
         return
 
-    daemon = RemapDaemon(args.config_dir)
+    daemon = RemapDaemon(args.config_dir, enable_app_watcher=args.app_watcher)
 
     if not daemon.setup():
         print("Failed to set up daemon")

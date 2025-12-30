@@ -15,9 +15,9 @@ def apply_dark_theme(app: QApplication) -> None:
     light_bg = QColor(45, 45, 45)
     text_color = QColor(220, 220, 220)
     disabled_text = QColor(120, 120, 120)
-    razer_green = QColor(68, 215, 44)  # Razer's signature green
+    razer_green = QColor(45, 160, 90)  # Softer green, easier on eyes
     highlight = razer_green
-    link_color = QColor(100, 200, 100)
+    link_color = QColor(70, 150, 90)
 
     # Window
     palette.setColor(QPalette.Window, dark_bg)
@@ -67,7 +67,7 @@ def apply_dark_theme(app: QApplication) -> None:
             subcontrol-origin: margin;
             left: 10px;
             padding: 0 5px;
-            color: #44d72c;
+            color: #2da05a;
         }
         QPushButton {
             background-color: #2d2d2d;
@@ -78,10 +78,10 @@ def apply_dark_theme(app: QApplication) -> None:
         }
         QPushButton:hover {
             background-color: #3d3d3d;
-            border-color: #44d72c;
+            border-color: #2da05a;
         }
         QPushButton:pressed {
-            background-color: #44d72c;
+            background-color: #2da05a;
             color: black;
         }
         QPushButton:disabled {
@@ -95,7 +95,7 @@ def apply_dark_theme(app: QApplication) -> None:
             padding: 4px;
         }
         QLineEdit:focus, QSpinBox:focus, QComboBox:focus {
-            border-color: #44d72c;
+            border-color: #2da05a;
         }
         QListWidget, QTreeWidget, QTableWidget {
             background-color: #141414;
@@ -103,7 +103,7 @@ def apply_dark_theme(app: QApplication) -> None:
             border-radius: 4px;
         }
         QListWidget::item:selected, QTreeWidget::item:selected {
-            background-color: #44d72c;
+            background-color: #2da05a;
             color: black;
         }
         QListWidget::item:hover, QTreeWidget::item:hover {
@@ -120,7 +120,7 @@ def apply_dark_theme(app: QApplication) -> None:
             margin-right: 2px;
         }
         QTabBar::tab:selected {
-            background-color: #44d72c;
+            background-color: #2da05a;
             color: black;
         }
         QTabBar::tab:hover:!selected {
@@ -132,13 +132,13 @@ def apply_dark_theme(app: QApplication) -> None:
             border-radius: 3px;
         }
         QSlider::handle:horizontal {
-            background-color: #44d72c;
+            background-color: #2da05a;
             width: 16px;
             margin: -5px 0;
             border-radius: 8px;
         }
         QSlider::sub-page:horizontal {
-            background-color: #44d72c;
+            background-color: #2da05a;
             border-radius: 3px;
         }
         QScrollBar:vertical {
@@ -152,7 +152,7 @@ def apply_dark_theme(app: QApplication) -> None:
             border-radius: 6px;
         }
         QScrollBar::handle:vertical:hover {
-            background-color: #44d72c;
+            background-color: #2da05a;
         }
         QStatusBar {
             background-color: #141414;
