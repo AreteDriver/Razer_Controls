@@ -45,6 +45,7 @@ dev = [
 
 [project.scripts]
 razer-control-center = "apps.gui.main:main"
+razer-tray = "apps.tray.main:main"
 razer-remap-daemon = "services.remap_daemon.main:main"
 razer-profile = "tools.profile_cli:main"
 razer-keymap = "tools.keymap_check:main"

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Razer Control Center Tray
+Comment=System tray for Razer device control
+Exec=razer-tray
+Icon=input-gaming
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=razer;mouse;keyboard;gaming;
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
