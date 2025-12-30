@@ -14,12 +14,10 @@ import sys
 from pathlib import Path
 
 from crates.keycode_map import (
-    KEY_CATEGORIES,
-    get_all_schema_keys,
     get_all_evdev_keys,
-    get_keys_by_category,
+    get_all_schema_keys,
     get_key_info,
-    is_valid_key,
+    get_keys_by_category,
     validate_key,
 )
 
@@ -108,7 +106,7 @@ def cmd_check(args):
         print(f"\n✓ Valid chord: {' + '.join(keys)}")
         return 0
     else:
-        print(f"\n✗ Invalid chord")
+        print("\n✗ Invalid chord")
         return 1
 
 

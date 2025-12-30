@@ -3,7 +3,6 @@
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -12,8 +11,8 @@ class InputDevice:
     stable_id: str              # e.g., usb-Razer_Razer_Basilisk_V2-event-mouse
     name: str                   # Human readable name from device
     event_path: str             # e.g., /dev/input/event8
-    by_id_path: Optional[str]   # e.g., /dev/input/by-id/usb-Razer_...
-    by_path_path: Optional[str] # e.g., /dev/input/by-path/...
+    by_id_path: str | None   # e.g., /dev/input/by-id/usb-Razer_...
+    by_path_path: str | None # e.g., /dev/input/by-path/...
     is_mouse: bool = False
     is_keyboard: bool = False
     capabilities: list[str] = field(default_factory=list)
@@ -22,7 +21,7 @@ class InputDevice:
 class DeviceRegistry:
     """Registry for managing input devices with stable identification."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         if config_dir is None:
             config_dir = Path.home() / ".config" / "razer-control-center"
         self.config_dir = config_dir
@@ -80,7 +79,7 @@ class DeviceRegistry:
         except OSError:
             return event_name
 
-    def _find_by_path(self, event_path: Path) -> Optional[str]:
+    def _find_by_path(self, event_path: Path) -> str | None:
         """Find the by-path symlink for an event device."""
         by_path = Path("/dev/input/by-path")
         if not by_path.exists():
@@ -94,13 +93,13 @@ class DeviceRegistry:
                 continue
         return None
 
-    def get_device_by_stable_id(self, stable_id: str) -> Optional[InputDevice]:
+    def get_device_by_stable_id(self, stable_id: str) -> InputDevice | None:
         """Get a device by its stable ID."""
         if not self._devices:
             self.scan_devices()
         return self._devices.get(stable_id)
 
-    def get_event_path(self, stable_id: str) -> Optional[str]:
+    def get_event_path(self, stable_id: str) -> str | None:
         """Get the current event path for a stable device ID."""
         device = self.get_device_by_stable_id(stable_id)
         if device:

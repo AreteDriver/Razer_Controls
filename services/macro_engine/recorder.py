@@ -1,13 +1,13 @@
 """Macro recorder - captures key events with timing."""
 
 import time
-from dataclasses import dataclass, field
-from typing import Optional, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from evdev import InputDevice, ecodes, InputEvent
+from evdev import InputDevice, InputEvent, ecodes
 
-from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 from crates.keycode_map import evdev_code_to_schema
+from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
 
 @dataclass
@@ -52,7 +52,7 @@ class MacroRecorder:
         self._recording = False
         self._events: list[RecordedEvent] = []
         self._start_time: float = 0
-        self._on_event: Optional[Callable[[RecordedEvent], None]] = None
+        self._on_event: Callable[[RecordedEvent], None] | None = None
 
     def start(self) -> None:
         """Start recording."""
@@ -211,12 +211,12 @@ class DeviceMacroRecorder(MacroRecorder):
         super().__init__(**kwargs)
         self.device_path = device_path
         self.stop_key = stop_key.upper()
-        self._device: Optional[InputDevice] = None
+        self._device: InputDevice | None = None
 
     def record_from_device(
         self,
         timeout: float = 60.0,
-        on_event: Optional[Callable[[RecordedEvent], None]] = None,
+        on_event: Callable[[RecordedEvent], None] | None = None,
     ) -> MacroAction:
         """Record from the device until stop key or timeout.
 

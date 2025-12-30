@@ -1,11 +1,11 @@
 """OpenRazer bridge - DBus communication with OpenRazer daemon."""
 
 from .bridge import (
+    LightingEffect,
     OpenRazerBridge,
     RazerDevice,
-    LightingEffect,
-    WaveDirection,
     ReactiveSpeed,
+    WaveDirection,
 )
 
 __all__ = [

@@ -3,21 +3,28 @@
 import subprocess
 from pathlib import Path
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-    QLabel, QPushButton, QMessageBox, QStatusBar, QSplitter,
-    QGroupBox, QListWidget, QListWidgetItem, QComboBox, QLineEdit,
-    QSpinBox, QSlider, QCheckBox, QGridLayout, QScrollArea, QFrame
+    QCheckBox,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QStatusBar,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QIcon, QColor
 
-from crates.profile_schema import ProfileLoader, Profile, Layer, Binding, ActionType
 from crates.device_registry import DeviceRegistry
+from crates.profile_schema import Profile, ProfileLoader
 from services.openrazer_bridge import OpenRazerBridge
 
-from .widgets.device_list import DeviceListWidget
 from .widgets.binding_editor import BindingEditorWidget
+from .widgets.device_list import DeviceListWidget
 from .widgets.profile_panel import ProfilePanel
 from .widgets.razer_controls import RazerControlsWidget
 

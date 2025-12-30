@@ -1,19 +1,19 @@
 """Profile schema for Razer Control Center."""
 
+from .loader import ProfileLoader
 from .schema import (
-    Profile,
-    Layer,
+    ActionType,
     Binding,
+    DeviceConfig,
+    DPIConfig,
+    Layer,
+    LightingConfig,
+    LightingEffect,
     MacroAction,
     MacroStep,
-    DeviceConfig,
-    LightingConfig,
-    DPIConfig,
-    ActionType,
     MacroStepType,
-    LightingEffect,
+    Profile,
 )
-from .loader import ProfileLoader
 
 __all__ = [
     "Profile",

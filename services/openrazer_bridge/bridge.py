@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 from pydbus import SessionBus
 
@@ -115,7 +114,7 @@ class OpenRazerBridge:
 
         return devices
 
-    def _get_device_info(self, object_path: str, serial_hint: str = "") -> Optional[RazerDevice]:
+    def _get_device_info(self, object_path: str, serial_hint: str = "") -> RazerDevice | None:
         """Get device info from a DBus object path."""
         try:
             dev = self._bus.get(self.DBUS_INTERFACE, object_path)
@@ -236,7 +235,7 @@ class OpenRazerBridge:
         except Exception:
             pass
 
-    def get_device(self, serial: str) -> Optional[RazerDevice]:
+    def get_device(self, serial: str) -> RazerDevice | None:
         """Get a device by serial number."""
         if serial in self._devices:
             return self._devices[serial]
@@ -273,7 +272,7 @@ class OpenRazerBridge:
             print(f"Error setting color: {e}")
             return False
 
-    def set_dpi(self, serial: str, dpi_x: int, dpi_y: Optional[int] = None) -> bool:
+    def set_dpi(self, serial: str, dpi_x: int, dpi_y: int | None = None) -> bool:
         """Set device DPI."""
         if dpi_y is None:
             dpi_y = dpi_x
@@ -425,7 +424,7 @@ class OpenRazerBridge:
             print(f"Error setting poll rate: {e}")
             return False
 
-    def get_poll_rate(self, serial: str) -> Optional[int]:
+    def get_poll_rate(self, serial: str) -> int | None:
         """Get device polling rate."""
         device = self.get_device(serial)
         if not device or not device.has_poll_rate:
@@ -440,7 +439,7 @@ class OpenRazerBridge:
             print(f"Error getting poll rate: {e}")
             return None
 
-    def get_dpi(self, serial: str) -> Optional[tuple[int, int]]:
+    def get_dpi(self, serial: str) -> tuple[int, int] | None:
         """Get current DPI."""
         device = self.get_device(serial)
         if not device or not device.has_dpi:
@@ -455,7 +454,7 @@ class OpenRazerBridge:
             print(f"Error getting DPI: {e}")
             return None
 
-    def get_brightness(self, serial: str) -> Optional[int]:
+    def get_brightness(self, serial: str) -> int | None:
         """Get current brightness."""
         device = self.get_device(serial)
         if not device or not device.has_brightness:
@@ -470,7 +469,7 @@ class OpenRazerBridge:
             print(f"Error getting brightness: {e}")
             return None
 
-    def get_battery(self, serial: str) -> Optional[dict]:
+    def get_battery(self, serial: str) -> dict | None:
         """Get battery info (level and charging status)."""
         device = self.get_device(serial)
         if not device or not device.has_battery:
@@ -548,7 +547,7 @@ class OpenRazerBridge:
             print(f"Error setting scroll color: {e}")
             return False
 
-    def refresh_device(self, serial: str) -> Optional[RazerDevice]:
+    def refresh_device(self, serial: str) -> RazerDevice | None:
         """Refresh device state from hardware."""
         device = self.get_device(serial)
         if not device:

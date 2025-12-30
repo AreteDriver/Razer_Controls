@@ -12,17 +12,16 @@ Usage:
 
 import argparse
 import sys
-from typing import Optional
 
 from services.openrazer_bridge import (
     OpenRazerBridge,
     RazerDevice,
-    WaveDirection,
     ReactiveSpeed,
+    WaveDirection,
 )
 
 
-def parse_color(color_str: str) -> Optional[tuple[int, int, int]]:
+def parse_color(color_str: str) -> tuple[int, int, int] | None:
     """Parse color from various formats: 'FF0000', '#FF0000', '255,0,0', '255 0 0'."""
     color_str = color_str.strip().lstrip("#")
 
@@ -48,7 +47,7 @@ def parse_color(color_str: str) -> Optional[tuple[int, int, int]]:
     return None
 
 
-def get_bridge() -> Optional[OpenRazerBridge]:
+def get_bridge() -> OpenRazerBridge | None:
     """Get connected OpenRazer bridge."""
     bridge = OpenRazerBridge()
     if not bridge.connect():
@@ -59,7 +58,7 @@ def get_bridge() -> Optional[OpenRazerBridge]:
     return bridge
 
 
-def find_device(bridge: OpenRazerBridge, identifier: str) -> Optional[RazerDevice]:
+def find_device(bridge: OpenRazerBridge, identifier: str) -> RazerDevice | None:
     """Find a device by serial or partial name match."""
     devices = bridge.discover_devices()
 
@@ -133,35 +132,36 @@ def cmd_info(args) -> int:
     if device.firmware_version:
         print(f"  Firmware:  {device.firmware_version}")
 
-    print(f"\n  Capabilities:")
+    print("\n  Capabilities:")
 
     if device.has_dpi:
-        print(f"    DPI:        Yes (current: {device.dpi[0]}x{device.dpi[1]}, max: {device.max_dpi})")
+        dpi_info = f"{device.dpi[0]}x{device.dpi[1]}, max: {device.max_dpi}"
+        print(f"    DPI:        Yes (current: {dpi_info})")
     else:
-        print(f"    DPI:        No")
+        print("    DPI:        No")
 
     if device.has_poll_rate:
         print(f"    Poll Rate:  Yes (current: {device.poll_rate} Hz)")
     else:
-        print(f"    Poll Rate:  No")
+        print("    Poll Rate:  No")
 
     if device.has_brightness:
         print(f"    Brightness: Yes (current: {device.brightness}%)")
     else:
-        print(f"    Brightness: No")
+        print("    Brightness: No")
 
     if device.has_lighting:
         effects = ", ".join(device.supported_effects) if device.supported_effects else "unknown"
-        print(f"    Lighting:   Yes")
+        print("    Lighting:   Yes")
         print(f"    Effects:    {effects}")
     else:
-        print(f"    Lighting:   No")
+        print("    Lighting:   No")
 
     if device.has_logo:
-        print(f"    Logo LED:   Yes")
+        print("    Logo LED:   Yes")
 
     if device.has_scroll:
-        print(f"    Scroll LED: Yes")
+        print("    Scroll LED: Yes")
 
     if device.has_battery:
         status = "charging" if device.is_charging else "discharging"
@@ -334,7 +334,11 @@ def cmd_effect(args) -> int:
                 r, g, b = color
         speed = ReactiveSpeed.MEDIUM
         if args.speed:
-            speed_map = {"short": ReactiveSpeed.SHORT, "medium": ReactiveSpeed.MEDIUM, "long": ReactiveSpeed.LONG}
+            speed_map = {
+                "short": ReactiveSpeed.SHORT,
+                "medium": ReactiveSpeed.MEDIUM,
+                "long": ReactiveSpeed.LONG,
+            }
             speed = speed_map.get(args.speed.lower(), ReactiveSpeed.MEDIUM)
         success = bridge.set_reactive_effect(device.serial, r, g, b, speed)
     elif effect == "starlight":

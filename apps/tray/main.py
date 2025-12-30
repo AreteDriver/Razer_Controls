@@ -9,19 +9,17 @@ Provides:
 
 import subprocess
 import sys
-from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, QTimer, Signal, QObject
-from PySide6.QtGui import QIcon, QAction, QPixmap, QPainter, QColor, QFont
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
-    QSystemTrayIcon,
     QMenu,
     QMessageBox,
+    QSystemTrayIcon,
 )
 
-from crates.profile_schema import ProfileLoader, Profile
+from crates.profile_schema import ProfileLoader
 from services.openrazer_bridge import OpenRazerBridge
 
 
@@ -44,7 +42,7 @@ class RazerTray(QSystemTrayIcon):
         self.openrazer = OpenRazerBridge()
 
         # State
-        self._active_profile: Optional[str] = None
+        self._active_profile: str | None = None
         self._daemon_running = False
         self._devices: list = []
 

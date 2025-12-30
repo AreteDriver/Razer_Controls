@@ -1,7 +1,7 @@
 """Profile schema definitions using Pydantic."""
 
 from enum import Enum
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -36,9 +36,9 @@ class LightingEffect(str, Enum):
 class MacroStep(BaseModel):
     """A single step in a macro sequence."""
     type: MacroStepType
-    key: Optional[str] = None        # For key actions
-    delay_ms: Optional[int] = None   # For delay actions
-    text: Optional[str] = None       # For text actions
+    key: str | None = None        # For key actions
+    delay_ms: int | None = None   # For delay actions
+    text: str | None = None       # For text actions
 
 
 class MacroAction(BaseModel):
@@ -55,7 +55,7 @@ class Binding(BaseModel):
     input_code: str = Field(..., description="evdev input code, e.g., BTN_SIDE")
     action_type: ActionType = ActionType.KEY
     output_keys: list[str] = Field(default_factory=list, description="Keys to output")
-    macro_id: Optional[str] = Field(None, description="Reference to macro if action_type=macro")
+    macro_id: str | None = Field(None, description="Reference to macro if action_type=macro")
 
 
 class Layer(BaseModel):
@@ -63,7 +63,7 @@ class Layer(BaseModel):
     id: str = Field(..., description="Layer identifier")
     name: str = Field(..., description="Human-readable name")
     bindings: list[Binding] = Field(default_factory=list)
-    hold_modifier_input_code: Optional[str] = Field(
+    hold_modifier_input_code: str | None = Field(
         None,
         description="If set, this layer activates when this key is held"
     )
@@ -89,8 +89,8 @@ class DPIConfig(BaseModel):
 class DeviceConfig(BaseModel):
     """Configuration for a specific Razer device."""
     device_id: str = Field(..., description="Stable device identifier")
-    lighting: Optional[LightingConfig] = None
-    dpi: Optional[DPIConfig] = None
+    lighting: LightingConfig | None = None
+    dpi: DPIConfig | None = None
 
 
 class Profile(BaseModel):

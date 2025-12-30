@@ -1,12 +1,12 @@
 """Macro player - executes macros through uinput."""
 
 import time
-from typing import Optional, Callable
+from collections.abc import Callable
 
 from evdev import UInput, ecodes
 
-from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 from crates.keycode_map import schema_to_evdev_code
+from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
 
 class MacroPlayer:
@@ -17,7 +17,7 @@ class MacroPlayer:
         player.play(macro)
     """
 
-    def __init__(self, uinput: Optional[UInput] = None):
+    def __init__(self, uinput: UInput | None = None):
         """Initialize player.
 
         Args:
@@ -27,7 +27,7 @@ class MacroPlayer:
         self._owns_uinput = False
         self._playing = False
         self._cancelled = False
-        self._on_step: Optional[Callable[[MacroStep, int], None]] = None
+        self._on_step: Callable[[MacroStep, int], None] | None = None
 
     def _ensure_uinput(self) -> None:
         """Ensure we have a uinput device."""

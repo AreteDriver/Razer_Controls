@@ -1,12 +1,20 @@
 """Razer device controls widget for lighting and DPI."""
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel,
-    QPushButton, QSlider, QComboBox, QSpinBox, QColorDialog,
-    QGridLayout, QFrame, QListWidget, QListWidgetItem
-)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QComboBox,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSlider,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from services.openrazer_bridge import OpenRazerBridge, RazerDevice
 

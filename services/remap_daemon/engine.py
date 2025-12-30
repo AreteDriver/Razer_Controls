@@ -2,12 +2,11 @@
 
 import time
 from dataclasses import dataclass, field
-from typing import Optional
 
-from evdev import UInput, ecodes, InputEvent
+from evdev import InputEvent, UInput, ecodes
 
-from crates.profile_schema import Profile, Binding, MacroAction, ActionType, MacroStepType
 from crates.keycode_map import schema_to_evdev_code
+from crates.profile_schema import ActionType, Binding, MacroAction, MacroStepType, Profile
 
 
 @dataclass
@@ -36,7 +35,7 @@ class KeyState:
     output_held: set[int] = field(default_factory=set)
 
     # Layer modifier currently held (if any)
-    layer_modifier_held: Optional[int] = None
+    layer_modifier_held: int | None = None
 
 
 class RemapEngine:
@@ -51,7 +50,7 @@ class RemapEngine:
     def __init__(self, profile: Profile):
         self.profile = profile
         self.state = KeyState()
-        self._uinput: Optional[UInput] = None
+        self._uinput: UInput | None = None
         self._bindings: dict[str, dict[int, Binding]] = {}  # layer_id -> code -> binding
         self._macros: dict[str, MacroAction] = {}
         self._layer_modifiers: dict[int, str] = {}  # input_code -> layer_id
@@ -230,11 +229,11 @@ class RemapEngine:
             return True
         return False
 
-    def _get_binding(self, code: int) -> Optional[Binding]:
+    def _get_binding(self, code: int) -> Binding | None:
         """Get the binding for a key code in the current layer."""
         return self._get_binding_for_layer(code, self.state.active_layer)
 
-    def _get_binding_for_layer(self, code: int, layer_id: str) -> Optional[Binding]:
+    def _get_binding_for_layer(self, code: int, layer_id: str) -> Binding | None:
         """Get the binding for a key code in a specific layer."""
         # Check specified layer
         if layer_id in self._bindings:

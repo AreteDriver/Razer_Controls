@@ -5,18 +5,16 @@ from evdev import ecodes
 
 from crates.keycode_map import (
     EVDEV_TO_SCHEMA,
-    SCHEMA_TO_EVDEV,
-    SCHEMA_TO_UINPUT,
     KEY_CATEGORIES,
     evdev_code_to_schema,
+    evdev_event_to_schema,
+    get_all_evdev_keys,
+    get_all_schema_keys,
+    get_key_info,
+    get_keys_by_category,
+    is_valid_key,
     schema_to_evdev_code,
     schema_to_evdev_name,
-    evdev_event_to_schema,
-    get_all_schema_keys,
-    get_all_evdev_keys,
-    get_keys_by_category,
-    get_key_info,
-    is_valid_key,
     validate_key,
 )
 

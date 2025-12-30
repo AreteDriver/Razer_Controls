@@ -12,25 +12,24 @@ Usage:
 
 import argparse
 import json
+import select
 import sys
 import time
-import select
 from pathlib import Path
-from typing import Optional
 
 from evdev import InputDevice, ecodes, list_devices
 
+from crates.keycode_map import schema_to_evdev_code, validate_key
 from crates.profile_schema import (
     MacroAction,
     MacroStep,
     MacroStepType,
     ProfileLoader,
 )
-from crates.keycode_map import evdev_code_to_schema, schema_to_evdev_code, validate_key
-from services.macro_engine import MacroRecorder, MacroPlayer
+from services.macro_engine import MacroPlayer, MacroRecorder
 
 
-def find_keyboard_device() -> Optional[str]:
+def find_keyboard_device() -> str | None:
     """Find a keyboard device to record from."""
     for path in list_devices():
         try:
@@ -459,7 +458,7 @@ def cmd_create(args) -> int:
     return 0
 
 
-def _parse_step(step_str: str) -> Optional[MacroStep]:
+def _parse_step(step_str: str) -> MacroStep | None:
     """Parse a step from string format."""
     if ":" not in step_str:
         return None

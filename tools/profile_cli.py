@@ -15,20 +15,18 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
-from crates.profile_schema import (
-    Profile,
-    Layer,
-    Binding,
-    ProfileLoader,
-    ActionType,
-)
 from crates.device_registry import DeviceRegistry
 from crates.keycode_map import validate_key
+from crates.profile_schema import (
+    ActionType,
+    Layer,
+    Profile,
+    ProfileLoader,
+)
 
 
-def get_loader(config_dir: Optional[Path] = None) -> ProfileLoader:
+def get_loader(config_dir: Path | None = None) -> ProfileLoader:
     """Get a profile loader instance."""
     return ProfileLoader(config_dir)
 
@@ -119,7 +117,7 @@ def cmd_show(args) -> int:
 
     # Process matching
     if profile.match_process_names:
-        print(f"\nAuto-activate for processes:")
+        print("\nAuto-activate for processes:")
         for proc in profile.match_process_names:
             print(f"  - {proc}")
 
@@ -169,7 +167,7 @@ def cmd_new(args) -> int:
 
         if args.activate:
             loader.set_active_profile(profile_id)
-            print(f"  Status: ACTIVE")
+            print("  Status: ACTIVE")
 
         return 0
     else:

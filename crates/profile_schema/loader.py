@@ -2,15 +2,14 @@
 
 import json
 from pathlib import Path
-from typing import Optional
 
-from .schema import Profile, MacroAction
+from .schema import MacroAction, Profile
 
 
 class ProfileLoader:
     """Loads and saves profiles from the config directory."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         if config_dir is None:
             config_dir = Path.home() / ".config" / "razer-control-center"
         self.config_dir = config_dir
@@ -30,7 +29,7 @@ class ProfileLoader:
             profiles.append(f.stem)
         return sorted(profiles)
 
-    def load_profile(self, profile_id: str) -> Optional[Profile]:
+    def load_profile(self, profile_id: str) -> Profile | None:
         """Load a profile by ID."""
         path = self.profiles_dir / f"{profile_id}.json"
         if not path.exists():
@@ -86,7 +85,7 @@ class ProfileLoader:
         """Get path to the active profile marker file."""
         return self.config_dir / "active_profile"
 
-    def get_active_profile_id(self) -> Optional[str]:
+    def get_active_profile_id(self) -> str | None:
         """Get the currently active profile ID."""
         path = self.get_active_profile_path()
         if path.exists():
@@ -98,7 +97,7 @@ class ProfileLoader:
         path = self.get_active_profile_path()
         path.write_text(profile_id)
 
-    def load_active_profile(self) -> Optional[Profile]:
+    def load_active_profile(self) -> Profile | None:
         """Load the currently active profile."""
         profile_id = self.get_active_profile_id()
         if profile_id:

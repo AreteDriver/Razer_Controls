@@ -1,6 +1,6 @@
 """Macro engine - recording and playback of macros."""
 
-from .recorder import MacroRecorder
 from .player import MacroPlayer
+from .recorder import MacroRecorder
 
 __all__ = ["MacroRecorder", "MacroPlayer"]

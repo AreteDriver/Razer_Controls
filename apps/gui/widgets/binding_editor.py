@@ -1,18 +1,34 @@
 """Binding editor widget for configuring key bindings."""
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QListWidget, QListWidgetItem,
-    QPushButton, QLabel, QComboBox, QLineEdit, QDialog, QFormLayout,
-    QDialogButtonBox, QTabWidget, QTextEdit, QSpinBox, QScrollArea
-)
 from PySide6.QtCore import Qt, Signal
-
-from crates.profile_schema import (
-    Profile, Layer, Binding, MacroAction, MacroStep,
-    ActionType, MacroStepType
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QSpinBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
-from crates.keycode_map import get_all_schema_keys, evdev_code_to_schema
 
+from crates.keycode_map import evdev_code_to_schema
+from crates.profile_schema import (
+    ActionType,
+    Binding,
+    Layer,
+    MacroAction,
+    MacroStep,
+    MacroStepType,
+    Profile,
+)
 
 # Common input buttons for quick selection
 COMMON_INPUTS = {
@@ -124,7 +140,9 @@ class LayerDialog(QDialog):
 class BindingDialog(QDialog):
     """Dialog for editing a single binding."""
 
-    def __init__(self, binding: Binding | None = None, macros: list[MacroAction] = None, parent=None):
+    def __init__(
+        self, binding: Binding | None = None, macros: list[MacroAction] = None, parent=None
+    ):
         super().__init__(parent)
         self.setWindowTitle("Edit Binding")
         self.setMinimumWidth(400)
@@ -567,7 +585,6 @@ class BindingEditorWidget(QWidget):
     def _format_binding(self, binding: Binding) -> str:
         """Format a binding for display."""
         input_name = evdev_code_to_schema(binding.input_code)
-        action_name = binding.action_type.value
 
         if binding.action_type == ActionType.KEY:
             output = binding.output_keys[0] if binding.output_keys else "?"

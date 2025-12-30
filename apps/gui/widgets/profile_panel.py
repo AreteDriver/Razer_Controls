@@ -1,13 +1,24 @@
 """Profile panel widget for managing profiles."""
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-    QPushButton, QLabel, QLineEdit, QDialog, QFormLayout, QTextEdit,
-    QDialogButtonBox, QMessageBox, QGroupBox
-)
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
-from crates.profile_schema import ProfileLoader, Profile, Layer
+from crates.profile_schema import Layer, Profile, ProfileLoader
 
 
 class NewProfileDialog(QDialog):
@@ -158,7 +169,7 @@ class ProfilePanel(QWidget):
         profile_id = item.data(Qt.UserRole)
         reply = QMessageBox.question(
             self, "Delete Profile",
-            f"Are you sure you want to delete this profile?",
+            "Are you sure you want to delete this profile?",
             QMessageBox.Yes | QMessageBox.No
         )
 

@@ -3,21 +3,21 @@
 from .mapping import (
     # Core mappings
     EVDEV_TO_SCHEMA,
+    KEY_CATEGORIES,
     SCHEMA_TO_EVDEV,
     SCHEMA_TO_UINPUT,
-    KEY_CATEGORIES,
     # Conversion functions
     evdev_code_to_schema,
-    schema_to_evdev_code,
-    schema_to_evdev_name,
     evdev_event_to_schema,
+    get_all_evdev_keys,
     # Query functions
     get_all_schema_keys,
-    get_all_evdev_keys,
-    get_keys_by_category,
     get_key_info,
+    get_keys_by_category,
     # Validation
     is_valid_key,
+    schema_to_evdev_code,
+    schema_to_evdev_name,
     validate_key,
 )
 

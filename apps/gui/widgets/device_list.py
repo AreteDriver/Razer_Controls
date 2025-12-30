@@ -1,9 +1,7 @@
 """Device list widget for selecting input devices."""
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLabel
-)
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from crates.device_registry import DeviceRegistry
 

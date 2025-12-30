@@ -4,23 +4,23 @@ import selectors
 import signal
 import sys
 from pathlib import Path
-from typing import Optional
 
-from evdev import InputDevice, UInput, ecodes, list_devices
+from evdev import InputDevice, UInput, ecodes
 
-from crates.profile_schema import ProfileLoader, Profile
 from crates.device_registry import DeviceRegistry
+from crates.profile_schema import Profile, ProfileLoader
+
 from .engine import RemapEngine
 
 
 class RemapDaemon:
     """Main remap daemon - grabs input devices and remaps events."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         self.profile_loader = ProfileLoader(config_dir)
         self.device_registry = DeviceRegistry(config_dir)
-        self.engine: Optional[RemapEngine] = None
-        self.uinput: Optional[UInput] = None
+        self.engine: RemapEngine | None = None
+        self.uinput: UInput | None = None
         self.grabbed_devices: dict[str, InputDevice] = {}
         self.selector = selectors.DefaultSelector()
         self.running = False
@@ -59,7 +59,7 @@ class RemapDaemon:
 
     def _create_default_profile(self) -> Profile:
         """Create a default profile with no bindings."""
-        from crates.profile_schema import Profile, Layer
+        from crates.profile_schema import Layer, Profile
 
         # Get available Razer devices
         devices = self.device_registry.get_razer_devices()
