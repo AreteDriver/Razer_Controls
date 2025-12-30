@@ -110,7 +110,7 @@ class ProfilePanel(QWidget):
 
         # Active profile indicator
         self.active_label = QLabel("Active: None")
-        self.active_label.setStyleSheet("color: #44d72c; padding: 4px;")
+        self.active_label.setStyleSheet("color: #2da05a; padding: 4px;")
         layout.addWidget(self.active_label)
 
     def load_profiles(self, loader: ProfileLoader):

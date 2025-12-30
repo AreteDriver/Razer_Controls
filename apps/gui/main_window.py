@@ -23,6 +23,7 @@ from crates.device_registry import DeviceRegistry
 from crates.profile_schema import Profile, ProfileLoader
 from services.openrazer_bridge import OpenRazerBridge
 
+from .widgets.app_matcher import AppMatcherWidget
 from .widgets.binding_editor import BindingEditorWidget
 from .widgets.device_list import DeviceListWidget
 from .widgets.profile_panel import ProfilePanel
@@ -85,6 +86,11 @@ class MainWindow(QMainWindow):
         self.bindings_tab = QWidget()
         self._setup_bindings_tab()
         self.tabs.addTab(self.bindings_tab, "Bindings")
+
+        # App Switching tab
+        self.app_matcher = AppMatcherWidget()
+        self.app_matcher.patterns_changed.connect(self._on_app_patterns_changed)
+        self.tabs.addTab(self.app_matcher, "App Switching")
 
         # Razer tab (OpenRazer controls)
         self.razer_tab = RazerControlsWidget(self.openrazer)
@@ -225,6 +231,9 @@ class MainWindow(QMainWindow):
         # Update binding editor
         self.binding_editor.load_profile(profile)
 
+        # Update app matcher
+        self.app_matcher.load_profile(profile)
+
         # Update active profile label
         active_id = self.profile_loader.get_active_profile_id()
         if active_id == profile.id:
@@ -272,6 +281,12 @@ class MainWindow(QMainWindow):
             self.profile_loader.save_profile(self.current_profile)
             self.statusbar.showMessage("Bindings saved")
 
+    def _on_app_patterns_changed(self):
+        """Handle app pattern change."""
+        if self.current_profile:
+            self.profile_loader.save_profile(self.current_profile)
+            self.statusbar.showMessage("App patterns saved")
+
     def _refresh_devices(self):
         """Refresh device list."""
         self.device_list.refresh()
@@ -291,7 +306,7 @@ class MainWindow(QMainWindow):
             )
             if result.returncode == 0:
                 self.daemon_status_label.setText("Running")
-                self.daemon_status_label.setStyleSheet("color: #44d72c;")
+                self.daemon_status_label.setStyleSheet("color: #2da05a;")
             else:
                 self.daemon_status_label.setText("Stopped")
                 self.daemon_status_label.setStyleSheet("color: #888888;")
