@@ -8,12 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 90 new unit tests for core services (152 total tests)
+  - RemapEngine: bindings, layers, macros, state tracking
+  - MacroPlayer: all step types, cancellation, speed multiplier
+  - OpenRazerBridge: DBus communication, lighting, DPI, battery
+
+## [1.2.0] - 2025-12-30
+
+### Added
 - **App Watcher Service** - Automatic profile switching based on active application
   - X11 backend using xdotool
   - GNOME Wayland backend using DBus
   - Pattern matching with wildcards (e.g., `*.exe`, `steam*`)
   - Case-insensitive and substring matching
   - Enable with `--app-watcher` flag on daemon
+- **GUI App Matcher** - Visual interface for app-to-profile mapping
 - 19 new unit tests for app watcher (62 total tests)
 
 ### Usage
@@ -81,5 +90,6 @@ razer-remap-daemon --app-watcher
 - Systemd user service for daemon
 - Install script with automatic setup
 
-[Unreleased]: https://github.com/AreteDriver/Razer_Controls/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/Razer_Controls/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/AreteDriver/Razer_Controls/compare/v1.0.0...v1.2.0
 [1.0.0]: https://github.com/AreteDriver/Razer_Controls/releases/tag/v1.0.0
