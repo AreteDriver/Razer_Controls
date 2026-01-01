@@ -26,6 +26,7 @@ from services.openrazer_bridge import OpenRazerBridge
 from .widgets.app_matcher import AppMatcherWidget
 from .widgets.binding_editor import BindingEditorWidget
 from .widgets.device_list import DeviceListWidget
+from .widgets.macro_editor import MacroEditorWidget
 from .widgets.profile_panel import ProfilePanel
 from .widgets.razer_controls import RazerControlsWidget
 
@@ -86,6 +87,11 @@ class MainWindow(QMainWindow):
         self.bindings_tab = QWidget()
         self._setup_bindings_tab()
         self.tabs.addTab(self.bindings_tab, "Bindings")
+
+        # Macros tab
+        self.macro_editor = MacroEditorWidget()
+        self.macro_editor.macros_updated.connect(self._on_macros_changed)
+        self.tabs.addTab(self.macro_editor, "Macros")
 
         # App Switching tab
         self.app_matcher = AppMatcherWidget()
@@ -231,6 +237,9 @@ class MainWindow(QMainWindow):
         # Update binding editor
         self.binding_editor.load_profile(profile)
 
+        # Update macro editor
+        self.macro_editor.set_macros(profile.macros)
+
         # Update app matcher
         self.app_matcher.load_profile(profile)
 
@@ -280,6 +289,13 @@ class MainWindow(QMainWindow):
             self.current_profile.macros = macros
             self.profile_loader.save_profile(self.current_profile)
             self.statusbar.showMessage("Bindings saved")
+
+    def _on_macros_changed(self, macros: list):
+        """Handle macros change."""
+        if self.current_profile:
+            self.current_profile.macros = macros
+            self.profile_loader.save_profile(self.current_profile)
+            self.statusbar.showMessage("Macros saved")
 
     def _on_app_patterns_changed(self):
         """Handle app pattern change."""
