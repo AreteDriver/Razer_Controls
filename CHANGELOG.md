@@ -7,8 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-12-31
+
 ### Added
-- 90 new unit tests for core services (152 total tests)
+- **Macro Editor Widget** - Visual macro creation and editing
+  - Step editor dialog (key press/down/up, delay, text)
+  - Drag-drop step reordering
+  - Macro properties (name, repeat count, delay)
+  - Test macro preview
+- **Battery Monitor Widget** - Wireless device battery status
+  - Real-time battery level with color-coded progress bars
+  - Charging state detection
+  - Low battery warnings (configurable threshold)
+  - Auto-refresh every 30 seconds
+- **DPI Stage Editor Widget** - Visual DPI configuration
+  - Configure up to 5 DPI stages with slider/spinbox
+  - Preset configurations (Gaming, Productivity, High Precision)
+  - Color-coded DPI levels (blue/green/yellow/red)
+  - Active stage selector with visual highlighting
+- 46 new unit tests for GUI widget logic (252 total tests)
+
+## [1.2.1] - 2025-12-30
+
+### Changed
+- Code quality improvements with ruff formatting
+- 23 files reformatted for consistency
+
+### Added
+- 90 new unit tests for core services (206 total tests)
   - RemapEngine: bindings, layers, macros, state tracking
   - MacroPlayer: all step types, cancellation, speed multiplier
   - OpenRazerBridge: DBus communication, lighting, DPI, battery
