@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Monitor mouse button presses - run this and click all buttons!"""
+
 import select
 import sys
 
 from evdev import InputDevice, ecodes
 
 # Unbuffered output
-sys.stdout.reconfigure(line_buffering=True)
+sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
-dev = InputDevice('/dev/input/event8')
+dev = InputDevice("/dev/input/event8")
 print(f"Monitoring: {dev.name}")
 print("Click ALL mouse buttons including thumb buttons!")
 print("Press Ctrl+C to stop\n")

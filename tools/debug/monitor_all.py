@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Monitor ALL Basilisk devices for button presses."""
+
 import select
 import sys
 
 from evdev import InputDevice, ecodes
 
-sys.stdout.reconfigure(line_buffering=True)
+sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
 # Find all devices
 devices = []
-for path in ['/dev/input/event8', '/dev/input/event11', '/dev/input/event19']:
+for path in ["/dev/input/event8", "/dev/input/event11", "/dev/input/event19"]:
     try:
         dev = InputDevice(path)
         devices.append(dev)

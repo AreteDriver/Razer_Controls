@@ -116,6 +116,7 @@ def main():
         while time.time() - start_time < timeout:
             # Non-blocking read with select
             import select
+
             r, _, _ = select.select([device.fd], [], [], 0.1)
 
             if r:
@@ -123,9 +124,7 @@ def main():
                     # Show raw event
                     if event.type == ecodes.EV_KEY:
                         key_name = (
-                            ecodes.KEY.get(event.code)
-                            or ecodes.BTN.get(event.code)
-                            or event.code
+                            ecodes.KEY.get(event.code) or ecodes.BTN.get(event.code) or event.code
                         )
                         if event.value == 1:
                             state = "DOWN"

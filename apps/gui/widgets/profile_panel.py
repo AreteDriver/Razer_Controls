@@ -38,7 +38,9 @@ class NewProfileDialog(QDialog):
         self.desc_edit.setMaximumHeight(80)
         layout.addRow("Description:", self.desc_edit)
 
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
@@ -56,7 +58,9 @@ class NewProfileDialog(QDialog):
             id=profile_id,
             name=name,
             description=self.desc_edit.toPlainText().strip(),
-            layers=[Layer(id="base", name="Base Layer", bindings=[])],
+            layers=[
+                Layer(id="base", name="Base Layer", bindings=[], hold_modifier_input_code=None)
+            ],
         )
 
 
@@ -128,9 +132,9 @@ class ProfilePanel(QWidget):
                     self.active_label.setText(f"Active: {profile.name}")
 
                 item = QListWidgetItem(display_name)
-                item.setData(Qt.UserRole, profile_id)
+                item.setData(Qt.ItemDataRole.UserRole, profile_id)
                 if profile_id == active_id:
-                    item.setForeground(Qt.green)
+                    item.setForeground(Qt.GlobalColor.green)
                 self.profile_list.addItem(item)
 
         if not profile_ids:
@@ -145,7 +149,7 @@ class ProfilePanel(QWidget):
 
         item = self.profile_list.item(row)
         if item:
-            profile_id = item.data(Qt.UserRole)
+            profile_id = item.data(Qt.ItemDataRole.UserRole)
             self.delete_btn.setEnabled(True)
             self.activate_btn.setEnabled(True)
             self.profile_selected.emit(profile_id)
@@ -153,7 +157,7 @@ class ProfilePanel(QWidget):
     def _create_profile(self):
         """Create a new profile."""
         dialog = NewProfileDialog(self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             profile = dialog.get_profile()
             if profile:
                 self.profile_created.emit(profile)

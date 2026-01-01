@@ -72,21 +72,21 @@ class RazerTray(QSystemTrayIcon):
         """Create the tray icon."""
         # Create a simple green Razer-style icon
         pixmap = QPixmap(64, 64)
-        pixmap.fill(Qt.transparent)
+        pixmap.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         # Draw a green circle (Razer green: #44D62C)
         painter.setBrush(QColor("#44D62C"))
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.drawEllipse(4, 4, 56, 56)
 
         # Draw "R" in the center
         painter.setPen(QColor("white"))
-        font = QFont("Arial", 32, QFont.Bold)
+        font = QFont("Arial", 32, QFont.Weight.Bold)
         painter.setFont(font)
-        painter.drawText(pixmap.rect(), Qt.AlignCenter, "R")
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "R")
 
         painter.end()
 
@@ -427,14 +427,18 @@ class RazerTray(QSystemTrayIcon):
 
     def _notify(self, title: str, message: str, error: bool = False) -> None:
         """Show a desktop notification."""
-        icon = QSystemTrayIcon.Critical if error else QSystemTrayIcon.Information
+        icon = (
+            QSystemTrayIcon.MessageIcon.Critical
+            if error
+            else QSystemTrayIcon.MessageIcon.Information
+        )
         self.showMessage(title, message, icon, 3000)
 
     def _on_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """Handle tray icon activation."""
-        if reason == QSystemTrayIcon.DoubleClick:
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self._open_gui()
-        elif reason == QSystemTrayIcon.MiddleClick:
+        elif reason == QSystemTrayIcon.ActivationReason.MiddleClick:
             # Quick refresh
             self._check_status()
             self._update_devices_menu()
@@ -468,7 +472,7 @@ def main():
     tray.showMessage(
         "Razer Control Center",
         "Running in system tray",
-        QSystemTrayIcon.Information,
+        QSystemTrayIcon.MessageIcon.Information,
         2000,
     )
 

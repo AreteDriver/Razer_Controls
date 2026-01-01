@@ -312,10 +312,14 @@ class AppWatcher:
 
     def _find_matching_profile(self, window_info: ActiveWindowInfo) -> Profile | None:
         """Find a profile that matches the current window."""
-        profiles = self.profile_loader.list_profiles()
+        profile_ids = self.profile_loader.list_profiles()
         default_profile: Profile | None = None
 
-        for profile in profiles:
+        for profile_id in profile_ids:
+            profile = self.profile_loader.load_profile(profile_id)
+            if not profile:
+                continue
+
             # Check if this is the default profile
             if profile.is_default:
                 default_profile = profile

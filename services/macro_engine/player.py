@@ -35,7 +35,7 @@ class MacroPlayer:
             capabilities = {
                 ecodes.EV_KEY: list(range(0, 256)) + list(range(0x110, 0x120)),
             }
-            self._uinput = UInput(capabilities, name="Razer Macro Player")
+            self._uinput = UInput(capabilities, name="Razer Macro Player")  # type: ignore[arg-type]
             self._owns_uinput = True
 
     def close(self) -> None:

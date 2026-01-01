@@ -48,8 +48,8 @@ class DeviceListWidget(QWidget):
         # Add separator if we have both types
         if razer_devices and other_devices:
             separator = QListWidgetItem("--- Other Devices ---")
-            separator.setFlags(Qt.NoItemFlags)
-            separator.setForeground(Qt.gray)
+            separator.setFlags(Qt.ItemFlag.NoItemFlags)
+            separator.setForeground(Qt.GlobalColor.gray)
             self.list_widget.addItem(separator)
 
         # Add other devices
@@ -70,10 +70,10 @@ class DeviceListWidget(QWidget):
         display_text = f"{device.name}\n  Type: {type_str}\n  ID: {device.stable_id}"
 
         item = QListWidgetItem(display_text)
-        item.setData(Qt.UserRole, device.stable_id)
+        item.setData(Qt.ItemDataRole.UserRole, device.stable_id)
 
         if is_razer:
-            item.setForeground(Qt.green)
+            item.setForeground(Qt.GlobalColor.green)
 
         return item
 
@@ -88,7 +88,7 @@ class DeviceListWidget(QWidget):
         for i in range(self.list_widget.count()):
             item = self.list_widget.item(i)
             if item.isSelected():
-                device_id = item.data(Qt.UserRole)
+                device_id = item.data(Qt.ItemDataRole.UserRole)
                 if device_id:
                     selected.append(device_id)
         return selected
@@ -98,6 +98,6 @@ class DeviceListWidget(QWidget):
         self.list_widget.clearSelection()
         for i in range(self.list_widget.count()):
             item = self.list_widget.item(i)
-            device_id = item.data(Qt.UserRole)
+            device_id = item.data(Qt.ItemDataRole.UserRole)
             if device_id in device_ids:
                 item.setSelected(True)

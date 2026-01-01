@@ -155,7 +155,7 @@ def cmd_new(args) -> int:
         name=args.name,
         description=args.description or "",
         input_devices=input_devices,
-        layers=[Layer(id="base", name="Base Layer", bindings=[])],
+        layers=[Layer(id="base", name="Base Layer", bindings=[], hold_modifier_input_code=None)],
         is_default=args.default,
     )
 

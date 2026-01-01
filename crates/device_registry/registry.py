@@ -31,7 +31,7 @@ class DeviceRegistry:
 
     def scan_devices(self) -> list[InputDevice]:
         """Scan for all input devices and return them with stable IDs."""
-        devices = []
+        devices: list[InputDevice] = []
 
         by_id = Path("/dev/input/by-id")
         if not by_id.exists():

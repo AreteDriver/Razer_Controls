@@ -112,7 +112,9 @@ class LayerDialog(QDialog):
         layout.addRow(help_label)
 
         # Buttons
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
@@ -139,7 +141,10 @@ class BindingDialog(QDialog):
     """Dialog for editing a single binding."""
 
     def __init__(
-        self, binding: Binding | None = None, macros: list[MacroAction] = None, parent=None
+        self,
+        binding: Binding | None = None,
+        macros: list[MacroAction] | None = None,
+        parent=None,
     ):
         super().__init__(parent)
         self.setWindowTitle("Edit Binding")
@@ -176,7 +181,9 @@ class BindingDialog(QDialog):
         layout.addRow("Macro:", self.macro_combo)
 
         # Buttons
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
@@ -296,7 +303,9 @@ class MacroDialog(QDialog):
         layout.addRow("Repeat:", self.repeat_spin)
 
         # Buttons
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
@@ -561,7 +570,7 @@ class BindingEditorWidget(QWidget):
         for binding in layer.bindings:
             display = self._format_binding(binding)
             item = QListWidgetItem(display)
-            item.setData(Qt.UserRole, binding)
+            item.setData(Qt.ItemDataRole.UserRole, binding)
             self.bindings_list.addItem(item)
 
     def _refresh_macros(self):
@@ -573,7 +582,7 @@ class BindingEditorWidget(QWidget):
         for macro in self.current_profile.macros:
             display = f"{macro.name} ({len(macro.steps)} steps)"
             item = QListWidgetItem(display)
-            item.setData(Qt.UserRole, macro)
+            item.setData(Qt.ItemDataRole.UserRole, macro)
             self.macros_list.addItem(item)
 
     def _format_binding(self, binding: Binding) -> str:
@@ -599,7 +608,7 @@ class BindingEditorWidget(QWidget):
             return
 
         dialog = LayerDialog(parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             name, modifier = dialog.get_layer_data()
 
             # Generate unique ID
@@ -625,7 +634,7 @@ class BindingEditorWidget(QWidget):
 
         is_base = layer.id == "base"
         dialog = LayerDialog(layer=layer, is_base=is_base, parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             name, modifier = dialog.get_layer_data()
             layer.name = name
             if not is_base:
@@ -668,7 +677,7 @@ class BindingEditorWidget(QWidget):
 
         macros = self.current_profile.macros if self.current_profile else []
         dialog = BindingDialog(macros=macros, parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             binding = dialog.get_binding()
             if binding:
                 layer.bindings.append(binding)
@@ -677,7 +686,7 @@ class BindingEditorWidget(QWidget):
 
     def _edit_binding(self, item: QListWidgetItem):
         """Edit a binding from double-click."""
-        binding = item.data(Qt.UserRole)
+        binding = item.data(Qt.ItemDataRole.UserRole)
         if binding:
             self._edit_binding_dialog(binding)
 
@@ -685,7 +694,7 @@ class BindingEditorWidget(QWidget):
         """Edit the selected binding."""
         item = self.bindings_list.currentItem()
         if item:
-            binding = item.data(Qt.UserRole)
+            binding = item.data(Qt.ItemDataRole.UserRole)
             if binding:
                 self._edit_binding_dialog(binding)
 
@@ -697,7 +706,7 @@ class BindingEditorWidget(QWidget):
 
         macros = self.current_profile.macros if self.current_profile else []
         dialog = BindingDialog(binding=binding, macros=macros, parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             new_binding = dialog.get_binding()
             if new_binding:
                 # Replace binding
@@ -714,7 +723,7 @@ class BindingEditorWidget(QWidget):
 
         item = self.bindings_list.currentItem()
         if item:
-            binding = item.data(Qt.UserRole)
+            binding = item.data(Qt.ItemDataRole.UserRole)
             if binding in layer.bindings:
                 layer.bindings.remove(binding)
                 self._refresh_bindings()
@@ -726,7 +735,7 @@ class BindingEditorWidget(QWidget):
             return
 
         dialog = MacroDialog(parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             macro = dialog.get_macro()
             if macro:
                 self.current_profile.macros.append(macro)
@@ -735,7 +744,7 @@ class BindingEditorWidget(QWidget):
 
     def _edit_macro(self, item: QListWidgetItem):
         """Edit a macro from double-click."""
-        macro = item.data(Qt.UserRole)
+        macro = item.data(Qt.ItemDataRole.UserRole)
         if macro:
             self._edit_macro_dialog(macro)
 
@@ -743,7 +752,7 @@ class BindingEditorWidget(QWidget):
         """Edit the selected macro."""
         item = self.macros_list.currentItem()
         if item:
-            macro = item.data(Qt.UserRole)
+            macro = item.data(Qt.ItemDataRole.UserRole)
             if macro:
                 self._edit_macro_dialog(macro)
 
@@ -753,7 +762,7 @@ class BindingEditorWidget(QWidget):
             return
 
         dialog = MacroDialog(macro=macro, parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             new_macro = dialog.get_macro()
             if new_macro:
                 # Preserve original ID
@@ -770,7 +779,7 @@ class BindingEditorWidget(QWidget):
 
         item = self.macros_list.currentItem()
         if item:
-            macro = item.data(Qt.UserRole)
+            macro = item.data(Qt.ItemDataRole.UserRole)
             if macro in self.current_profile.macros:
                 self.current_profile.macros.remove(macro)
                 self._refresh_macros()

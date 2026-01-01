@@ -20,34 +20,34 @@ def apply_dark_theme(app: QApplication) -> None:
     link_color = QColor(70, 150, 90)
 
     # Window
-    palette.setColor(QPalette.Window, dark_bg)
-    palette.setColor(QPalette.WindowText, text_color)
+    palette.setColor(QPalette.ColorRole.Window, dark_bg)
+    palette.setColor(QPalette.ColorRole.WindowText, text_color)
 
     # Base (for text inputs, etc.)
-    palette.setColor(QPalette.Base, darker_bg)
-    palette.setColor(QPalette.AlternateBase, light_bg)
+    palette.setColor(QPalette.ColorRole.Base, darker_bg)
+    palette.setColor(QPalette.ColorRole.AlternateBase, light_bg)
 
     # Text
-    palette.setColor(QPalette.Text, text_color)
-    palette.setColor(QPalette.BrightText, Qt.white)
-    palette.setColor(QPalette.Disabled, QPalette.Text, disabled_text)
+    palette.setColor(QPalette.ColorRole.Text, text_color)
+    palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, disabled_text)
 
     # Buttons
-    palette.setColor(QPalette.Button, light_bg)
-    palette.setColor(QPalette.ButtonText, text_color)
-    palette.setColor(QPalette.Disabled, QPalette.ButtonText, disabled_text)
+    palette.setColor(QPalette.ColorRole.Button, light_bg)
+    palette.setColor(QPalette.ColorRole.ButtonText, text_color)
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, disabled_text)
 
     # Highlights
-    palette.setColor(QPalette.Highlight, highlight)
-    palette.setColor(QPalette.HighlightedText, Qt.black)
+    palette.setColor(QPalette.ColorRole.Highlight, highlight)
+    palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
 
     # Links
-    palette.setColor(QPalette.Link, link_color)
-    palette.setColor(QPalette.LinkVisited, QColor(80, 160, 80))
+    palette.setColor(QPalette.ColorRole.Link, link_color)
+    palette.setColor(QPalette.ColorRole.LinkVisited, QColor(80, 160, 80))
 
     # Tooltips
-    palette.setColor(QPalette.ToolTipBase, dark_bg)
-    palette.setColor(QPalette.ToolTipText, text_color)
+    palette.setColor(QPalette.ColorRole.ToolTipBase, dark_bg)
+    palette.setColor(QPalette.ColorRole.ToolTipText, text_color)
 
     app.setPalette(palette)
 

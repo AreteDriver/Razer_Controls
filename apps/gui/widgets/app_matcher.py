@@ -48,7 +48,9 @@ class AddPatternDialog(QDialog):
         layout.addRow(help_text)
 
         # Buttons
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
@@ -180,7 +182,7 @@ class AppMatcherWidget(QWidget):
             return
 
         dialog = AddPatternDialog(self)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             pattern = dialog.get_pattern()
             if pattern:
                 # Check for duplicates

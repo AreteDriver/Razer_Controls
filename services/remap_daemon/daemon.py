@@ -52,7 +52,10 @@ class RemapDaemon:
                 ecodes.EV_KEY: list(range(0, 256)) + list(range(0x110, 0x120)),
                 ecodes.EV_REL: [ecodes.REL_X, ecodes.REL_Y, ecodes.REL_WHEEL, ecodes.REL_HWHEEL],
             }
-            self.uinput = UInput(capabilities, name="Razer Control Center Virtual Device")
+            self.uinput = UInput(
+                capabilities,
+                name="Razer Control Center Virtual Device",  # type: ignore[arg-type]
+            )
             self.engine.set_uinput(self.uinput)
             logger.info("Created virtual device: %s", self.uinput.name)
         except PermissionError as e:
@@ -81,7 +84,9 @@ class RemapDaemon:
             name="Default Profile",
             description="Default profile - no remapping",
             input_devices=mouse_devices[:1] if mouse_devices else [],
-            layers=[Layer(id="base", name="Base Layer", bindings=[])],
+            layers=[
+                Layer(id="base", name="Base Layer", bindings=[], hold_modifier_input_code=None)
+            ],
             is_default=True,
         )
 
@@ -262,7 +267,8 @@ def main():
         help="Enable automatic profile switching based on active application",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Enable verbose (debug) logging",
     )
