@@ -1,0 +1,103 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of what the bug is.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: input
+    id: distro
+    attributes:
+      label: Linux Distribution
+      description: e.g., Ubuntu 24.04, Fedora 40, Arch
+      placeholder: Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python Version
+      description: Output of `python --version`
+      placeholder: Python 3.12.3
+    validations:
+      required: true
+
+  - type: input
+    id: openrazer
+    attributes:
+      label: OpenRazer Version
+      description: Output of `openrazer-daemon --version` (if applicable)
+      placeholder: 3.7.0
+
+  - type: input
+    id: device
+    attributes:
+      label: Razer Device
+      description: Which Razer device(s) are you using?
+      placeholder: Razer Basilisk V2
+
+  - type: dropdown
+    id: display
+    attributes:
+      label: Display Server
+      options:
+        - X11
+        - Wayland (GNOME)
+        - Wayland (KDE)
+        - Wayland (Other)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Messages
+      description: Any relevant logs or error messages
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
