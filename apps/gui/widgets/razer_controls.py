@@ -67,6 +67,8 @@ class ColorButton(QPushButton):
 class RazerControlsWidget(QWidget):
     """Widget for controlling Razer device lighting and DPI."""
 
+    device_selected = Signal(object)  # Emits RazerDevice when selected
+
     def __init__(self, bridge: OpenRazerBridge, parent=None):
         super().__init__(parent)
         self.bridge = bridge
@@ -217,6 +219,7 @@ class RazerControlsWidget(QWidget):
         if device:
             self.current_device = device
             self._update_ui_for_device(device)
+            self.device_selected.emit(device)
 
     def _update_ui_for_device(self, device: RazerDevice):
         """Update UI for selected device."""

@@ -27,6 +27,7 @@ from .widgets.app_matcher import AppMatcherWidget
 from .widgets.battery_monitor import BatteryMonitorWidget
 from .widgets.binding_editor import BindingEditorWidget
 from .widgets.device_list import DeviceListWidget
+from .widgets.dpi_editor import DPIStageEditor
 from .widgets.macro_editor import MacroEditorWidget
 from .widgets.profile_panel import ProfilePanel
 from .widgets.razer_controls import RazerControlsWidget
@@ -101,7 +102,12 @@ class MainWindow(QMainWindow):
 
         # Razer tab (OpenRazer controls)
         self.razer_tab = RazerControlsWidget(self.openrazer)
+        self.razer_tab.device_selected.connect(self._on_razer_device_selected)
         self.tabs.addTab(self.razer_tab, "Lighting & DPI")
+
+        # DPI Stages tab
+        self.dpi_editor = DPIStageEditor(self.openrazer)
+        self.tabs.addTab(self.dpi_editor, "DPI Stages")
 
         # Battery tab
         self.battery_monitor = BatteryMonitorWidget(self.openrazer)
@@ -316,6 +322,10 @@ class MainWindow(QMainWindow):
             "Low Battery",
             f"{device_name} battery is low ({level}%).\n\nPlease charge your device.",
         )
+
+    def _on_razer_device_selected(self, device):
+        """Handle Razer device selection - update DPI editor."""
+        self.dpi_editor.set_device(device)
 
     def _refresh_devices(self):
         """Refresh device list."""
