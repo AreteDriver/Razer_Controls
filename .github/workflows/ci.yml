@@ -21,6 +21,21 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+          pip install mypy types-setuptools
+      - name: Type check with mypy
+        run: mypy --ignore-missing-imports --no-error-summary apps/ services/ crates/ tools/
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -34,5 +49,5 @@ jobs:
           pip install -e ".[dev]" || pip install -e .
           pip install pytest
       - name: Run tests
-        run: pytest -v || echo "No tests found"
+        run: pytest -v
 

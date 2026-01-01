@@ -1,5 +1,6 @@
 """Remap daemon - main daemon that grabs devices and runs the remap engine."""
 
+import logging
 import selectors
 import signal
 import sys
@@ -12,6 +13,8 @@ from crates.profile_schema import Profile, ProfileLoader
 from services.app_watcher import AppWatcher
 
 from .engine import RemapEngine
+
+logger = logging.getLogger(__name__)
 
 
 class RemapDaemon:
@@ -34,7 +37,7 @@ class RemapDaemon:
         # Load active profile
         profile = self.profile_loader.load_active_profile()
         if not profile:
-            print("No active profile found. Creating default profile...")
+            logger.info("No active profile found. Creating default profile...")
             profile = self._create_default_profile()
             self.profile_loader.save_profile(profile)
             self.profile_loader.set_active_profile(profile.id)
@@ -51,11 +54,15 @@ class RemapDaemon:
             }
             self.uinput = UInput(capabilities, name="Razer Control Center Virtual Device")
             self.engine.set_uinput(self.uinput)
-            print(f"Created virtual device: {self.uinput.name}")
-        except Exception as e:
-            print(f"Failed to create uinput device: {e}")
-            print("Make sure the uinput module is loaded and you have permissions.")
-            print("Try: sudo modprobe uinput")
+            logger.info("Created virtual device: %s", self.uinput.name)
+        except PermissionError as e:
+            logger.error("Permission denied creating uinput device: %s", e)
+            logger.error("Make sure the uinput module is loaded and you have permissions.")
+            logger.error("Try: sudo modprobe uinput")
+            return False
+        except OSError as e:
+            logger.error("Failed to create uinput device: %s", e)
+            logger.error("Try: sudo modprobe uinput")
             return False
 
         # Grab configured devices
@@ -81,23 +88,23 @@ class RemapDaemon:
     def _grab_devices(self, profile: Profile) -> bool:
         """Grab the input devices specified in the profile."""
         if not profile.input_devices:
-            print("No input devices configured in profile")
+            logger.warning("No input devices configured in profile")
             # Scan for Razer devices and show available
             devices = self.device_registry.scan_devices()
             razer_devices = [d for d in devices if "razer" in d.stable_id.lower()]
             if razer_devices:
-                print("\nAvailable Razer devices:")
+                logger.info("Available Razer devices:")
                 for d in razer_devices:
-                    print(f"  {d.stable_id}")
-                    print(f"    Name: {d.name}")
-                    print(f"    Path: {d.event_path}")
+                    logger.info("  %s", d.stable_id)
+                    logger.info("    Name: %s", d.name)
+                    logger.info("    Path: %s", d.event_path)
             return False
 
         grabbed_any = False
         for stable_id in profile.input_devices:
             event_path = self.device_registry.get_event_path(stable_id)
             if not event_path:
-                print(f"Device not found: {stable_id}")
+                logger.warning("Device not found: %s", stable_id)
                 continue
 
             try:
@@ -105,25 +112,25 @@ class RemapDaemon:
                 dev.grab()
                 self.grabbed_devices[stable_id] = dev
                 self.selector.register(dev, selectors.EVENT_READ)
-                print(f"Grabbed device: {dev.name} ({stable_id})")
+                logger.info("Grabbed device: %s (%s)", dev.name, stable_id)
                 grabbed_any = True
             except PermissionError:
-                print(f"Permission denied for {event_path}")
-                print("Add yourself to the 'input' group or run with sudo")
-            except Exception as e:
-                print(f"Failed to grab {stable_id}: {e}")
+                logger.error("Permission denied for %s", event_path)
+                logger.error("Add yourself to the 'input' group or run with sudo")
+            except OSError as e:
+                logger.error("Failed to grab %s: %s", stable_id, e)
 
         return grabbed_any
 
     def run(self) -> None:
         """Run the daemon main loop."""
         if not self.engine or not self.grabbed_devices:
-            print("Daemon not properly set up")
+            logger.error("Daemon not properly set up")
             return
 
         # Set up signal handlers
         def handle_signal(signum, frame):
-            print("\nShutting down...")
+            logger.info("Received signal %s, shutting down...", signum)
             self.running = False
 
         signal.signal(signal.SIGINT, handle_signal)
@@ -134,7 +141,7 @@ class RemapDaemon:
         # Start app watcher if enabled
         self._start_app_watcher()
 
-        print("Remap daemon running. Press Ctrl+C to stop.")
+        logger.info("Remap daemon running. Press Ctrl+C to stop.")
 
         try:
             while self.running:
@@ -147,8 +154,8 @@ class RemapDaemon:
                             if not handled:
                                 # Pass through unhandled events
                                 self._passthrough_event(event)
-                    except Exception as e:
-                        print(f"Error reading device: {e}")
+                    except OSError as e:
+                        logger.error("Error reading device: %s", e)
         finally:
             self.cleanup()
 
@@ -161,7 +168,7 @@ class RemapDaemon:
 
     def cleanup(self) -> None:
         """Clean up resources."""
-        print("Cleaning up...")
+        logger.info("Cleaning up...")
 
         # Stop app watcher
         self._stop_app_watcher()
@@ -174,12 +181,12 @@ class RemapDaemon:
         for stable_id, dev in self.grabbed_devices.items():
             try:
                 dev.ungrab()
-                print(f"Released: {stable_id}")
-            except Exception:
+                logger.info("Released: %s", stable_id)
+            except OSError:
                 pass
             try:
                 self.selector.unregister(dev)
-            except Exception:
+            except (KeyError, ValueError):
                 pass
 
         self.grabbed_devices.clear()
@@ -188,7 +195,7 @@ class RemapDaemon:
         if self.uinput:
             try:
                 self.uinput.close()
-            except Exception:
+            except OSError:
                 pass
             self.uinput = None
 
@@ -199,7 +206,7 @@ class RemapDaemon:
         profile = self.profile_loader.load_active_profile()
         if profile and self.engine:
             self.engine.reload_profile(profile)
-            print(f"Reloaded profile: {profile.name}")
+            logger.info("Reloaded profile: %s", profile.name)
 
     def switch_profile(self, profile: Profile) -> None:
         """Switch to a different profile."""
@@ -211,7 +218,7 @@ class RemapDaemon:
 
         # Reload the engine with new profile
         self.engine.reload_profile(profile)
-        print(f"Switched to profile: {profile.name}")
+        logger.info("Switched to profile: %s", profile.name)
 
     def _start_app_watcher(self) -> None:
         """Start the app watcher if enabled."""
@@ -222,9 +229,9 @@ class RemapDaemon:
         self.app_watcher.on_profile_change = self.switch_profile
 
         if self.app_watcher.start():
-            print(f"App watcher enabled (backend: {self.app_watcher.backend_name})")
+            logger.info("App watcher enabled (backend: %s)", self.app_watcher.backend_name)
         else:
-            print("App watcher could not start - no backend available")
+            logger.warning("App watcher could not start - no backend available")
             self.app_watcher = None
 
     def _stop_app_watcher(self) -> None:
@@ -254,7 +261,20 @@ def main():
         action="store_true",
         help="Enable automatic profile switching based on active application",
     )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose (debug) logging",
+    )
     args = parser.parse_args()
+
+    # Configure logging for systemd compatibility
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(levelname)s: %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+    )
 
     if args.list_devices:
         registry = DeviceRegistry(args.config_dir)
@@ -278,7 +298,7 @@ def main():
     daemon = RemapDaemon(args.config_dir, enable_app_watcher=args.app_watcher)
 
     if not daemon.setup():
-        print("Failed to set up daemon")
+        logger.error("Failed to set up daemon")
         sys.exit(1)
 
     daemon.run()

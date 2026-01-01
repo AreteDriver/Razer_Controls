@@ -1,6 +1,6 @@
 [Unit]
 Description=Razer Control Center Remap Daemon
-Documentation=https://github.com/arete/razer-control-center
+Documentation=https://github.com/AreteDriver/Razer_Controls
 After=graphical-session.target
 
 [Service]
