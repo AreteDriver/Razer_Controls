@@ -1,67 +1,123 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-appimage:
+    name: Build AppImage
+    runs-on: ubuntu-22.04
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install build dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-cursor0 \
+            libxcb-xinerama0 \
+            libxkbcommon-x11-0 \
+            libgl1-mesa-glx \
+            libegl1 \
+            libfuse2
+
+      - name: Build AppImage
+        run: |
+          # Create build directory
+          BUILD_DIR="${PWD}/build/appimage"
+          APPDIR="${BUILD_DIR}/Razer_Control_Center.AppDir"
+          mkdir -p "${APPDIR}/usr/bin"
+          mkdir -p "${APPDIR}/usr/lib/python3/site-packages"
+          mkdir -p "${APPDIR}/usr/share/applications"
+          mkdir -p "${APPDIR}/usr/share/icons/hicolor/scalable/apps"
+
+          # Copy AppRun and desktop file
+          cp packaging/appimage/AppRun "${APPDIR}/"
+          chmod +x "${APPDIR}/AppRun"
+          cp packaging/appimage/razer-control-center.desktop "${APPDIR}/"
+          cp packaging/appimage/razer-control-center.desktop "${APPDIR}/usr/share/applications/"
+          cp packaging/appimage/razer-control-center.svg "${APPDIR}/"
+          cp packaging/appimage/razer-control-center.svg "${APPDIR}/usr/share/icons/hicolor/scalable/apps/"
+
+          # Create venv and install
+          python3 -m venv "${BUILD_DIR}/venv"
+          source "${BUILD_DIR}/venv/bin/activate"
+          pip install --upgrade pip wheel
+          pip install .
+
+          # Bundle Python
+          PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+          cp "$(which python3)" "${APPDIR}/usr/bin/"
+          cp -r "${BUILD_DIR}/venv/lib/python${PYTHON_VERSION}/site-packages/"* "${APPDIR}/usr/lib/python3/site-packages/"
+
+          # Copy application source
+          for dir in apps services crates tools; do
+            cp -r "${dir}" "${APPDIR}/usr/lib/python3/site-packages/"
+          done
+
+          # Copy Python stdlib
+          PYTHON_LIB=$(python3 -c "import sysconfig; print(sysconfig.get_path('stdlib'))")
+          mkdir -p "${APPDIR}/usr/lib/python${PYTHON_VERSION}"
+          cp -r "${PYTHON_LIB}/"*.py "${APPDIR}/usr/lib/python${PYTHON_VERSION}/" 2>/dev/null || true
+          for subdir in collections encodings importlib json logging urllib email http; do
+            [ -d "${PYTHON_LIB}/${subdir}" ] && cp -r "${PYTHON_LIB}/${subdir}" "${APPDIR}/usr/lib/python${PYTHON_VERSION}/"
+          done
+          [ -d "${PYTHON_LIB}/lib-dynload" ] && cp -r "${PYTHON_LIB}/lib-dynload" "${APPDIR}/usr/lib/python${PYTHON_VERSION}/"
+
+          deactivate
+
+          # Download appimagetool
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
+            -O "${BUILD_DIR}/appimagetool"
+          chmod +x "${BUILD_DIR}/appimagetool"
+
+          # Build AppImage
+          cd "${BUILD_DIR}"
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool --no-appstream "${APPDIR}"
+
+          # Move to dist
+          mkdir -p "${GITHUB_WORKSPACE}/dist"
+          mv Razer_Control_Center-x86_64.AppImage "${GITHUB_WORKSPACE}/dist/"
+
+      - name: Upload AppImage to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Razer_Control_Center-x86_64.AppImage
+
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/razer-control-center
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
         run: pip install build
 
       - name: Build package
         run: python -m build
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write  # Required for trusted publishing
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        # Uses trusted publishing - no token needed
-        # Configure at: https://pypi.org/manage/project/razer-control-center/settings/publishing/
-
-  github-release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/*
-          generate_release_notes: true
