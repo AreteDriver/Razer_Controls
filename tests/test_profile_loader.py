@@ -1,13 +1,17 @@
 """Tests for the profile loader."""
 
-import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from crates.profile_schema import Profile, ProfileLoader
-from crates.profile_schema.schema import ActionType, Binding, Layer, MacroAction, MacroStep, MacroStepType
+from crates.profile_schema.schema import (
+    ActionType,
+    Binding,
+    Layer,
+    MacroAction,
+    MacroStep,
+    MacroStepType,
+)
 
 
 class TestProfileLoader:

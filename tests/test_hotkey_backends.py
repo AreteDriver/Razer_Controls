@@ -3,10 +3,7 @@
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from apps.tray.hotkey_backends import (
-    HotkeyBackend,
     PortalGlobalShortcuts,
     X11Hotkeys,
     to_portal_format,

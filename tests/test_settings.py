@@ -4,8 +4,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from crates.profile_schema.settings import (
     AppSettings,
     HotkeyBinding,

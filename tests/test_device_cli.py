@@ -231,7 +231,7 @@ class TestCmdDpi:
         """Test setting DPI with X and Y values."""
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
             args = argparse.Namespace(device="basilisk", dpi="800x600")
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_dpi(args)
 
             assert result == 0

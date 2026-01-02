@@ -131,7 +131,6 @@ class TestRecordingWorker:
     def test_run_emits_step_recorded(self):
         """Test that step_recorded signal is emitted during recording."""
         from apps.gui.widgets.macro_editor import RecordingWorker
-        from services.macro_engine.recorder import RecordedEvent
 
         worker = RecordingWorker("/dev/input/event0")
 
