@@ -16,6 +16,7 @@ from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QMenu,
     QMessageBox,
     QSystemTrayIcon,
@@ -179,6 +180,14 @@ class RazerTray(QSystemTrayIcon):
             action = self.profiles_menu.addAction(name)
             action.setData(profile_id)
             action.triggered.connect(lambda checked, pid=profile_id: self._switch_profile(pid))
+
+        self.profiles_menu.addSeparator()
+
+        # Export/Import
+        export_action = self.profiles_menu.addAction("Export All...")
+        export_action.triggered.connect(self._export_profiles)
+        import_action = self.profiles_menu.addAction("Import...")
+        import_action.triggered.connect(self._import_profile)
 
         self.profiles_menu.addSeparator()
         refresh = self.profiles_menu.addAction("Refresh")
@@ -469,6 +478,86 @@ class RazerTray(QSystemTrayIcon):
                 self._notify("Error", f"Failed to enable autostart: {e}", error=True)
 
         self._update_autostart_status()
+
+    def _export_profiles(self) -> None:
+        """Export all profiles to a zip file."""
+        import json
+        import zipfile
+        from datetime import datetime
+
+        profiles = self.profile_loader.list_profiles()
+        if not profiles:
+            self._notify("Export", "No profiles to export", error=True)
+            return
+
+        # Get save location
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        default_name = f"razer_profiles_{timestamp}.zip"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "Export Profiles",
+            str(Path.home() / default_name),
+            "Zip Files (*.zip);;All Files (*)",
+        )
+
+        if not file_path:
+            return
+
+        try:
+            with zipfile.ZipFile(file_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                for pid in profiles:
+                    profile = self.profile_loader.load_profile(pid)
+                    if profile:
+                        data = profile.model_dump(mode="json")
+                        zf.writestr(f"{pid}.json", json.dumps(data, indent=2))
+
+            self._notify("Export Complete", f"Exported {len(profiles)} profile(s)")
+        except Exception as e:
+            self._notify("Export Failed", str(e), error=True)
+
+    def _import_profile(self) -> None:
+        """Import a profile from a JSON file."""
+        import json
+
+        from crates.profile_schema import Profile
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            None,
+            "Import Profile",
+            str(Path.home()),
+            "JSON Files (*.json);;All Files (*)",
+        )
+
+        if not file_path:
+            return
+
+        try:
+            data = json.loads(Path(file_path).read_text())
+            profile = Profile.model_validate(data)
+
+            # Check for existing
+            existing = self.profile_loader.load_profile(profile.id)
+            if existing:
+                reply = QMessageBox.question(
+                    None,
+                    "Profile Exists",
+                    f"Profile '{profile.id}' already exists. Overwrite?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+
+            if self.profile_loader.save_profile(profile):
+                self._notify("Import Complete", f"Imported '{profile.name}'")
+                self._update_profiles_menu()
+            else:
+                self._notify("Import Failed", "Could not save profile", error=True)
+
+        except json.JSONDecodeError as e:
+            self._notify("Import Failed", f"Invalid JSON: {e}", error=True)
+        except Exception as e:
+            self._notify("Import Failed", str(e), error=True)
 
     def _check_openrazer(self) -> None:
         """Show OpenRazer status."""

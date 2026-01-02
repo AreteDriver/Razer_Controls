@@ -257,7 +257,7 @@ def cmd_copy(args) -> int:
 
 
 def cmd_export(args) -> int:
-    """Export a profile to stdout as JSON."""
+    """Export a profile to JSON."""
     loader = get_loader(args.config_dir)
 
     profile = loader.load_profile(args.profile_id)
@@ -266,7 +266,60 @@ def cmd_export(args) -> int:
         return 1
 
     data = profile.model_dump(mode="json")
-    print(json.dumps(data, indent=2))
+    json_str = json.dumps(data, indent=2)
+
+    if args.output:
+        output_path = Path(args.output)
+        output_path.write_text(json_str)
+        print(f"Exported '{profile.name}' to {output_path}")
+    else:
+        print(json_str)
+
+    return 0
+
+
+def cmd_export_all(args) -> int:
+    """Export all profiles to a directory or zip file."""
+    loader = get_loader(args.config_dir)
+    profiles = loader.list_profiles()
+
+    if not profiles:
+        print("No profiles to export.")
+        return 1
+
+    output_path = Path(args.output)
+
+    if args.zip:
+        # Export as zip
+        import zipfile
+        from datetime import datetime
+
+        if output_path.is_dir():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = output_path / f"razer_profiles_{timestamp}.zip"
+
+        with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for pid in profiles:
+                profile = loader.load_profile(pid)
+                if profile:
+                    data = profile.model_dump(mode="json")
+                    zf.writestr(f"{pid}.json", json.dumps(data, indent=2))
+
+        print(f"Exported {len(profiles)} profile(s) to {output_path}")
+    else:
+        # Export to directory
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        for pid in profiles:
+            profile = loader.load_profile(pid)
+            if profile:
+                data = profile.model_dump(mode="json")
+                file_path = output_path / f"{pid}.json"
+                file_path.write_text(json.dumps(data, indent=2))
+                print(f"  Exported: {pid}.json")
+
+        print(f"\nExported {len(profiles)} profile(s) to {output_path}/")
+
     return 0
 
 
@@ -422,7 +475,8 @@ Examples:
   %(prog)s activate gaming               Set 'gaming' as active
   %(prog)s delete old_profile            Delete a profile
   %(prog)s copy gaming gaming_backup     Copy a profile
-  %(prog)s export gaming > backup.json   Export to file
+  %(prog)s export gaming -o backup.json  Export to file
+  %(prog)s export-all ~/backup --zip     Export all as zip
   %(prog)s import backup.json            Import from file
   %(prog)s validate gaming               Validate bindings
   %(prog)s devices                       List available devices
@@ -477,7 +531,14 @@ Examples:
     # export
     sub_export = subparsers.add_parser("export", help="Export profile to JSON")
     sub_export.add_argument("profile_id", help="Profile ID to export")
+    sub_export.add_argument("--output", "-o", help="Output file (default: stdout)")
     sub_export.set_defaults(func=cmd_export)
+
+    # export-all
+    sub_export_all = subparsers.add_parser("export-all", help="Export all profiles")
+    sub_export_all.add_argument("output", help="Output directory or zip file")
+    sub_export_all.add_argument("--zip", "-z", action="store_true", help="Export as zip file")
+    sub_export_all.set_defaults(func=cmd_export_all)
 
     # import
     sub_import = subparsers.add_parser("import", help="Import profile from JSON")
