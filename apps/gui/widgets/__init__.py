@@ -8,6 +8,7 @@ from .dpi_editor import DPIStageEditor
 from .macro_editor import MacroEditorWidget
 from .profile_panel import ProfilePanel
 from .razer_controls import RazerControlsWidget
+from .setup_wizard import SetupWizard
 
 __all__ = [
     "AppMatcherWidget",
@@ -18,4 +19,5 @@ __all__ = [
     "MacroEditorWidget",
     "ProfilePanel",
     "RazerControlsWidget",
+    "SetupWizard",
 ]

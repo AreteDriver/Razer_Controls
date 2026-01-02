@@ -119,6 +119,45 @@ class MainWindow(QMainWindow):
         self._setup_daemon_tab()
         self.tabs.addTab(self.daemon_tab, "Daemon")
 
+        # Menu bar
+        self._setup_menu()
+
+    def _setup_menu(self):
+        """Set up the menu bar."""
+        menubar = self.menuBar()
+
+        # Help menu
+        help_menu = menubar.addMenu("Help")
+
+        wizard_action = help_menu.addAction("Run Setup Wizard...")
+        wizard_action.triggered.connect(self._run_setup_wizard)
+
+        help_menu.addSeparator()
+
+        about_action = help_menu.addAction("About")
+        about_action.triggered.connect(self._show_about)
+
+    def _run_setup_wizard(self):
+        """Open the setup wizard."""
+        from .widgets.setup_wizard import SetupWizard
+
+        wizard = SetupWizard(self)
+        wizard.exec()
+
+        # Refresh profiles after wizard
+        self.profile_panel.refresh()
+
+    def _show_about(self):
+        """Show about dialog."""
+        QMessageBox.about(
+            self,
+            "About Razer Control Center",
+            "Razer Control Center for Linux\n\n"
+            "Configure button remapping, macros, RGB lighting,\n"
+            "and DPI settings for your Razer devices.\n\n"
+            "https://github.com/AreteDriver/Razer_Controls",
+        )
+
     def _setup_devices_tab(self):
         """Set up the devices configuration tab."""
         layout = QVBoxLayout(self.devices_tab)

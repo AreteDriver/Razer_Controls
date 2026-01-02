@@ -2,7 +2,9 @@
 
 import sys
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog
+
+from crates.profile_schema import ProfileLoader
 
 from .main_window import MainWindow
 
@@ -19,6 +21,15 @@ def main():
     from .theme import apply_dark_theme
 
     apply_dark_theme(app)
+
+    # Check if first run (no profiles exist)
+    loader = ProfileLoader()
+    if not loader.list_profiles():
+        from .widgets.setup_wizard import SetupWizard
+
+        wizard = SetupWizard()
+        if wizard.exec() != QDialog.DialogCode.Accepted:
+            sys.exit(0)  # User cancelled setup
 
     window = MainWindow()
     window.show()
