@@ -1,10 +1,9 @@
 # Razer Control Center for Linux
 
+[![PyPI](https://img.shields.io/pypi/v/razer-control-center)](https://pypi.org/project/razer-control-center/)
+[![Python](https://img.shields.io/pypi/pyversions/razer-control-center)](https://pypi.org/project/razer-control-center/)
 [![CI](https://github.com/AreteDriver/Razer_Controls/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/Razer_Controls/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/AreteDriver/Razer_Controls/graph/badge.svg)](https://codecov.io/gh/AreteDriver/Razer_Controls)
-[![Tests](https://img.shields.io/badge/tests-368%20passed-brightgreen.svg)](https://github.com/AreteDriver/Razer_Controls/actions)
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/AreteDriver/Razer_Controls/releases)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)]()
 
