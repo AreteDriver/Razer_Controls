@@ -295,3 +295,43 @@ class TestProfileLoader:
 
             assert loaded is not None
             assert loaded.match_process_names == ["firefox", "chrome*", "*.exe"]
+
+    def test_save_profile_handles_write_error(self):
+        """Test save_profile handles write errors gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            loader = ProfileLoader(config_dir=Path(tmpdir))
+            profile = Profile(
+                id="test-profile",
+                name="Test",
+                input_devices=[],
+            )
+
+            # Make profiles directory read-only to cause write error
+            loader.profiles_dir.chmod(0o444)
+            try:
+                result = loader.save_profile(profile)
+                assert result is False
+            finally:
+                # Restore permissions for cleanup
+                loader.profiles_dir.chmod(0o755)
+
+    def test_save_global_macros_handles_write_error(self):
+        """Test save_global_macros handles write errors gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            loader = ProfileLoader(config_dir=Path(tmpdir))
+            macros = [
+                MacroAction(
+                    id="macro1",
+                    name="Test Macro",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="a")],
+                ),
+            ]
+
+            # Make config directory read-only to cause write error
+            loader.config_dir.chmod(0o444)
+            try:
+                result = loader.save_global_macros(macros)
+                assert result is False
+            finally:
+                # Restore permissions for cleanup
+                loader.config_dir.chmod(0o755)

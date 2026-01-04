@@ -78,6 +78,37 @@ class TestZone:
         )
         assert zone.description == ""
 
+    def test_zone_converts_non_list_keys_to_list(self):
+        """Test that Zone.__post_init__ converts non-list keys to list."""
+        # Pass a tuple instead of a list
+        keys_tuple = (KeyPosition(0, 0, "A"), KeyPosition(0, 1, "B"))
+        zone = Zone(
+            id="tuple_zone",
+            name="Tuple Zone",
+            zone_type=ZoneType.CUSTOM,
+            keys=keys_tuple,  # type: ignore
+        )
+        # Should be converted to list
+        assert isinstance(zone.keys, list)
+        assert len(zone.keys) == 2
+
+    def test_zone_converts_generator_keys_to_list(self):
+        """Test that Zone.__post_init__ converts generator keys to list."""
+        # Pass a generator
+        def key_gen():
+            yield KeyPosition(1, 0, "Q")
+            yield KeyPosition(1, 1, "W")
+
+        zone = Zone(
+            id="gen_zone",
+            name="Generator Zone",
+            zone_type=ZoneType.CUSTOM,
+            keys=key_gen(),  # type: ignore
+        )
+        # Should be converted to list
+        assert isinstance(zone.keys, list)
+        assert len(zone.keys) == 2
+
 
 class TestKeyboardLayout:
     """Tests for KeyboardLayout dataclass."""

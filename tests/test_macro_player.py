@@ -435,3 +435,125 @@ class TestComplexMacro:
         # Text "hi" - h and i keys
         assert call(ecodes.EV_KEY, ecodes.KEY_H, 1) in calls
         assert call(ecodes.EV_KEY, ecodes.KEY_I, 1) in calls
+
+
+class TestUinputManagement:
+    """Tests for UInput device management."""
+
+    def test_set_uinput_closes_owned_uinput(self):
+        """Test set_uinput closes previously owned uinput."""
+        with patch("services.macro_engine.player.UInput") as mock_uinput_class:
+            mock_instance = MagicMock()
+            mock_uinput_class.return_value = mock_instance
+
+            player = MacroPlayer()
+            player._ensure_uinput()  # Creates owned uinput
+            assert player._owns_uinput is True
+
+            # Now set a new uinput
+            new_uinput = MagicMock()
+            player.set_uinput(new_uinput)
+
+            # Old uinput should be closed
+            mock_instance.close.assert_called_once()
+            assert player._owns_uinput is False
+            assert player._uinput is new_uinput
+
+
+class TestCancellationEdgeCases:
+    """Tests for cancellation edge cases."""
+
+    def test_cancel_during_step_loop_inner(self, mock_uinput):
+        """Test cancellation during inner step iteration via step callback."""
+        macro = MacroAction(
+            id="test",
+            name="Test",
+            steps=[
+                MacroStep(type=MacroStepType.KEY_PRESS, key="A"),
+                MacroStep(type=MacroStepType.KEY_PRESS, key="B"),
+                MacroStep(type=MacroStepType.KEY_PRESS, key="C"),
+            ],
+        )
+        player = MacroPlayer(uinput=mock_uinput)
+
+        # Use the step callback to cancel after first step
+        def on_step(step, index):
+            if index == 0:
+                player._cancelled = True
+
+        player.set_step_callback(on_step)
+
+        result = player.play(macro)
+
+        # Should have been cancelled during step loop (line 96)
+        assert result is False
+
+    def test_cancel_during_repeat_loop_outer(self, mock_uinput):
+        """Test cancellation at start of repeat loop (line 92)."""
+        macro = MacroAction(
+            id="test",
+            name="Test",
+            steps=[
+                MacroStep(type=MacroStepType.KEY_PRESS, key="A"),
+            ],
+            repeat_count=3,
+            repeat_delay_ms=0,  # No delay so cancel is caught at line 91-92
+        )
+        player = MacroPlayer(uinput=mock_uinput)
+
+        repeat_count = [0]
+
+        # Use step callback to track repeats and cancel after first
+        def on_step(step, index):
+            repeat_count[0] += 1
+            if repeat_count[0] == 1:
+                # Cancel after first repeat's step executes
+                # The cancel will be caught at line 91-92 when starting repeat 2
+                player._cancelled = True
+
+        player.set_step_callback(on_step)
+
+        result = player.play(macro)
+
+        # Should have been cancelled at outer loop check (line 92)
+        assert result is False
+        assert repeat_count[0] == 1  # Only first repeat ran
+
+    def test_cancel_during_repeat_delay(self, mock_uinput):
+        """Test cancellation during repeat delay."""
+        macro = MacroAction(
+            id="test",
+            name="Test",
+            steps=[
+                MacroStep(type=MacroStepType.KEY_PRESS, key="A"),
+            ],
+            repeat_count=3,
+            repeat_delay_ms=200,  # 200ms delay between repeats
+        )
+        player = MacroPlayer(uinput=mock_uinput)
+
+        def cancel_during_delay():
+            time.sleep(0.05)  # Wait for first repeat to finish
+            player.cancel()
+
+        thread = threading.Thread(target=cancel_during_delay)
+        thread.start()
+
+        result = player.play(macro)
+        thread.join()
+
+        # Should have been cancelled during repeat delay
+        assert result is False
+
+    def test_cancel_during_text_playback(self, mock_uinput):
+        """Test cancellation during text playback."""
+        player = MacroPlayer(uinput=mock_uinput)
+
+        # Set cancelled before calling _type_text
+        player._cancelled = True
+
+        # Directly call _type_text - should return early
+        player._type_text("Hello World!", 1.0)
+
+        # No writes should have happened since cancelled immediately
+        assert mock_uinput.write.call_count == 0

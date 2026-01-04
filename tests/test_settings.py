@@ -382,3 +382,19 @@ class TestSettingsManager:
             # Verify persisted
             manager2 = SettingsManager(config_dir=Path(tmpdir))
             assert manager2.settings.hotkeys.profile_hotkeys[0].key == "1"
+
+    def test_save_handles_write_error(self):
+        """save should handle write errors gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir)
+            manager = SettingsManager(config_dir=config_dir)
+            manager.load()
+
+            # Make config directory read-only to cause write error
+            config_dir.chmod(0o444)
+            try:
+                result = manager.save()
+                assert result is False
+            finally:
+                # Restore permissions for cleanup
+                config_dir.chmod(0o755)

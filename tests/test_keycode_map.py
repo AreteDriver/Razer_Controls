@@ -287,6 +287,161 @@ class TestEdgeCases:
         assert schema_to_evdev_code("VOL_UP") == ecodes.KEY_VOLUMEUP
         assert schema_to_evdev_code("VOL_DOWN") == ecodes.KEY_VOLUMEDOWN
 
+    def test_schema_to_evdev_code_direct_evdev_name(self):
+        """Test schema_to_evdev_code with direct evdev name in SCHEMA_TO_EVDEV."""
+        # KEY_A is in SCHEMA_TO_EVDEV, should return int code
+        code = schema_to_evdev_code("KEY_A")
+        assert code == ecodes.KEY_A
+        assert isinstance(code, int)
+
+    def test_schema_to_evdev_code_with_key_prefix(self):
+        """Test schema_to_evdev_code falls back to KEY_ prefix."""
+        # "ESC" maps to KEY_ESC, but also test direct ecodes access
+        code = schema_to_evdev_code("ESC")
+        assert code == ecodes.KEY_ESC
+
+    def test_schema_to_evdev_code_with_btn_prefix(self):
+        """Test schema_to_evdev_code tries BTN_ prefix."""
+        # BTN_LEFT is in mapping, but test the fallback path
+        code = schema_to_evdev_code("LEFT")  # Could match BTN_LEFT via prefix
+        # This should return KEY_LEFT, not BTN_LEFT
+        assert code == ecodes.KEY_LEFT
+
+    def test_is_valid_key_direct_evdev_lookup(self):
+        """Test is_valid_key with direct evdev name."""
+        # Test getattr(ecodes, key_name) path
+        assert is_valid_key("KEY_POWER")
+        assert is_valid_key("BTN_MOUSE")
+
+    def test_is_valid_key_with_key_prefix_fallback(self):
+        """Test is_valid_key tries KEY_ prefix."""
+        # CAPSLOCK should match via KEY_CAPSLOCK prefix lookup
+        assert is_valid_key("CAPS")  # Via schema mapping
+        # Direct evdev code should also work
+        assert is_valid_key("KEY_CAPSLOCK")
+
+    def test_is_valid_key_with_btn_prefix_fallback(self):
+        """Test is_valid_key tries BTN_ prefix."""
+        # Test a button that exists in ecodes
+        assert is_valid_key("BTN_SIDE")
+
+    def test_validate_key_unknown_no_suggestions(self):
+        """Test validate_key with unknown key and no similar keys."""
+        # Use a string that won't match any key substring
+        valid, msg = validate_key("QQQZZZ999")
+        assert not valid
+        assert "Unknown key" in msg
+        # Either shows suggestions or --list hint
+        assert "Did you mean" in msg or "--list" in msg
+
+    def test_evdev_event_to_schema_list_code_name(self):
+        """Test evdev_event_to_schema when code_name is a list."""
+        from unittest.mock import patch
+        import crates.keycode_map.mapping as mapping_module
+
+        # Mock the ecodes module's BTN dict to return a list
+        original_btn = ecodes.BTN
+        try:
+            # Create a modified BTN dict that returns a list for BTN_LEFT
+            class MockBTN(dict):
+                def get(self, key, default=None):
+                    if key == ecodes.BTN_LEFT:
+                        return ["BTN_LEFT", "BTN_MOUSE"]
+                    return super().get(key, default)
+
+            mock_btn = MockBTN(original_btn)
+            with patch.object(mapping_module.ecodes, "BTN", mock_btn):
+                result = evdev_event_to_schema(ecodes.EV_KEY, ecodes.BTN_LEFT)
+                # Should extract first element and map to schema
+                assert result == "MOUSE_LEFT"
+        finally:
+            pass  # ecodes.BTN is restored by patch context manager
+
+    def test_evdev_event_to_schema_button_event(self):
+        """Test evdev_event_to_schema with button codes."""
+        result = evdev_event_to_schema(ecodes.EV_KEY, ecodes.BTN_RIGHT)
+        assert result == "MOUSE_RIGHT"
+
+    def test_schema_to_evdev_code_reverse_lookup_path(self):
+        """Test schema_to_evdev_code reverse lookup and getattr path."""
+        # Test a key that's in SCHEMA_TO_EVDEV but needs getattr
+        # KEY_A is in SCHEMA_TO_EVDEV mapping
+        code = schema_to_evdev_code("KEY_A")
+        assert code == ecodes.KEY_A
+
+    def test_schema_to_evdev_code_key_prefix_path(self):
+        """Test schema_to_evdev_code with KEY_ prefix fallback."""
+        # Test a key that needs KEY_ prefix added
+        # CAPSLOCK needs KEY_CAPSLOCK
+        code = schema_to_evdev_code("CAPSLOCK")
+        assert code == ecodes.KEY_CAPSLOCK
+
+    def test_schema_to_evdev_code_btn_prefix_path(self):
+        """Test schema_to_evdev_code with BTN_ prefix fallback."""
+        # Test a key that needs BTN_ prefix
+        # SIDE needs BTN_SIDE
+        code = schema_to_evdev_code("SIDE")
+        assert code == ecodes.BTN_SIDE
+
+    def test_is_valid_key_ecodes_direct(self):
+        """Test is_valid_key with direct ecodes attribute."""
+        # Test key that exists directly in ecodes
+        assert is_valid_key("KEY_RESERVED")  # code 0
+
+    def test_is_valid_key_key_prefix_fallback(self):
+        """Test is_valid_key with KEY_ prefix fallback."""
+        # Test key that needs KEY_ prefix
+        assert is_valid_key("CAPSLOCK")  # becomes KEY_CAPSLOCK
+
+    def test_is_valid_key_btn_prefix_fallback(self):
+        """Test is_valid_key with BTN_ prefix fallback."""
+        # Test key that needs BTN_ prefix
+        assert is_valid_key("SIDE")  # becomes BTN_SIDE
+        assert is_valid_key("EXTRA")  # becomes BTN_EXTRA
+
+    def test_validate_key_no_similar_keys(self):
+        """Test validate_key with truly unique unknown key."""
+        # Use a very unique string that won't substring match anything
+        valid, msg = validate_key("XYZQWKJHGF123456789")
+        assert not valid
+        assert "Unknown key" in msg
+
+    def test_schema_to_evdev_code_getattr_path(self):
+        """Test schema_to_evdev_code hits getattr code path."""
+        from unittest.mock import patch
+        import crates.keycode_map.mapping as mapping_module
+
+        # Mock SCHEMA_TO_UINPUT to not contain our test key
+        with patch.dict(mapping_module.SCHEMA_TO_UINPUT, clear=True):
+            # KEY_A should be findable via getattr(ecodes, evdev_name)
+            # even when not in SCHEMA_TO_UINPUT
+            code = schema_to_evdev_code("KEY_A")
+            # Should still find it via getattr fallback
+            assert code == ecodes.KEY_A
+
+    def test_is_valid_key_schema_to_evdev_path(self):
+        """Test is_valid_key hits SCHEMA_TO_EVDEV check."""
+        from unittest.mock import patch
+        import crates.keycode_map.mapping as mapping_module
+
+        # Create a scenario where key is in SCHEMA_TO_EVDEV but not SCHEMA_TO_UINPUT
+        with patch.dict(mapping_module.SCHEMA_TO_UINPUT, clear=True):
+            # CTRL should be in SCHEMA_TO_EVDEV still
+            result = is_valid_key("CTRL")
+            assert result is True
+
+    def test_validate_key_no_suggestions_path(self):
+        """Test validate_key returns --list message when no suggestions."""
+        from unittest.mock import patch
+        import crates.keycode_map.mapping as mapping_module
+
+        # Mock get_all_schema_keys to return empty list (no suggestions possible)
+        with patch.object(mapping_module, "get_all_schema_keys", return_value=[]):
+            valid, msg = validate_key("NONEXISTENT")
+            assert not valid
+            assert "Unknown key" in msg
+            assert "--list" in msg
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

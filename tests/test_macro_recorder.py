@@ -403,6 +403,147 @@ class TestDeviceMacroRecorder:
         assert recorder._on_event == callback
 
 
+class TestRecordEventEdgeCases:
+    """Tests for edge cases in record_event method."""
+
+    def test_unknown_key_code_returns_false(self, recorder):
+        """Test record_event returns False when key code has no name (line 95)."""
+        recorder.start()
+        # Use a code that doesn't exist in KEY or BTN
+        event = InputEvent(0, 0, ecodes.EV_KEY, 9999, 1)  # Invalid code
+        result = recorder.record_event(event)
+        assert result is False
+
+    def test_list_code_name_uses_first(self, recorder):
+        """Test code_name list uses first element (line 98)."""
+        recorder.start()
+
+        # Mock BTN.get to return a list (evdev actually returns tuples)
+        with patch.dict(ecodes.BTN, {ecodes.BTN_LEFT: ["BTN_LEFT", "BTN_MOUSE"]}):
+            event = make_key_event(ecodes.BTN_LEFT, 1)
+            result = recorder.record_event(event)
+            assert result is True
+            assert recorder.get_event_count() == 1
+
+
+class TestDeviceRecordingLoop:
+    """Tests for the device reading loop in record_from_device."""
+
+    @patch("services.macro_engine.recorder.InputDevice")
+    def test_reads_events_and_records(self, mock_input_device):
+        """Test reading events from device and recording them (lines 264-278)."""
+        mock_device = MagicMock()
+
+        # Create key events that will be read
+        key_a_down = InputEvent(1, 0, ecodes.EV_KEY, ecodes.KEY_A, 1)
+        key_a_up = InputEvent(1, 50000, ecodes.EV_KEY, ecodes.KEY_A, 0)
+
+        # read_one() succeeds first, then BlockingIOError for rest
+        read_one_count = [0]
+        def read_one_side_effect():
+            read_one_count[0] += 1
+            if read_one_count[0] == 1:
+                return key_a_down  # Has data
+            raise BlockingIOError()
+
+        # read() returns our events
+        mock_device.read_one.side_effect = read_one_side_effect
+        mock_device.read.return_value = [key_a_down, key_a_up]
+        mock_input_device.return_value = mock_device
+
+        recorder = DeviceMacroRecorder("/dev/input/event0")
+        macro = recorder.record_from_device(timeout=0.05)
+
+        # Should have recorded the key events
+        assert recorder.get_event_count() >= 1
+
+    @patch("services.macro_engine.recorder.InputDevice")
+    def test_stop_key_stops_recording(self, mock_input_device):
+        """Test pressing stop key stops recording (line 276)."""
+        mock_device = MagicMock()
+
+        # Create F12 key down event (default stop key)
+        f12_down = InputEvent(1, 0, ecodes.EV_KEY, ecodes.KEY_F12, 1)
+
+        # read_one() succeeds to indicate data available
+        mock_device.read_one.return_value = f12_down
+        mock_device.read.return_value = [f12_down]
+        mock_input_device.return_value = mock_device
+
+        recorder = DeviceMacroRecorder("/dev/input/event0", stop_key="F12")
+        macro = recorder.record_from_device(timeout=5.0)  # Long timeout
+
+        # Should have stopped early due to F12
+        mock_device.ungrab.assert_called_once()
+
+    @patch("services.macro_engine.recorder.InputDevice")
+    def test_skips_non_key_events_in_loop(self, mock_input_device):
+        """Test non-EV_KEY events are skipped in reading loop (line 265-266)."""
+        mock_device = MagicMock()
+
+        # Create a relative movement event (not EV_KEY)
+        rel_event = InputEvent(1, 0, ecodes.EV_REL, ecodes.REL_X, 10)
+        key_event = InputEvent(1, 50000, ecodes.EV_KEY, ecodes.KEY_A, 1)
+
+        # read_one succeeds first then blocks
+        read_one_count = [0]
+        def read_one_side_effect():
+            read_one_count[0] += 1
+            if read_one_count[0] == 1:
+                return rel_event
+            raise BlockingIOError()
+
+        mock_device.read_one.side_effect = read_one_side_effect
+        mock_device.read.return_value = [rel_event, key_event]
+        mock_input_device.return_value = mock_device
+
+        recorder = DeviceMacroRecorder("/dev/input/event0")
+        recorder.record_from_device(timeout=0.05)
+
+        # Only key event should be recorded (rel_event skipped)
+        assert recorder.get_event_count() == 1
+
+    @patch("services.macro_engine.recorder.InputDevice")
+    def test_stop_key_with_list_code_name(self, mock_input_device):
+        """Test stop key detection when code returns list (line 272-273)."""
+        mock_device = MagicMock()
+
+        # Use KEY_F12 which we can mock to return a list
+        f12_down = InputEvent(1, 0, ecodes.EV_KEY, ecodes.KEY_F12, 1)
+
+        mock_device.read_one.return_value = f12_down
+        mock_device.read.return_value = [f12_down]
+        mock_input_device.return_value = mock_device
+
+        # Mock KEY.get to return a list (evdev normally returns tuples)
+        with patch.dict(ecodes.KEY, {ecodes.KEY_F12: ["KEY_F12", "KEY_F12_ALT"]}):
+            recorder = DeviceMacroRecorder("/dev/input/event0", stop_key="F12")
+            recorder.record_from_device(timeout=5.0)
+
+        # Should have stopped on F12
+        mock_device.ungrab.assert_called_once()
+
+
+class TestUngrabExceptionHandling:
+    """Tests for exception handling in ungrab."""
+
+    @patch("services.macro_engine.recorder.InputDevice")
+    def test_ungrab_exception_handled(self, mock_input_device):
+        """Test ungrab exception is caught and ignored (lines 284-285)."""
+        mock_device = MagicMock()
+        mock_device.read_one.side_effect = BlockingIOError()
+        mock_device.ungrab.side_effect = OSError("Device disconnected")
+        mock_input_device.return_value = mock_device
+
+        recorder = DeviceMacroRecorder("/dev/input/event0")
+        # Should not raise exception
+        macro = recorder.record_from_device(timeout=0.05)
+
+        mock_device.ungrab.assert_called_once()
+        # Should still return a valid macro
+        assert macro is not None
+
+
 class TestComplexMacroSequences:
     """Tests for complex macro recording scenarios."""
 

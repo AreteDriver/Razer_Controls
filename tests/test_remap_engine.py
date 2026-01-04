@@ -503,3 +503,470 @@ class TestGetLayerInfo:
         assert info["active_layer"] == "base"
         assert "base" in info["available_layers"]
         assert "shift" in info["available_layers"]
+
+
+class TestEdgeCases:
+    """Tests for edge cases and uncovered code paths."""
+
+    def test_invalid_event_value_returns_false(self, simple_profile, mock_uinput):
+        """Test event with invalid value (not 0, 1, or 2) returns False (line 115)."""
+        engine = RemapEngine(simple_profile)
+        engine.set_uinput(mock_uinput)
+
+        # Value 3 is invalid
+        event = InputEvent(0, 0, ecodes.EV_KEY, ecodes.BTN_SIDE, 3)
+        handled = engine.process_event(event)
+
+        assert handled is False
+
+    def test_key_up_without_active_binding_returns_false(self, simple_profile, mock_uinput):
+        """Test key up without prior press returns False (line 225)."""
+        engine = RemapEngine(simple_profile)
+        engine.set_uinput(mock_uinput)
+
+        # Release without pressing first
+        event = make_key_event(ecodes.BTN_SIDE, 0)
+        handled = engine.process_event(event)
+
+        assert handled is False
+
+    def test_key_repeat_for_unbound_key_returns_false(self, simple_profile, mock_uinput):
+        """Test key repeat for unbound key returns False (line 232)."""
+        engine = RemapEngine(simple_profile)
+        engine.set_uinput(mock_uinput)
+
+        # Repeat for a key that was never pressed (not in active_bindings)
+        event = make_key_event(ecodes.KEY_Q, 2)
+        handled = engine.process_event(event)
+
+        assert handled is False
+
+
+class TestLayerConflicts:
+    """Tests for layer switching with conflicting keys."""
+
+    def test_release_conflicting_keys_on_layer_change(self, mock_uinput):
+        """Test keys are released when layer binding differs (lines 150-158)."""
+        # Profile where BTN_SIDE maps to A on base, B on shift
+        profile = Profile(
+            id="test",
+            name="Conflict Profile",
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["A"]),
+                    ],
+                ),
+                Layer(
+                    id="shift",
+                    name="Shift",
+                    hold_modifier_input_code="BTN_EXTRA",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["B"]),
+                    ],
+                ),
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        # Press BTN_SIDE on base layer (outputs A)
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+        assert ecodes.KEY_A in engine.state.output_held
+        mock_uinput.reset_mock()
+
+        # Activate shift layer while holding BTN_SIDE
+        engine.process_event(make_key_event(ecodes.BTN_EXTRA, 1))
+
+        # A should be released because BTN_SIDE has different binding on shift
+        release_calls = [c for c in mock_uinput.write.call_args_list if c[0][2] == 0]
+        assert any(c[0][1] == ecodes.KEY_A for c in release_calls)
+
+    def test_release_layer_keys_on_modifier_release(self, mock_uinput):
+        """Test layer-specific keys are released on modifier release (lines 165-169)."""
+        profile = Profile(
+            id="test",
+            name="Layer Release Profile",
+            layers=[
+                Layer(id="base", name="Base", bindings=[]),
+                Layer(
+                    id="shift",
+                    name="Shift",
+                    hold_modifier_input_code="BTN_EXTRA",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["B"]),
+                    ],
+                ),
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        # Activate shift layer
+        engine.process_event(make_key_event(ecodes.BTN_EXTRA, 1))
+
+        # Press BTN_SIDE on shift layer
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+        assert ecodes.KEY_B in engine.state.output_held
+        mock_uinput.reset_mock()
+
+        # Release layer modifier - should release shift layer keys
+        engine.process_event(make_key_event(ecodes.BTN_EXTRA, 0))
+
+        # B should be released
+        release_calls = [c for c in mock_uinput.write.call_args_list if c[0][2] == 0]
+        assert any(c[0][1] == ecodes.KEY_B for c in release_calls)
+
+
+class TestMacroStepTypes:
+    """Tests for all macro step types."""
+
+    def test_macro_key_down_step(self, mock_uinput):
+        """Test KEY_DOWN macro step (lines 306-309)."""
+        profile = Profile(
+            id="test",
+            name="Key Down Macro",
+            macros=[
+                MacroAction(
+                    id="keydown_macro",
+                    name="Key Down Macro",
+                    steps=[MacroStep(type=MacroStepType.KEY_DOWN, key="A")],
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="keydown_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have KEY_A down
+        calls = mock_uinput.write.call_args_list
+        assert any(c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 1) for c in calls)
+
+    def test_macro_key_up_step(self, mock_uinput):
+        """Test KEY_UP macro step (lines 312-315)."""
+        profile = Profile(
+            id="test",
+            name="Key Up Macro",
+            macros=[
+                MacroAction(
+                    id="keyup_macro",
+                    name="Key Up Macro",
+                    steps=[MacroStep(type=MacroStepType.KEY_UP, key="A")],
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="keyup_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have KEY_A up
+        calls = mock_uinput.write.call_args_list
+        assert any(c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 0) for c in calls)
+
+    def test_macro_text_step(self, mock_uinput):
+        """Test TEXT macro step (lines 329-331)."""
+        profile = Profile(
+            id="test",
+            name="Text Macro",
+            macros=[
+                MacroAction(
+                    id="text_macro",
+                    name="Text Macro",
+                    steps=[MacroStep(type=MacroStepType.TEXT, text="ab")],
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="text_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have typed 'a' and 'b'
+        calls = mock_uinput.write.call_args_list
+        a_pressed = any(c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 1) for c in calls)
+        b_pressed = any(c[0] == (ecodes.EV_KEY, ecodes.KEY_B, 1) for c in calls)
+        assert a_pressed
+        assert b_pressed
+
+    def test_macro_text_with_uppercase(self, mock_uinput):
+        """Test TEXT macro with uppercase letters (lines 356-366)."""
+        profile = Profile(
+            id="test",
+            name="Uppercase Macro",
+            macros=[
+                MacroAction(
+                    id="upper_macro",
+                    name="Upper Macro",
+                    steps=[MacroStep(type=MacroStepType.TEXT, text="AB")],
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="upper_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have shift pressed for uppercase
+        calls = mock_uinput.write.call_args_list
+        shift_pressed = any(c[0][1] == ecodes.KEY_LEFTSHIFT and c[0][2] == 1 for c in calls)
+        assert shift_pressed
+
+    def test_macro_text_with_special_chars(self, mock_uinput):
+        """Test TEXT macro with space, enter, tab (lines 348-350)."""
+        profile = Profile(
+            id="test",
+            name="Special Macro",
+            macros=[
+                MacroAction(
+                    id="special_macro",
+                    name="Special Macro",
+                    steps=[MacroStep(type=MacroStepType.TEXT, text="a b")],  # Has space
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="special_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have space key
+        calls = mock_uinput.write.call_args_list
+        space_pressed = any(c[0][1] == ecodes.KEY_SPACE for c in calls)
+        assert space_pressed
+
+    def test_macro_text_with_numbers(self, mock_uinput):
+        """Test TEXT macro with numbers (lines 345-347)."""
+        profile = Profile(
+            id="test",
+            name="Number Macro",
+            macros=[
+                MacroAction(
+                    id="num_macro",
+                    name="Number Macro",
+                    steps=[MacroStep(type=MacroStepType.TEXT, text="12")],
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="num_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have 1 and 2 keys
+        calls = mock_uinput.write.call_args_list
+        one_pressed = any(c[0][1] == ecodes.KEY_1 for c in calls)
+        two_pressed = any(c[0][1] == ecodes.KEY_2 for c in calls)
+        assert one_pressed
+        assert two_pressed
+
+    def test_macro_text_skips_unknown_chars(self, mock_uinput):
+        """Test TEXT macro skips unknown characters (line 352)."""
+        profile = Profile(
+            id="test",
+            name="Unknown Char Macro",
+            macros=[
+                MacroAction(
+                    id="unknown_macro",
+                    name="Unknown Macro",
+                    steps=[MacroStep(type=MacroStepType.TEXT, text="a@b")],  # @ is skipped
+                    repeat_count=1,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="unknown_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should have a and b but not @
+        calls = mock_uinput.write.call_args_list
+        a_pressed = any(c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 1) for c in calls)
+        b_pressed = any(c[0] == (ecodes.EV_KEY, ecodes.KEY_B, 1) for c in calls)
+        assert a_pressed
+        assert b_pressed
+
+    def test_macro_with_repeat_and_delay(self, mock_uinput):
+        """Test macro with repeat and delay (line 301)."""
+        profile = Profile(
+            id="test",
+            name="Repeat Macro",
+            macros=[
+                MacroAction(
+                    id="repeat_macro",
+                    name="Repeat Macro",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                    repeat_count=2,
+                    repeat_delay_ms=10,
+                ),
+            ],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="repeat_macro"),
+                    ],
+                )
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        import time
+        start = time.time()
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+        elapsed = time.time() - start
+
+        # Should have taken at least 10ms for the delay
+        assert elapsed >= 0.01
+
+        # Should have pressed A twice (2 repeats)
+        calls = mock_uinput.write.call_args_list
+        a_presses = [c for c in calls if c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 1)]
+        assert len(a_presses) == 2
+
+
+class TestReleaseActiveBindingEdgeCases:
+    """Tests for _release_active_binding edge cases."""
+
+    def test_release_inactive_binding_does_nothing(self, simple_profile, mock_uinput):
+        """Test releasing a binding that isn't active does nothing (line 174)."""
+        engine = RemapEngine(simple_profile)
+        engine.set_uinput(mock_uinput)
+
+        # Try to release a binding that was never pressed
+        engine._release_active_binding(ecodes.BTN_SIDE)
+
+        # Should not crash or emit anything
+        mock_uinput.write.assert_not_called()
+
+
+class TestReleaseAllKeysOutputHeld:
+    """Tests for release_all_keys safety code."""
+
+    def test_release_all_clears_orphan_output_held(self, simple_profile, mock_uinput):
+        """Test release_all_keys clears orphaned output_held entries (line 378)."""
+        engine = RemapEngine(simple_profile)
+        engine.set_uinput(mock_uinput)
+
+        # Manually add an orphaned output key (simulates a bug where active_bindings was cleared but output_held wasn't)
+        engine.state.output_held.add(ecodes.KEY_X)
+        mock_uinput.reset_mock()
+
+        engine.release_all_keys()
+
+        # Should release the orphaned key
+        mock_uinput.write.assert_called_with(ecodes.EV_KEY, ecodes.KEY_X, 0)
+        assert len(engine.state.output_held) == 0
+
+
+class TestLayerFallback:
+    """Tests for layer binding fallback behavior."""
+
+    def test_fallback_to_base_layer(self, mock_uinput):
+        """Test binding falls back to base layer (line 248)."""
+        profile = Profile(
+            id="test",
+            name="Fallback Profile",
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["A"]),
+                    ],
+                ),
+                Layer(
+                    id="shift",
+                    name="Shift",
+                    hold_modifier_input_code="BTN_EXTRA",
+                    bindings=[],  # No bindings in shift layer
+                ),
+            ],
+        )
+        engine = RemapEngine(profile)
+        engine.set_uinput(mock_uinput)
+
+        # Activate shift layer
+        engine.process_event(make_key_event(ecodes.BTN_EXTRA, 1))
+        assert engine.state.active_layer == "shift"
+
+        # Press BTN_SIDE - should fall back to base layer binding
+        engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
+
+        # Should emit A (from base layer)
+        calls = mock_uinput.write.call_args_list
+        assert any(c[0] == (ecodes.EV_KEY, ecodes.KEY_A, 1) for c in calls)
