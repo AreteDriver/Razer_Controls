@@ -10,6 +10,7 @@ from .macro_editor import MacroEditorWidget
 from .profile_panel import ProfilePanel
 from .razer_controls import RazerControlsWidget
 from .setup_wizard import SetupWizard
+from .zone_editor import ZoneEditorWidget
 
 __all__ = [
     "AppMatcherWidget",
@@ -23,4 +24,5 @@ __all__ = [
     "ProfilePanel",
     "RazerControlsWidget",
     "SetupWizard",
+    "ZoneEditorWidget",
 ]

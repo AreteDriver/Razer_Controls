@@ -31,6 +31,7 @@ from .widgets.dpi_editor import DPIStageEditor
 from .widgets.macro_editor import MacroEditorWidget
 from .widgets.profile_panel import ProfilePanel
 from .widgets.razer_controls import RazerControlsWidget
+from .widgets.zone_editor import ZoneEditorWidget
 
 
 class MainWindow(QMainWindow):
@@ -104,6 +105,11 @@ class MainWindow(QMainWindow):
         self.razer_tab = RazerControlsWidget(self.openrazer)
         self.razer_tab.device_selected.connect(self._on_razer_device_selected)
         self.tabs.addTab(self.razer_tab, "Lighting & DPI")
+
+        # Zone Lighting tab (per-key RGB)
+        self.zone_editor = ZoneEditorWidget(self.openrazer)
+        self.zone_editor.config_changed.connect(self._on_zone_config_changed)
+        self.tabs.addTab(self.zone_editor, "Zone Lighting")
 
         # DPI Stages tab
         self.dpi_editor = DPIStageEditor(self.openrazer)
@@ -307,6 +313,17 @@ class MainWindow(QMainWindow):
         # Update app matcher
         self.app_matcher.load_profile(profile)
 
+        # Update zone editor if we have a device selected
+        if self.zone_editor.current_device:
+            device = self.zone_editor.current_device
+            # Find device config in profile
+            for dc in profile.devices:
+                if dc.device_id == device.serial and dc.lighting and dc.lighting.matrix:
+                    # Restore zone colors
+                    zone_colors = {zc.zone_id: zc.color for zc in dc.lighting.matrix.zones}
+                    self.zone_editor.set_zone_colors(zone_colors)
+                    break
+
         # Update active profile label
         active_id = self.profile_loader.get_active_profile_id()
         if active_id == profile.id:
@@ -376,8 +393,49 @@ class MainWindow(QMainWindow):
         )
 
     def _on_razer_device_selected(self, device):
-        """Handle Razer device selection - update DPI editor."""
+        """Handle Razer device selection - update DPI and zone editors."""
         self.dpi_editor.set_device(device)
+        self.zone_editor.set_device(device)
+
+    def _on_zone_config_changed(self):
+        """Handle zone lighting config change."""
+        if self.current_profile:
+            # Save zone colors to profile
+            from crates.profile_schema import MatrixLightingConfig, ZoneColor
+
+            zone_colors = self.zone_editor.get_zone_colors()
+            zones = [
+                ZoneColor(zone_id=zid, color=c)
+                for zid, c in zone_colors.items()
+                if c != (0, 0, 0)
+            ]
+
+            # Find or create device config for current device
+            device = self.zone_editor.current_device
+            if device:
+                # Get or create device config
+                device_config = None
+                for dc in self.current_profile.devices:
+                    if dc.device_id == device.serial:
+                        device_config = dc
+                        break
+
+                if device_config is None:
+                    from crates.profile_schema import DeviceConfig, LightingConfig
+
+                    device_config = DeviceConfig(device_id=device.serial)
+                    self.current_profile.devices.append(device_config)
+
+                # Update matrix config
+                if device_config.lighting is None:
+                    from crates.profile_schema import LightingConfig
+
+                    device_config.lighting = LightingConfig()
+
+                device_config.lighting.matrix = MatrixLightingConfig(enabled=True, zones=zones)
+
+                self.profile_loader.save_profile(self.current_profile)
+                self.statusbar.showMessage("Zone lighting saved")
 
     def _refresh_devices(self):
         """Refresh device list."""
