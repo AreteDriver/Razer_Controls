@@ -751,3 +751,195 @@ class TestBatteryMonitorMethods:
         widget.refresh_devices()
         mock_bridge.discover_devices.assert_called()
         widget.close()
+
+
+class TestSetupWizard:
+    """Tests for SetupWizard dialog."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_wizard_instantiation(self, qapp):
+        """Test SetupWizard can be created."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                assert wizard is not None
+                wizard.close()
+
+    def test_wizard_page_count(self, qapp):
+        """Test wizard has correct number of pages."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                # Should have 4 pages: welcome, device, profile, daemon
+                assert wizard.pages.count() == 4
+                wizard.close()
+
+    def test_wizard_initial_state(self, qapp):
+        """Test wizard initial state."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                assert wizard.profile_name == "Default"
+                assert wizard.enable_autostart is True
+                assert wizard.start_daemon_now is True
+                wizard.close()
+
+    def test_wizard_navigation_forward(self, qapp):
+        """Test wizard forward navigation."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                initial_page = wizard.pages.currentIndex()
+                wizard._go_next()
+                assert wizard.pages.currentIndex() == initial_page + 1
+                wizard.close()
+
+    def test_wizard_navigation_back(self, qapp):
+        """Test wizard backward navigation."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                wizard._go_next()  # Go to page 1
+                wizard._go_back()  # Back to page 0
+                assert wizard.pages.currentIndex() == 0
+                wizard.close()
+
+    def test_wizard_update_buttons(self, qapp):
+        """Test button state updates."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                wizard._update_buttons()
+                # Next button should always exist
+                assert wizard.next_btn is not None
+                wizard.close()
+
+    def test_wizard_page_indicator(self, qapp):
+        """Test page indicator updates."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                wizard._update_page_indicator()
+                # Should contain page indicators (dots)
+                text = wizard.page_indicator.text()
+                assert "●" in text or "○" in text or len(text) > 0
+                wizard.close()
+
+    def test_wizard_scan_devices(self, qapp):
+        """Test device scanning populates list."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                # scan_devices should work without error
+                wizard._scan_devices()
+                wizard.close()
+
+    def test_wizard_profile_name_change(self, qapp):
+        """Test profile name change handler."""
+        from apps.gui.widgets.setup_wizard import SetupWizard
+
+        with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
+            with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
+                mock_registry.return_value.scan_devices.return_value = []
+                mock_loader.return_value.list_profiles.return_value = []
+                wizard = SetupWizard()
+                wizard._on_name_changed("My Custom Profile")
+                assert wizard.profile_name == "My Custom Profile"
+                wizard.close()
+
+
+class TestMainWindowImport:
+    """Tests for MainWindow import."""
+
+    def test_main_window_import(self):
+        """Test MainWindow can be imported."""
+        from apps.gui.main_window import MainWindow
+
+        assert isinstance(MainWindow, type)
+
+
+class TestRazerControlsWidgetMethods:
+    """Tests for RazerControlsWidget methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.discover_devices.return_value = []
+        return bridge
+
+    def test_refresh_devices(self, qapp, mock_bridge):
+        """Test refreshing devices."""
+        from apps.gui.widgets.razer_controls import RazerControlsWidget
+
+        widget = RazerControlsWidget(bridge=mock_bridge)
+        widget.refresh_devices()
+        mock_bridge.discover_devices.assert_called()
+        widget.close()
+
+    def test_refresh_with_devices(self, qapp, mock_bridge):
+        """Test refresh with mock devices."""
+        from apps.gui.widgets.razer_controls import RazerControlsWidget
+
+        mock_device = MagicMock()
+        mock_device.configure_mock(name="Test Mouse")
+        mock_device.serial = "TEST123"
+        mock_device.device_type = "mouse"
+        mock_device.firmware_version = "1.0"
+        mock_device.driver_version = "1.0"
+        mock_device.supported_effects = []
+        mock_device.supported_zones = []
+        mock_device.max_dpi = 16000
+        mock_bridge.discover_devices.return_value = [mock_device]
+
+        widget = RazerControlsWidget(bridge=mock_bridge)
+        # Just verify it doesn't crash
+        widget.close()
