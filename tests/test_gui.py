@@ -3,7 +3,7 @@
 import ast
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -398,4 +398,356 @@ class TestMacroEditorMethods:
         widget = MacroEditorWidget()
         macros = widget.get_macros()
         assert isinstance(macros, list)
+        widget.close()
+
+
+class TestNewProfileDialog:
+    """Tests for NewProfileDialog."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_dialog_instantiation(self, qapp):
+        """Test NewProfileDialog can be created."""
+        from apps.gui.widgets.profile_panel import NewProfileDialog
+
+        dialog = NewProfileDialog()
+        assert dialog is not None
+        dialog.close()
+
+    def test_get_profile_empty_name(self, qapp):
+        """Test get_profile returns None for empty name."""
+        from apps.gui.widgets.profile_panel import NewProfileDialog
+
+        dialog = NewProfileDialog()
+        dialog.name_edit.setText("")
+        result = dialog.get_profile()
+        assert result is None
+        dialog.close()
+
+    def test_get_profile_valid(self, qapp):
+        """Test get_profile returns Profile for valid input."""
+        from apps.gui.widgets.profile_panel import NewProfileDialog
+
+        dialog = NewProfileDialog()
+        dialog.name_edit.setText("Test Profile")
+        dialog.desc_edit.setPlainText("Test description")
+        result = dialog.get_profile()
+        assert result is not None
+        assert result.name == "Test Profile"
+        assert result.id == "test_profile"
+        assert result.description == "Test description"
+        dialog.close()
+
+
+class TestProfilePanelMethods:
+    """Tests for ProfilePanel methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_loader(self):
+        loader = MagicMock()
+        loader.list_profiles.return_value = []
+        loader.get_active_profile.return_value = None
+        loader.config_dir = Path("/tmp/test_profiles")
+        return loader
+
+    def test_load_profiles(self, qapp, mock_loader):
+        """Test loading profiles into panel."""
+        from apps.gui.widgets.profile_panel import ProfilePanel
+
+        widget = ProfilePanel()
+        widget.load_profiles(mock_loader)
+        mock_loader.list_profiles.assert_called()
+        widget.close()
+
+    def test_load_with_profiles(self, qapp, mock_loader):
+        """Test load with existing profiles."""
+        from apps.gui.widgets.profile_panel import ProfilePanel
+        from crates.profile_schema import Profile, Layer
+
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+        )
+        mock_loader.list_profiles.return_value = [profile]
+        mock_loader.load_profile.return_value = profile
+
+        widget = ProfilePanel()
+        widget.load_profiles(mock_loader)
+        # At least one profile should be in the list
+        assert widget.profile_list.count() >= 1
+        widget.close()
+
+
+class TestDPIStageItem:
+    """Tests for DPIStageItem widget."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_stage_item_instantiation(self, qapp):
+        """Test DPIStageItem can be created."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=800, max_dpi=16000, index=0)
+        assert item is not None
+        assert item.get_dpi() == 800
+        item.close()
+
+    def test_stage_item_slider_change(self, qapp):
+        """Test changing DPI via slider."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=800, max_dpi=16000, index=0)
+        item.slider.setValue(1600)
+        # Slider should update spin value
+        assert item.spin.value() == 1600
+        item.close()
+
+    def test_stage_item_spin_change(self, qapp):
+        """Test changing DPI via spinbox."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=800, max_dpi=16000, index=0)
+        item.spin.setValue(1200)
+        assert item.get_dpi() == 1200
+        item.close()
+
+    def test_stage_item_set_active(self, qapp):
+        """Test setting stage as active."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=800, max_dpi=16000, index=0)
+        item.set_active(True)
+        # Should not raise
+        item.set_active(False)
+        item.close()
+
+
+class TestDPIStageEditorMethods:
+    """Tests for DPIStageEditor methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.get_dpi.return_value = (800, 800)
+        bridge.get_max_dpi.return_value = 16000
+        return bridge
+
+    def test_get_config_empty(self, qapp, mock_bridge):
+        """Test getting DPI config when empty."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+        from crates.profile_schema import DPIConfig
+
+        widget = DPIStageEditor(bridge=mock_bridge)
+        result = widget.get_config()
+        assert isinstance(result, DPIConfig)
+        widget.close()
+
+    def test_set_config_no_device(self, qapp, mock_bridge):
+        """Test set_config returns early without device."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+        from crates.profile_schema import DPIConfig
+
+        widget = DPIStageEditor(bridge=mock_bridge)
+        config = DPIConfig(stages=[800, 1600, 3200], active_stage=1)
+        # Without a device, set_config returns early
+        widget.set_config(config)
+        assert len(widget._stage_items) == 0  # No stages without device
+        widget.close()
+
+
+class TestBindingEditorMethods:
+    """Tests for BindingEditorWidget methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_load_profile(self, qapp):
+        """Test loading a profile."""
+        from apps.gui.widgets.binding_editor import BindingEditorWidget
+        from crates.profile_schema import Profile, Layer
+
+        widget = BindingEditorWidget()
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+        )
+        widget.load_profile(profile)
+        assert widget.current_profile == profile
+        widget.close()
+
+    def test_get_layers(self, qapp):
+        """Test getting layers."""
+        from apps.gui.widgets.binding_editor import BindingEditorWidget
+        from crates.profile_schema import Profile, Layer
+
+        widget = BindingEditorWidget()
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+        )
+        widget.load_profile(profile)
+        layers = widget.get_layers()
+        assert isinstance(layers, list)
+        widget.close()
+
+    def test_get_macros(self, qapp):
+        """Test getting macros."""
+        from apps.gui.widgets.binding_editor import BindingEditorWidget
+
+        widget = BindingEditorWidget()
+        macros = widget.get_macros()
+        assert isinstance(macros, list)
+        widget.close()
+
+    def test_clear(self, qapp):
+        """Test clearing the editor."""
+        from apps.gui.widgets.binding_editor import BindingEditorWidget
+        from crates.profile_schema import Profile, Layer
+
+        widget = BindingEditorWidget()
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+        )
+        widget.load_profile(profile)
+        widget.clear()
+        assert widget.current_profile is None
+        widget.close()
+
+
+class TestAppMatcherMethods:
+    """Tests for AppMatcherWidget methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_load_profile(self, qapp):
+        """Test loading a profile."""
+        from apps.gui.widgets.app_matcher import AppMatcherWidget
+        from crates.profile_schema import Profile, Layer
+
+        widget = AppMatcherWidget()
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
+            app_patterns=["firefox", "chrome"]
+        )
+        widget.load_profile(profile)
+        assert widget.current_profile == profile
+        widget.close()
+
+    def test_clear(self, qapp):
+        """Test clearing the widget."""
+        from apps.gui.widgets.app_matcher import AppMatcherWidget
+        from crates.profile_schema import Profile, Layer
+
+        widget = AppMatcherWidget()
+        profile = Profile(
+            id="test", name="Test", description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
+            app_patterns=["firefox"]
+        )
+        widget.load_profile(profile)
+        widget.clear()
+        assert widget.current_profile is None
+        widget.close()
+
+
+class TestZoneEditorMethods:
+    """Tests for ZoneEditorWidget methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.discover_devices.return_value = []
+        return bridge
+
+    def test_zone_editor_instantiation(self, qapp, mock_bridge):
+        """Test ZoneEditorWidget can be created."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        assert widget is not None
+        assert widget.current_device is None
+        widget.close()
+
+
+class TestBatteryMonitorMethods:
+    """Tests for BatteryMonitorWidget methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.discover_devices.return_value = []
+        return bridge
+
+    def test_refresh_devices(self, qapp, mock_bridge):
+        """Test refreshing device list."""
+        from apps.gui.widgets.battery_monitor import BatteryMonitorWidget
+
+        widget = BatteryMonitorWidget(bridge=mock_bridge)
+        widget.refresh_devices()
+        mock_bridge.discover_devices.assert_called()
         widget.close()
