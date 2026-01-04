@@ -54,6 +54,13 @@ class RazerTray(QSystemTrayIcon):
         self._daemon_running = False
         self._devices: list = []
 
+        # Start global hotkey listener (share settings manager)
+        # Must be before _create_menu() which accesses hotkey_listener.backend_name
+        self.hotkey_listener = HotkeyListener(
+            self._emit_hotkey_switch, self.settings_manager
+        )
+        self.hotkey_listener.start()
+
         # Create icon
         self._create_icon()
 
@@ -72,12 +79,6 @@ class RazerTray(QSystemTrayIcon):
         self.activated.connect(self._on_activated)
         self.signals.profile_changed.connect(self._on_profile_changed)
         self.signals.hotkey_switch.connect(self._on_hotkey_switch)
-
-        # Start global hotkey listener (share settings manager)
-        self.hotkey_listener = HotkeyListener(
-            self._emit_hotkey_switch, self.settings_manager
-        )
-        self.hotkey_listener.start()
 
         # Watch settings file for changes (hotkey reload on save)
         self._settings_watcher = QFileSystemWatcher()
