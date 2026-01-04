@@ -440,6 +440,7 @@ class TestDeviceRecordingLoop:
 
         # read_one() succeeds first, then BlockingIOError for rest
         read_one_count = [0]
+
         def read_one_side_effect():
             read_one_count[0] += 1
             if read_one_count[0] == 1:
@@ -452,7 +453,7 @@ class TestDeviceRecordingLoop:
         mock_input_device.return_value = mock_device
 
         recorder = DeviceMacroRecorder("/dev/input/event0")
-        macro = recorder.record_from_device(timeout=0.05)
+        recorder.record_from_device(timeout=0.05)
 
         # Should have recorded the key events
         assert recorder.get_event_count() >= 1
@@ -471,7 +472,7 @@ class TestDeviceRecordingLoop:
         mock_input_device.return_value = mock_device
 
         recorder = DeviceMacroRecorder("/dev/input/event0", stop_key="F12")
-        macro = recorder.record_from_device(timeout=5.0)  # Long timeout
+        recorder.record_from_device(timeout=5.0)  # Long timeout
 
         # Should have stopped early due to F12
         mock_device.ungrab.assert_called_once()
@@ -487,6 +488,7 @@ class TestDeviceRecordingLoop:
 
         # read_one succeeds first then blocks
         read_one_count = [0]
+
         def read_one_side_effect():
             read_one_count[0] += 1
             if read_one_count[0] == 1:

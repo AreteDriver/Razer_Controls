@@ -52,9 +52,7 @@ class HotkeyBackend(ABC):
         """Check if this backend works in current environment."""
 
     @abstractmethod
-    def register_shortcuts(
-        self, shortcuts: list[tuple[str, HotkeyBinding]]
-    ) -> bool:
+    def register_shortcuts(self, shortcuts: list[tuple[str, HotkeyBinding]]) -> bool:
         """Register shortcuts. Returns True on success.
 
         Args:
@@ -123,9 +121,7 @@ class PortalGlobalShortcuts(HotkeyBackend):
             logger.debug("Portal not available: %s", e)
             return False
 
-    def register_shortcuts(
-        self, shortcuts: list[tuple[str, HotkeyBinding]]
-    ) -> bool:
+    def register_shortcuts(self, shortcuts: list[tuple[str, HotkeyBinding]]) -> bool:
         """Register shortcuts with the portal."""
         self._shortcuts = shortcuts
         return True
@@ -308,9 +304,7 @@ class X11Hotkeys(HotkeyBackend):
                 return False
         return False
 
-    def register_shortcuts(
-        self, shortcuts: list[tuple[str, HotkeyBinding]]
-    ) -> bool:
+    def register_shortcuts(self, shortcuts: list[tuple[str, HotkeyBinding]]) -> bool:
         """Store shortcuts for matching."""
         self._shortcuts = shortcuts
         return True

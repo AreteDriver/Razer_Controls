@@ -212,9 +212,8 @@ class HotkeyEditorWidget(QWidget):
         # Check for conflicts
         for i, (capture, _) in enumerate(self._hotkey_widgets):
             if i != index and capture.binding.key:
-                if (
-                    capture.binding.key == binding.key
-                    and set(capture.binding.modifiers) == set(binding.modifiers)
+                if capture.binding.key == binding.key and set(capture.binding.modifiers) == set(
+                    binding.modifiers
                 ):
                     QMessageBox.warning(
                         self,

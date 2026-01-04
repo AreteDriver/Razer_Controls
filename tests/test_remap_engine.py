@@ -556,7 +556,11 @@ class TestLayerConflicts:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["A"]),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.KEY,
+                            output_keys=["A"],
+                        ),
                     ],
                 ),
                 Layer(
@@ -564,7 +568,11 @@ class TestLayerConflicts:
                     name="Shift",
                     hold_modifier_input_code="BTN_EXTRA",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["B"]),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.KEY,
+                            output_keys=["B"],
+                        ),
                     ],
                 ),
             ],
@@ -596,7 +604,11 @@ class TestLayerConflicts:
                     name="Shift",
                     hold_modifier_input_code="BTN_EXTRA",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["B"]),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.KEY,
+                            output_keys=["B"],
+                        ),
                     ],
                 ),
             ],
@@ -641,7 +653,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="keydown_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="keydown_macro",
+                        ),
                     ],
                 )
             ],
@@ -673,7 +689,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="keyup_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="keyup_macro",
+                        ),
                     ],
                 )
             ],
@@ -705,7 +725,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="text_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="text_macro",
+                        ),
                     ],
                 )
             ],
@@ -740,7 +764,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="upper_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="upper_macro",
+                        ),
                     ],
                 )
             ],
@@ -773,7 +801,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="special_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="special_macro",
+                        ),
                     ],
                 )
             ],
@@ -806,7 +838,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="num_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="num_macro",
+                        ),
                     ],
                 )
             ],
@@ -841,7 +877,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="unknown_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="unknown_macro",
+                        ),
                     ],
                 )
             ],
@@ -877,7 +917,11 @@ class TestMacroStepTypes:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="repeat_macro"),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.MACRO,
+                            macro_id="repeat_macro",
+                        ),
                     ],
                 )
             ],
@@ -886,6 +930,7 @@ class TestMacroStepTypes:
         engine.set_uinput(mock_uinput)
 
         import time
+
         start = time.time()
         engine.process_event(make_key_event(ecodes.BTN_SIDE, 1))
         elapsed = time.time() - start
@@ -922,7 +967,8 @@ class TestReleaseAllKeysOutputHeld:
         engine = RemapEngine(simple_profile)
         engine.set_uinput(mock_uinput)
 
-        # Manually add an orphaned output key (simulates a bug where active_bindings was cleared but output_held wasn't)
+        # Manually add an orphaned output key (simulates a bug where
+        # active_bindings was cleared but output_held wasn't)
         engine.state.output_held.add(ecodes.KEY_X)
         mock_uinput.reset_mock()
 
@@ -946,7 +992,11 @@ class TestLayerFallback:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["A"]),
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.KEY,
+                            output_keys=["A"],
+                        ),
                     ],
                 ),
                 Layer(

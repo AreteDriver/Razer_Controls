@@ -148,10 +148,7 @@ class TestHotkeySettings:
 
     def test_ensure_defaults_full(self):
         """ensure_defaults should not modify full list."""
-        custom = [
-            HotkeyBinding(modifiers=["alt"], key=str(i))
-            for i in range(9)
-        ]
+        custom = [HotkeyBinding(modifiers=["alt"], key=str(i)) for i in range(9)]
         settings = HotkeySettings(profile_hotkeys=custom)
         settings.ensure_defaults()
 
@@ -199,11 +196,7 @@ class TestAppSettings:
     def test_deserialization(self):
         """Settings should deserialize from JSON correctly."""
         data = {
-            "hotkeys": {
-                "profile_hotkeys": [
-                    {"modifiers": ["ctrl"], "key": "1", "enabled": True}
-                ]
-            },
+            "hotkeys": {"profile_hotkeys": [{"modifiers": ["ctrl"], "key": "1", "enabled": True}]},
             "show_notifications": False,
         }
         settings = AppSettings.model_validate(data)
@@ -256,14 +249,18 @@ class TestSettingsManager:
 
             # Write custom settings
             settings_file = config_dir / "settings.json"
-            settings_file.write_text(json.dumps({
-                "hotkeys": {
-                    "profile_hotkeys": [
-                        {"modifiers": ["alt"], "key": "x", "enabled": False}
-                    ]
-                },
-                "show_notifications": False,
-            }))
+            settings_file.write_text(
+                json.dumps(
+                    {
+                        "hotkeys": {
+                            "profile_hotkeys": [
+                                {"modifiers": ["alt"], "key": "x", "enabled": False}
+                            ]
+                        },
+                        "show_notifications": False,
+                    }
+                )
+            )
 
             manager = SettingsManager(config_dir=config_dir)
             settings = manager.load()

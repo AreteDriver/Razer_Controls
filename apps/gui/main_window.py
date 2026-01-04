@@ -405,9 +405,7 @@ class MainWindow(QMainWindow):
 
             zone_colors = self.zone_editor.get_zone_colors()
             zones = [
-                ZoneColor(zone_id=zid, color=c)
-                for zid, c in zone_colors.items()
-                if c != (0, 0, 0)
+                ZoneColor(zone_id=zid, color=c) for zid, c in zone_colors.items() if c != (0, 0, 0)
             ]
 
             # Find or create device config for current device

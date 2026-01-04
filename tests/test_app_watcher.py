@@ -304,8 +304,6 @@ class TestX11BackendEdgeCases:
 
         from pathlib import Path
 
-        mock_path = MagicMock(spec=Path)
-
         with patch("subprocess.run", side_effect=mock_run):
             with patch("pathlib.Path.exists", return_value=False):  # comm doesn't exist
                 with patch("pathlib.Path.resolve") as mock_resolve:

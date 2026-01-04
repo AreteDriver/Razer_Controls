@@ -590,7 +590,13 @@ class TestCmdEffect:
     def test_effect_no_bridge(self):
         """Test effect when bridge connection fails."""
         with patch("tools.device_cli.get_bridge", return_value=None):
-            args = argparse.Namespace(device="test", effect="spectrum", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="test",
+                effect="spectrum",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
             assert result == 1
@@ -600,7 +606,13 @@ class TestCmdEffect:
         mock_bridge.discover_devices.return_value = []
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="nonexistent", effect="spectrum", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="nonexistent",
+                effect="spectrum",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_effect(args)
 
@@ -612,7 +624,13 @@ class TestCmdEffect:
         mock_device.has_lighting = False
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="spectrum", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="spectrum",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_effect(args)
 
@@ -622,7 +640,13 @@ class TestCmdEffect:
     def test_effect_unsupported(self, mock_bridge, mock_device):
         """Test effect that's not supported."""
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="unknown", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="unknown",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_effect(args)
 
@@ -634,8 +658,14 @@ class TestCmdEffect:
         mock_bridge.set_none_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="off", color=None, direction=None, speed=None)
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="off",
+                color=None,
+                direction=None,
+                speed=None,
+            )
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
             assert result == 0
@@ -646,7 +676,13 @@ class TestCmdEffect:
         mock_bridge.set_spectrum_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="spectrum", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="spectrum",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -658,7 +694,13 @@ class TestCmdEffect:
         mock_bridge.set_breathing_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="breathing", color="FF0000", direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="breathing",
+                color="FF0000",
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -671,7 +713,13 @@ class TestCmdEffect:
         mock_bridge.set_wave_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="wave", color=None, direction="left", speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="wave",
+                color=None,
+                direction="left",
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -684,7 +732,13 @@ class TestCmdEffect:
         mock_bridge.set_reactive_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="reactive", color="00FF00", direction=None, speed="short")
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="reactive",
+                color="00FF00",
+                direction=None,
+                speed="short",
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -697,7 +751,13 @@ class TestCmdEffect:
         mock_bridge.set_starlight_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="starlight", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="starlight",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -710,7 +770,13 @@ class TestCmdEffect:
         mock_bridge.set_starlight_effect.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="starlight", color="FF0000", direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="starlight",
+                color="FF0000",
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -723,7 +789,13 @@ class TestCmdEffect:
         mock_bridge.set_breathing_random.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="breathing_random", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="breathing_random",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -735,7 +807,13 @@ class TestCmdEffect:
         mock_bridge.set_static_color.return_value = True
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="static", color="0000FF", direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="static",
+                color="0000FF",
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()):
                 result = cmd_effect(args)
 
@@ -747,7 +825,13 @@ class TestCmdEffect:
         mock_bridge.set_spectrum_effect.return_value = False
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
-            args = argparse.Namespace(device="basilisk", effect="spectrum", color=None, direction=None, speed=None)
+            args = argparse.Namespace(
+                device="basilisk",
+                effect="spectrum",
+                color=None,
+                direction=None,
+                speed=None,
+            )
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_effect(args)
 
@@ -796,7 +880,7 @@ class TestCmdColor:
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
             args = argparse.Namespace(device="basilisk", r="255", g="128", b="0")
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_color(args)
 
             assert result == 0
@@ -898,7 +982,7 @@ class TestCmdLogo:
 
         with patch("tools.device_cli.get_bridge", return_value=mock_bridge):
             args = argparse.Namespace(device="basilisk", brightness="75", color=None)
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_logo(args)
 
             assert result == 0

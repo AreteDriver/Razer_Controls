@@ -1,7 +1,5 @@
 """Tests for HotkeyEditorWidget and HotkeyCapture."""
 
-
-
 from crates.profile_schema.settings import HotkeyBinding
 
 # --- Test HotkeyBinding logic ---
@@ -98,31 +96,31 @@ class TestKeyCodeMapping:
         0x01000030: "f1",  # Qt.Key.Key_F1
         0x01000031: "f2",
         0x01000032: "f3",
-        0x0100003b: "f12",
+        0x0100003B: "f12",
         0x30: "0",
         0x31: "1",
         0x39: "9",
         0x41: "a",
-        0x5a: "z",
+        0x5A: "z",
     }
 
     def qt_key_to_string(self, key_code: int) -> str:
         """Convert Qt key code to string."""
         # Function keys F1-F12
-        if 0x01000030 <= key_code <= 0x0100003b:
+        if 0x01000030 <= key_code <= 0x0100003B:
             return f"f{key_code - 0x01000030 + 1}"
         # Numbers 0-9
         if 0x30 <= key_code <= 0x39:
             return str(key_code - 0x30)
         # Letters A-Z
-        if 0x41 <= key_code <= 0x5a:
+        if 0x41 <= key_code <= 0x5A:
             return chr(key_code).lower()
         return ""
 
     def test_function_keys(self):
         """Test function key conversion."""
         assert self.qt_key_to_string(0x01000030) == "f1"
-        assert self.qt_key_to_string(0x0100003b) == "f12"
+        assert self.qt_key_to_string(0x0100003B) == "f12"
 
     def test_number_keys(self):
         """Test number key conversion."""
@@ -133,7 +131,7 @@ class TestKeyCodeMapping:
     def test_letter_keys(self):
         """Test letter key conversion."""
         assert self.qt_key_to_string(0x41) == "a"
-        assert self.qt_key_to_string(0x5a) == "z"
+        assert self.qt_key_to_string(0x5A) == "z"
 
 
 class TestHotkeyDefaults:
@@ -181,9 +179,7 @@ class TestHotkeyValidation:
     """Tests for hotkey validation logic."""
 
     VALID_MODIFIERS = {"ctrl", "alt", "shift", "meta", "super"}
-    VALID_KEYS = set("abcdefghijklmnopqrstuvwxyz0123456789") | {
-        f"f{i}" for i in range(1, 13)
-    }
+    VALID_KEYS = set("abcdefghijklmnopqrstuvwxyz0123456789") | {f"f{i}" for i in range(1, 13)}
 
     def is_valid_binding(self, binding: HotkeyBinding) -> bool:
         """Validate a hotkey binding."""

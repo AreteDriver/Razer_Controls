@@ -227,9 +227,7 @@ class TestHotkeyListener:
             callback = MagicMock()
             listener = HotkeyListener(callback)
 
-            with patch.object(
-                listener._backend, "register_shortcuts"
-            ) as mock_register:
+            with patch.object(listener._backend, "register_shortcuts") as mock_register:
                 with patch.object(listener._backend, "start"):
                     listener.start()
                     mock_register.assert_called_once()

@@ -626,9 +626,7 @@ class OpenRazerBridge:
             print(f"Error setting custom frame: {e}")
             return False
 
-    def set_matrix_colors(
-        self, serial: str, matrix: list[list[tuple[int, int, int]]]
-    ) -> bool:
+    def set_matrix_colors(self, serial: str, matrix: list[list[tuple[int, int, int]]]) -> bool:
         """Set the entire matrix of colors and apply.
 
         Args:

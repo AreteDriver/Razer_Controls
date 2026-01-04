@@ -491,7 +491,7 @@ class TestCmdPlay:
             args = argparse.Namespace(file=f.name, speed=1.0, yes=True, verbose=False)
 
             with patch("tools.macro_cli.MacroPlayer", return_value=mock_player):
-                with patch("sys.stdout", new=StringIO()) as mock_out:
+                with patch("sys.stdout", new=StringIO()):
                     result = cmd_play(args)
 
             assert result == 1
@@ -814,7 +814,13 @@ class TestCmdCreate:
 
     def test_create_invalid_step(self):
         """Test create with invalid step format."""
-        args = argparse.Namespace(name="Test", steps=["invalid"], output=None, repeat=1, repeat_delay=0)
+        args = argparse.Namespace(
+            name="Test",
+            steps=["invalid"],
+            output=None,
+            repeat=1,
+            repeat_delay=0,
+        )
 
         with patch("sys.stdout", new=StringIO()) as mock_out:
             result = cmd_create(args)
@@ -1009,7 +1015,7 @@ class TestMain:
     def test_main_no_command(self):
         """Test main with no command shows help."""
         with patch("sys.argv", ["razer-macro"]):
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = main()
 
         assert result == 0

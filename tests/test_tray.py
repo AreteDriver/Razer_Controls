@@ -697,7 +697,7 @@ class TestHotkeyListener:
         from crates.profile_schema import SettingsManager
 
         with patch("apps.tray.hotkeys.PortalGlobalShortcuts") as mock_portal:
-            with patch("apps.tray.hotkeys.X11Hotkeys") as mock_x11:
+            with patch("apps.tray.hotkeys.X11Hotkeys"):
                 mock_backend = MagicMock()
                 mock_portal.return_value.is_available.return_value = True
                 mock_portal.return_value = mock_backend
@@ -731,7 +731,7 @@ class TestHotkeyListener:
         from apps.tray.hotkeys import HotkeyListener
 
         with patch("apps.tray.hotkeys.PortalGlobalShortcuts") as mock_portal:
-            with patch("apps.tray.hotkeys.X11Hotkeys") as mock_x11:
+            with patch("apps.tray.hotkeys.X11Hotkeys"):
                 mock_backend = MagicMock()
                 mock_portal.return_value.is_available.return_value = True
                 mock_portal.return_value = mock_backend
@@ -748,7 +748,7 @@ class TestHotkeyListener:
         from apps.tray.hotkeys import HotkeyListener
 
         with patch("apps.tray.hotkeys.PortalGlobalShortcuts") as mock_portal:
-            with patch("apps.tray.hotkeys.X11Hotkeys") as mock_x11:
+            with patch("apps.tray.hotkeys.X11Hotkeys"):
                 mock_backend = MagicMock()
                 mock_portal.return_value.is_available.return_value = True
                 mock_portal.return_value = mock_backend
@@ -764,7 +764,7 @@ class TestHotkeyListener:
         from apps.tray.hotkeys import HotkeyListener
 
         with patch("apps.tray.hotkeys.PortalGlobalShortcuts") as mock_portal:
-            with patch("apps.tray.hotkeys.X11Hotkeys") as mock_x11:
+            with patch("apps.tray.hotkeys.X11Hotkeys"):
                 mock_backend = MagicMock()
                 mock_backend.name = "TestBackend"
                 mock_portal.return_value.is_available.return_value = True
@@ -815,6 +815,7 @@ class TestTrayMain:
 
                 with pytest.raises(SystemExit) as exc_info:
                     from apps.tray.main import main
+
                     main()
 
                 assert exc_info.value.code == 1
@@ -833,6 +834,7 @@ class TestTrayMain:
 
                     with patch("sys.exit"):
                         from apps.tray.main import main
+
                         main()
 
                     mock_razer_tray.assert_called_once()
@@ -865,8 +867,9 @@ class TestRazerTrayMethods:
 
         # Patch the locations list to use our temp path
         with patch.object(
-            RazerTray, "_get_source_desktop_path",
-            lambda self: desktop_file if desktop_file.exists() else tmp_path / "fallback"
+            RazerTray,
+            "_get_source_desktop_path",
+            lambda self: desktop_file if desktop_file.exists() else tmp_path / "fallback",
         ):
             result = tray._get_source_desktop_path()
             assert result == desktop_file
@@ -924,10 +927,7 @@ class TestMainGuard:
             if isinstance(node, ast.If):
                 # Check if it's `if __name__ == "__main__"`
                 if isinstance(node.test, ast.Compare):
-                    if (
-                        isinstance(node.test.left, ast.Name)
-                        and node.test.left.id == "__name__"
-                    ):
+                    if isinstance(node.test.left, ast.Name) and node.test.left.id == "__name__":
                         has_main_guard = True
                         break
 

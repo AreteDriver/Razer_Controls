@@ -188,7 +188,6 @@ class TestWidgetInstantiation:
         assert widget is not None
         widget.close()
 
-
     def test_zone_editor_widget(self, qapp, mock_bridge):
         """Test ZoneEditorWidget instantiation."""
         from apps.gui.widgets.zone_editor import ZoneEditorWidget
@@ -481,8 +480,10 @@ class TestProfilePanelMethods:
         from crates.profile_schema import Layer, Profile
 
         profile = Profile(
-            id="test", name="Test", description="",
-            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+            id="test",
+            name="Test",
+            description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
         )
         mock_loader.list_profiles.return_value = [profile]
         mock_loader.load_profile.return_value = profile
@@ -606,8 +607,10 @@ class TestBindingEditorMethods:
 
         widget = BindingEditorWidget()
         profile = Profile(
-            id="test", name="Test", description="",
-            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+            id="test",
+            name="Test",
+            description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
         )
         widget.load_profile(profile)
         assert widget.current_profile == profile
@@ -620,8 +623,10 @@ class TestBindingEditorMethods:
 
         widget = BindingEditorWidget()
         profile = Profile(
-            id="test", name="Test", description="",
-            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+            id="test",
+            name="Test",
+            description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
         )
         widget.load_profile(profile)
         layers = widget.get_layers()
@@ -644,8 +649,10 @@ class TestBindingEditorMethods:
 
         widget = BindingEditorWidget()
         profile = Profile(
-            id="test", name="Test", description="",
-            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)]
+            id="test",
+            name="Test",
+            description="",
+            layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
         )
         widget.load_profile(profile)
         widget.clear()
@@ -672,9 +679,11 @@ class TestAppMatcherMethods:
 
         widget = AppMatcherWidget()
         profile = Profile(
-            id="test", name="Test", description="",
+            id="test",
+            name="Test",
+            description="",
             layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
-            app_patterns=["firefox", "chrome"]
+            app_patterns=["firefox", "chrome"],
         )
         widget.load_profile(profile)
         assert widget.current_profile == profile
@@ -687,9 +696,11 @@ class TestAppMatcherMethods:
 
         widget = AppMatcherWidget()
         profile = Profile(
-            id="test", name="Test", description="",
+            id="test",
+            name="Test",
+            description="",
             layers=[Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None)],
-            app_patterns=["firefox"]
+            app_patterns=["firefox"],
         )
         widget.load_profile(profile)
         widget.clear()

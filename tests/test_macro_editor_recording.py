@@ -54,9 +54,7 @@ class TestRecordingWorker:
         worker.error_occurred.connect(lambda e: error_results.append(e))
 
         # Mock to raise PermissionError
-        with patch(
-            "services.macro_engine.recorder.DeviceMacroRecorder"
-        ) as mock_class:
+        with patch("services.macro_engine.recorder.DeviceMacroRecorder") as mock_class:
             mock_class.side_effect = PermissionError()
             worker.run()
 
@@ -75,9 +73,7 @@ class TestRecordingWorker:
         worker.error_occurred.connect(lambda e: error_results.append(e))
 
         # Mock to raise FileNotFoundError
-        with patch(
-            "services.macro_engine.recorder.DeviceMacroRecorder"
-        ) as mock_class:
+        with patch("services.macro_engine.recorder.DeviceMacroRecorder") as mock_class:
             mock_class.side_effect = FileNotFoundError()
             worker.run()
 
@@ -93,9 +89,7 @@ class TestRecordingWorker:
         error_results = []
         worker.error_occurred.connect(lambda e: error_results.append(e))
 
-        with patch(
-            "services.macro_engine.recorder.DeviceMacroRecorder"
-        ) as mock_class:
+        with patch("services.macro_engine.recorder.DeviceMacroRecorder") as mock_class:
             mock_class.side_effect = RuntimeError("Something went wrong")
             worker.run()
 
@@ -117,9 +111,7 @@ class TestRecordingWorker:
             steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
         )
 
-        with patch(
-            "services.macro_engine.recorder.DeviceMacroRecorder"
-        ) as mock_class:
+        with patch("services.macro_engine.recorder.DeviceMacroRecorder") as mock_class:
             mock_instance = MagicMock()
             mock_instance.record_from_device.return_value = mock_macro
             mock_class.return_value = mock_instance
@@ -148,9 +140,7 @@ class TestRecordingWorker:
                 on_event(event)
             return mock_macro
 
-        with patch(
-            "services.macro_engine.recorder.DeviceMacroRecorder"
-        ) as mock_class:
+        with patch("services.macro_engine.recorder.DeviceMacroRecorder") as mock_class:
             mock_instance = MagicMock()
             mock_instance.record_from_device.side_effect = fake_record
             mock_class.return_value = mock_instance
@@ -190,9 +180,7 @@ class TestRecordingDialogUnit:
 
         with patch.object(RecordingDialog, "__init__", lambda self, parent=None: None):
             dialog = RecordingDialog.__new__(RecordingDialog)
-            dialog._recorded_macro = MacroAction(
-                id="test", name="Test", steps=[]
-            )
+            dialog._recorded_macro = MacroAction(id="test", name="Test", steps=[])
 
             result = dialog.get_recorded_macro()
             assert result is not None

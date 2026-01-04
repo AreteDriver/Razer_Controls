@@ -314,7 +314,7 @@ class TestDeviceRegistry:
                 mock_path.resolve.return_value = fake_event
                 mock_path.__truediv__ = lambda self, x: mock_path
 
-                result = registry.get_event_path("test-device")
+                registry.get_event_path("test-device")
                 # Result depends on mocking - just verify no exception
 
     def test_get_event_path_handles_oserror_in_fallback(self):

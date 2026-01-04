@@ -56,9 +56,7 @@ class RazerTray(QSystemTrayIcon):
 
         # Start global hotkey listener (share settings manager)
         # Must be before _create_menu() which accesses hotkey_listener.backend_name
-        self.hotkey_listener = HotkeyListener(
-            self._emit_hotkey_switch, self.settings_manager
-        )
+        self.hotkey_listener = HotkeyListener(self._emit_hotkey_switch, self.settings_manager)
         self.hotkey_listener.start()
 
         # Create icon

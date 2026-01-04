@@ -779,8 +779,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -795,8 +797,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -812,8 +816,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -828,8 +834,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -845,8 +853,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -861,8 +871,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -877,8 +889,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -893,8 +907,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -909,8 +925,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="mouse",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -925,8 +943,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -943,8 +963,10 @@ class TestCapabilityDetectionExceptions:
         mock_session_bus.get.return_value = mock_dev
 
         device = RazerDevice(
-            serial="TEST123", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/TEST123"
+            serial="TEST123",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/TEST123",
         )
         bridge = OpenRazerBridge()
         bridge._detect_capabilities(mock_dev, device)
@@ -1253,8 +1275,11 @@ class TestBatteryErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_battery=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_battery=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1272,8 +1297,11 @@ class TestBatteryErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_battery=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_battery=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1289,8 +1317,11 @@ class TestLogoScrollErrors:
     def test_set_logo_brightness_no_capability(self, mock_session_bus):
         """Test set_logo_brightness returns False without capability (line 525)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_logo=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_logo=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1305,8 +1336,11 @@ class TestLogoScrollErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_logo=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_logo=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1318,8 +1352,11 @@ class TestLogoScrollErrors:
     def test_set_scroll_brightness_no_capability(self, mock_session_bus):
         """Test set_scroll_brightness returns False without capability (line 539)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_scroll=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_scroll=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1334,8 +1371,11 @@ class TestLogoScrollErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_scroll=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_scroll=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1347,8 +1387,11 @@ class TestLogoScrollErrors:
     def test_set_logo_static_no_capability(self, mock_session_bus):
         """Test set_logo_static returns False without capability (line 553)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_logo=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_logo=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1363,8 +1406,11 @@ class TestLogoScrollErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_logo=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_logo=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1376,8 +1422,11 @@ class TestLogoScrollErrors:
     def test_set_scroll_static_no_capability(self, mock_session_bus):
         """Test set_scroll_static returns False without capability (line 567)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_scroll=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_scroll=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1392,8 +1441,11 @@ class TestLogoScrollErrors:
         mock_session_bus.get.return_value = mock_device
 
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="mouse",
-            object_path="/org/razer/device/PM1234567890", has_scroll=True
+            serial="PM1234567890",
+            name="Test",
+            device_type="mouse",
+            object_path="/org/razer/device/PM1234567890",
+            has_scroll=True,
         )
 
         bridge = OpenRazerBridge()
@@ -1410,16 +1462,23 @@ class TestMatrixMethods:
     def matrix_device(self):
         """Create a device with matrix support."""
         return RazerDevice(
-            serial="PM1234567890", name="Test Keyboard", device_type="keyboard",
+            serial="PM1234567890",
+            name="Test Keyboard",
+            device_type="keyboard",
             object_path="/org/razer/device/PM1234567890",
-            has_matrix=True, matrix_rows=6, matrix_cols=22
+            has_matrix=True,
+            matrix_rows=6,
+            matrix_cols=22,
         )
 
     def test_set_key_row_no_matrix(self, mock_session_bus):
         """Test set_key_row returns False without matrix (line 591)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/PM1234567890", has_matrix=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/PM1234567890",
+            has_matrix=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1466,8 +1525,11 @@ class TestMatrixMethods:
     def test_set_custom_frame_no_matrix(self, mock_session_bus):
         """Test set_custom_frame returns False without matrix (line 618)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/PM1234567890", has_matrix=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/PM1234567890",
+            has_matrix=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1502,8 +1564,11 @@ class TestMatrixMethods:
     def test_set_matrix_colors_no_matrix(self, mock_session_bus):
         """Test set_matrix_colors returns False without matrix (line 642)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/PM1234567890", has_matrix=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/PM1234567890",
+            has_matrix=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1548,8 +1613,11 @@ class TestMatrixMethods:
     def test_get_matrix_dimensions_no_matrix(self, mock_session_bus):
         """Test get_matrix_dimensions returns None without matrix (lines 666-667)."""
         device = RazerDevice(
-            serial="PM1234567890", name="Test", device_type="keyboard",
-            object_path="/org/razer/device/PM1234567890", has_matrix=False
+            serial="PM1234567890",
+            name="Test",
+            device_type="keyboard",
+            object_path="/org/razer/device/PM1234567890",
+            has_matrix=False,
         )
 
         bridge = OpenRazerBridge()
@@ -1658,6 +1726,4 @@ class TestMainGuard:
         daemon.getDevices.return_value = []
         mock_session_bus.get.return_value = daemon
 
-        runpy.run_module(
-            "services.openrazer_bridge.bridge", run_name="__main__", alter_sys=True
-        )
+        runpy.run_module("services.openrazer_bridge.bridge", run_name="__main__", alter_sys=True)

@@ -93,6 +93,7 @@ class TestZone:
 
     def test_zone_converts_generator_keys_to_list(self):
         """Test that Zone.__post_init__ converts generator keys to list."""
+
         # Pass a generator
         def key_gen():
             yield KeyPosition(1, 0, "Q")
@@ -156,9 +157,7 @@ class TestKeyboardLayout:
             zone_type=ZoneType.CUSTOM,
             keys=[KeyPosition(1, 0, ""), KeyPosition(1, 1, "")],
         )
-        layout = KeyboardLayout(
-            device_type="keyboard", rows=6, cols=22, zones=[zone1, zone2]
-        )
+        layout = KeyboardLayout(device_type="keyboard", rows=6, cols=22, zones=[zone1, zone2])
 
         keys = layout.get_all_zone_keys()
         assert keys == {(0, 0), (0, 1), (1, 0), (1, 1)}

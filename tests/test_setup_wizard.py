@@ -1,8 +1,6 @@
 """Tests for SetupWizard logic."""
 
 
-
-
 # --- Test Profile ID Generation ---
 
 

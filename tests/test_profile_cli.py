@@ -5,12 +5,19 @@ import json
 import tempfile
 from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from crates.profile_schema import Profile, ProfileLoader
-from crates.profile_schema.schema import ActionType, Binding, Layer
+from crates.profile_schema.schema import (
+    ActionType,
+    Binding,
+    Layer,
+    MacroAction,
+    MacroStep,
+    MacroStepType,
+)
 from tools.profile_cli import (
     cmd_activate,
     cmd_copy,
@@ -512,9 +519,7 @@ class TestCmdImport:
             f.write("not valid json {{{{")
             f.flush()
 
-            args = argparse.Namespace(
-                config_dir=config_dir, file=f.name, force=False, new_id=None
-            )
+            args = argparse.Namespace(config_dir=config_dir, file=f.name, force=False, new_id=None)
 
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_import(args)
@@ -533,9 +538,7 @@ class TestCmdImport:
             json.dump(data, f)
             f.flush()
 
-            args = argparse.Namespace(
-                config_dir=config_dir, file=f.name, force=False, new_id=None
-            )
+            args = argparse.Namespace(config_dir=config_dir, file=f.name, force=False, new_id=None)
 
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_import(args)
@@ -560,9 +563,7 @@ class TestCmdImport:
             yaml.dump(data, f)
             f.flush()
 
-            args = argparse.Namespace(
-                config_dir=config_dir, file=f.name, force=False, new_id=None
-            )
+            args = argparse.Namespace(config_dir=config_dir, file=f.name, force=False, new_id=None)
 
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_import(args)
@@ -592,9 +593,7 @@ class TestCmdImport:
             json.dump(export_data, f)
             f.flush()
 
-            args = argparse.Namespace(
-                config_dir=config_dir, file=f.name, force=False, new_id=None
-            )
+            args = argparse.Namespace(config_dir=config_dir, file=f.name, force=False, new_id=None)
 
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_import(args)
@@ -646,9 +645,7 @@ class TestCmdImport:
             json.dump(data, f)
             f.flush()
 
-            args = argparse.Namespace(
-                config_dir=config_dir, file=f.name, force=False, new_id=None
-            )
+            args = argparse.Namespace(config_dir=config_dir, file=f.name, force=False, new_id=None)
 
             with patch("sys.stdout", new=StringIO()) as mock_out:
                 result = cmd_import(args)
@@ -739,11 +736,6 @@ class TestCmdValidate:
         output = mock_out.getvalue()
         assert "Warnings:" in output
         assert "No input devices" in output
-
-
-from unittest.mock import MagicMock
-
-from crates.profile_schema.schema import MacroAction, MacroStep, MacroStepType
 
 
 class TestCmdListWithDefault:
@@ -1004,7 +996,9 @@ class TestCmdCopyBranches:
 
         # Create a mock loader that returns the real profile but fails to save the copy
         mock_loader = MagicMock()
-        mock_loader.load_profile.side_effect = lambda pid: sample_profile if pid == "test-profile" else None
+        mock_loader.load_profile.side_effect = (
+            lambda pid: sample_profile if pid == "test-profile" else None
+        )
         mock_loader.save_profile.return_value = False
 
         with patch("tools.profile_cli.get_loader", return_value=mock_loader):
@@ -1052,7 +1046,7 @@ class TestCmdExportAll:
                 no_metadata=False,
             )
 
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_export_all(args)
 
             assert result == 0
@@ -1075,7 +1069,7 @@ class TestCmdExportAll:
                 no_metadata=False,
             )
 
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_export_all(args)
 
             assert result == 0
@@ -1095,7 +1089,7 @@ class TestCmdExportAll:
                 no_metadata=False,
             )
 
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_export_all(args)
 
             assert result == 0
@@ -1154,7 +1148,7 @@ class TestCmdImportBranches:
         )
 
         with patch("sys.stdin.read", return_value=json.dumps(wrapped_data)):
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = cmd_import(args)
 
         assert result == 0
@@ -1318,7 +1312,7 @@ class TestMain:
         config_dir, _ = temp_config
 
         with patch("sys.argv", ["razer-profile", "--config-dir", str(config_dir), "list"]):
-            with patch("sys.stdout", new=StringIO()) as mock_out:
+            with patch("sys.stdout", new=StringIO()):
                 result = main()
 
         assert result == 0

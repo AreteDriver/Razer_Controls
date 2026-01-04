@@ -237,11 +237,7 @@ def _create_standard_zones() -> list[Zone]:
             id="numpad",
             name="Numpad",
             zone_type=ZoneType.NUMPAD,
-            keys=[
-                KeyPosition(r, c, "")
-                for r in range(1, 6)
-                for c in range(17, 21)
-            ],
+            keys=[KeyPosition(r, c, "") for r in range(1, 6) for c in range(17, 21)],
             description="Numeric keypad",
         )
     )
@@ -253,9 +249,7 @@ def _create_standard_zones() -> list[Zone]:
 STANDARD_KEYBOARD_ZONES = _create_standard_zones()
 
 
-def get_layout_for_device(
-    device_name: str, rows: int, cols: int
-) -> KeyboardLayout:
+def get_layout_for_device(device_name: str, rows: int, cols: int) -> KeyboardLayout:
     """Get the appropriate layout for a device.
 
     Args:
@@ -298,10 +292,7 @@ def get_layout_for_device(
     # For keyboards, add zones that fit within the matrix dimensions
     for zone in STANDARD_KEYBOARD_ZONES:
         # Check if all keys in this zone fit in the matrix
-        fits = all(
-            k.row < rows and k.col < cols
-            for k in zone.keys
-        )
+        fits = all(k.row < rows and k.col < cols for k in zone.keys)
         if fits and zone.keys:  # Only add non-empty zones that fit
             layout.zones.append(zone)
 

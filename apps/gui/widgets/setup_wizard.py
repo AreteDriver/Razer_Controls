@@ -84,9 +84,7 @@ class SetupWizard(QDialog):
         self.next_btn = QPushButton("Next")
         self.next_btn.clicked.connect(self._go_next)
         self.next_btn.setDefault(True)
-        self.next_btn.setStyleSheet(
-            "QPushButton { background-color: #2da05a; font-weight: bold; }"
-        )
+        self.next_btn.setStyleSheet("QPushButton { background-color: #2da05a; font-weight: bold; }")
         nav_layout.addWidget(self.next_btn)
 
         self.cancel_btn = QPushButton("Cancel")
@@ -218,8 +216,7 @@ class SetupWizard(QDialog):
         layout.addWidget(title)
 
         desc = QLabel(
-            "The remap daemon runs in the background to handle\n"
-            "your key bindings and macros."
+            "The remap daemon runs in the background to handle\nyour key bindings and macros."
         )
         layout.addWidget(desc)
 
@@ -291,13 +288,9 @@ class SetupWizard(QDialog):
 
         # Check input group
         try:
-            result = subprocess.run(
-                ["groups"], capture_output=True, text=True, timeout=2
-            )
+            result = subprocess.run(["groups"], capture_output=True, text=True, timeout=2)
             if "input" not in result.stdout:
-                issues.append(
-                    "- User not in 'input' group. Run: sudo usermod -aG input $USER"
-                )
+                issues.append("- User not in 'input' group. Run: sudo usermod -aG input $USER")
         except Exception:
             pass
 
