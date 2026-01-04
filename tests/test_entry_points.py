@@ -2,10 +2,6 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 
 # --- Test First-Run Detection (apps/gui/main.py) ---
 

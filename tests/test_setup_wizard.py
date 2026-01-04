@@ -1,10 +1,6 @@
 """Tests for SetupWizard logic."""
 
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 # --- Test Profile ID Generation ---
