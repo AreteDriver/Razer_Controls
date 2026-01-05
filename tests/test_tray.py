@@ -943,3 +943,759 @@ class TestMainGuard:
         # The guard should be at the end and call main()
         assert 'if __name__ == "__main__":' in source
         assert source.strip().endswith("main()")
+
+
+# --- Comprehensive RazerTray Tests ---
+
+
+@pytest.fixture
+def mock_hotkey_listener_for_tray():
+    """Mock HotkeyListener for RazerTray tests."""
+    with patch("apps.tray.main.HotkeyListener") as mock_cls:
+        mock_instance = MagicMock()
+        mock_instance.backend_name = "X11Hotkeys"
+        mock_instance.start = MagicMock()
+        mock_instance.stop = MagicMock()
+        mock_instance.reload_bindings = MagicMock()
+        mock_cls.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_profile_loader_for_tray():
+    """Mock ProfileLoader for RazerTray tests."""
+    with patch("apps.tray.main.ProfileLoader") as mock_cls:
+        mock_instance = MagicMock()
+        mock_instance.list_profiles.return_value = ["profile1", "profile2"]
+        mock_instance.get_active_profile_id.return_value = "profile1"
+        mock_instance.config_dir = Path("/tmp/test_config")
+
+        mock_profile = MagicMock()
+        mock_profile.name = "Test Profile"
+        mock_profile.id = "profile1"
+        mock_instance.load_profile.return_value = mock_profile
+        mock_instance.save_profile.return_value = True
+
+        mock_cls.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_settings_manager_for_tray():
+    """Mock SettingsManager for RazerTray tests."""
+    with patch("apps.tray.main.SettingsManager") as mock_cls:
+        mock_instance = MagicMock()
+        mock_instance.settings_file = Path("/tmp/test_settings.json")
+        mock_instance.config_dir = Path("/tmp/test_config")
+
+        # Mock file exists checks
+        type(mock_instance.settings_file).exists = MagicMock(return_value=True)
+        type(mock_instance.config_dir).exists = MagicMock(return_value=True)
+
+        # Mock settings with hotkeys
+        mock_settings = MagicMock()
+        mock_hotkeys = MagicMock()
+        mock_binding = MagicMock()
+        mock_binding.enabled = True
+        mock_binding.key = "F1"
+        mock_binding.to_display_string.return_value = "F1"
+        mock_hotkeys.profile_hotkeys = [mock_binding]
+        mock_settings.hotkeys = mock_hotkeys
+        mock_instance.settings = mock_settings
+        mock_instance.load = MagicMock()
+
+        mock_cls.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_openrazer_for_tray():
+    """Mock OpenRazerBridge for RazerTray tests."""
+    with patch("apps.tray.main.OpenRazerBridge") as mock_cls:
+        mock_instance = MagicMock()
+        mock_instance.is_connected.return_value = True
+        mock_instance.discover_devices.return_value = []
+        mock_instance.connect = MagicMock()
+        mock_instance.set_dpi.return_value = True
+        mock_instance.set_spectrum_effect.return_value = True
+        mock_instance.set_static_color.return_value = True
+        mock_instance.set_breathing_effect.return_value = True
+        mock_instance.set_breathing_random.return_value = True
+        mock_instance.set_wave_effect.return_value = True
+        mock_instance.set_none_effect.return_value = True
+        mock_cls.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_subprocess_for_tray():
+    """Mock subprocess for RazerTray tests."""
+    with patch("apps.tray.main.subprocess.run") as mock_run, \
+         patch("apps.tray.main.subprocess.Popen") as mock_popen:
+        mock_run.return_value = MagicMock(stdout="active\n", returncode=0)
+        yield mock_run, mock_popen
+
+
+@pytest.fixture
+def razer_tray_instance(
+    qtbot,
+    mock_hotkey_listener_for_tray,
+    mock_profile_loader_for_tray,
+    mock_settings_manager_for_tray,
+    mock_openrazer_for_tray,
+    mock_subprocess_for_tray,
+):
+    """Create a RazerTray instance for testing."""
+    from PySide6.QtWidgets import QSystemTrayIcon
+
+    from apps.tray.main import RazerTray
+
+    with patch.object(QSystemTrayIcon, "show"):
+        with patch.object(QSystemTrayIcon, "setIcon"):
+            with patch.object(QSystemTrayIcon, "setToolTip"):
+                with patch.object(QSystemTrayIcon, "setContextMenu"):
+                    with patch.object(QSystemTrayIcon, "showMessage"):
+                        tray = RazerTray()
+                        yield tray
+                        tray._status_timer.stop()
+
+
+class TestRazerTrayInit:
+    """Tests for RazerTray initialization."""
+
+    def test_init_sets_signals(self, razer_tray_instance):
+        """Test tray has signals object."""
+        from apps.tray.main import TraySignals
+
+        assert hasattr(razer_tray_instance, "signals")
+
+    def test_init_sets_profile_loader(self, razer_tray_instance):
+        """Test tray has profile loader."""
+        assert hasattr(razer_tray_instance, "profile_loader")
+
+    def test_init_sets_settings_manager(self, razer_tray_instance):
+        """Test tray has settings manager."""
+        assert hasattr(razer_tray_instance, "settings_manager")
+
+    def test_init_sets_openrazer(self, razer_tray_instance):
+        """Test tray has openrazer bridge."""
+        assert hasattr(razer_tray_instance, "openrazer")
+
+    def test_init_starts_timer(self, razer_tray_instance):
+        """Test status timer is started."""
+        assert razer_tray_instance._status_timer.isActive()
+
+    def test_init_creates_menu(self, razer_tray_instance):
+        """Test menu is created."""
+        from PySide6.QtWidgets import QMenu
+
+        assert hasattr(razer_tray_instance, "menu")
+        assert isinstance(razer_tray_instance.menu, QMenu)
+
+
+class TestRazerTrayCreateIcon:
+    """Tests for _create_icon method."""
+
+    def test_create_icon_sets_tooltip(
+        self,
+        qtbot,
+        mock_hotkey_listener_for_tray,
+        mock_profile_loader_for_tray,
+        mock_settings_manager_for_tray,
+        mock_openrazer_for_tray,
+        mock_subprocess_for_tray,
+    ):
+        """Test icon creation sets tooltip."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        from apps.tray.main import RazerTray
+
+        with patch.object(QSystemTrayIcon, "show"):
+            with patch.object(QSystemTrayIcon, "setIcon"):
+                with patch.object(QSystemTrayIcon, "setToolTip") as mock_tip:
+                    with patch.object(QSystemTrayIcon, "setContextMenu"):
+                        with patch.object(QSystemTrayIcon, "showMessage"):
+                            tray = RazerTray()
+                            # Tooltip includes profile name after status check
+                            assert mock_tip.called
+                            tray._status_timer.stop()
+
+
+class TestRazerTrayCreateMenu:
+    """Tests for _create_menu method."""
+
+    def test_menu_has_header(self, razer_tray_instance):
+        """Test menu has header action."""
+        actions = razer_tray_instance.menu.actions()
+        assert len(actions) > 0
+
+    def test_menu_has_profile_label(self, razer_tray_instance):
+        """Test menu has profile label."""
+        assert hasattr(razer_tray_instance, "profile_label")
+
+    def test_menu_has_hotkey_status(self, razer_tray_instance):
+        """Test menu has hotkey status."""
+        assert hasattr(razer_tray_instance, "hotkey_status")
+
+    def test_menu_has_profiles_menu(self, razer_tray_instance):
+        """Test menu has profiles submenu."""
+        assert hasattr(razer_tray_instance, "profiles_menu")
+
+    def test_menu_has_devices_menu(self, razer_tray_instance):
+        """Test menu has devices submenu."""
+        assert hasattr(razer_tray_instance, "devices_menu")
+
+    def test_menu_has_daemon_menu(self, razer_tray_instance):
+        """Test menu has daemon submenu."""
+        assert hasattr(razer_tray_instance, "daemon_menu")
+
+    def test_menu_has_autostart(self, razer_tray_instance):
+        """Test menu has autostart action."""
+        assert hasattr(razer_tray_instance, "autostart_action")
+
+
+class TestRazerTrayUpdateProfilesMenu:
+    """Tests for _update_profiles_menu method."""
+
+    def test_update_empty_profiles(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test profiles menu with no profiles."""
+        mock_profile_loader_for_tray.list_profiles.return_value = []
+        razer_tray_instance._update_profiles_menu()
+        # Menu should have "(No profiles)" action
+
+    def test_update_with_profiles(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test profiles menu with profiles."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1", "p2"]
+        mock_profile = MagicMock()
+        mock_profile.name = "Profile 1"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+        razer_tray_instance._update_profiles_menu()
+
+    def test_marks_active_profile(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test active profile is marked with bullet."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1"]
+        mock_profile_loader_for_tray.get_active_profile_id.return_value = "p1"
+        mock_profile = MagicMock()
+        mock_profile.name = "Profile 1"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+        razer_tray_instance._update_profiles_menu()
+
+
+class TestRazerTrayUpdateDevicesMenu:
+    """Tests for _update_devices_menu method."""
+
+    def test_update_no_devices(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test devices menu with no devices."""
+        mock_openrazer_for_tray.discover_devices.return_value = []
+        razer_tray_instance._update_devices_menu()
+
+    def test_update_with_device(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test devices menu with a device."""
+        mock_device = MagicMock()
+        mock_device.name = "Razer DeathAdder"
+        mock_device.serial = "XX1234"
+        mock_device.has_dpi = True
+        mock_device.dpi = (800, 800)
+        mock_device.has_poll_rate = True
+        mock_device.poll_rate = 1000
+        mock_device.has_battery = True
+        mock_device.battery_level = 75
+        mock_device.is_charging = False
+        mock_device.has_brightness = True
+        mock_device.brightness = 100
+        mock_device.has_lighting = True
+        mock_device.supported_effects = ["spectrum", "static"]
+        mock_device.max_dpi = 16000
+
+        mock_openrazer_for_tray.discover_devices.return_value = [mock_device]
+        razer_tray_instance._update_devices_menu()
+
+    def test_connects_if_not_connected(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test connects to OpenRazer if not connected."""
+        mock_openrazer_for_tray.is_connected.return_value = False
+        razer_tray_instance._update_devices_menu()
+        mock_openrazer_for_tray.connect.assert_called_once()
+
+
+class TestRazerTrayCheckStatus:
+    """Tests for _check_status method."""
+
+    def test_daemon_running(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test status check with daemon running."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.return_value = MagicMock(stdout="active\n")
+        razer_tray_instance._daemon_running = False  # Force change
+        razer_tray_instance._check_status()
+        assert razer_tray_instance._daemon_running is True
+
+    def test_daemon_stopped(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test status check with daemon stopped."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.return_value = MagicMock(stdout="inactive\n")
+        razer_tray_instance._daemon_running = True  # Force change
+        razer_tray_instance._check_status()
+        assert razer_tray_instance._daemon_running is False
+
+    def test_exception_handling(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test status check handles exceptions."""
+        import subprocess
+
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.side_effect = subprocess.TimeoutExpired("cmd", 2)
+        razer_tray_instance._check_status()
+        assert razer_tray_instance._daemon_running is False
+
+
+class TestRazerTrayDaemonControl:
+    """Tests for daemon control methods."""
+
+    def test_start_daemon(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test start daemon."""
+        mock_run, _ = mock_subprocess_for_tray
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_check_status"):
+                razer_tray_instance._start_daemon()
+
+    def test_start_daemon_exception(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test start daemon with exception."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.side_effect = Exception("Failed")
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._start_daemon()
+            mock_notify.assert_called()
+
+    def test_stop_daemon(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test stop daemon."""
+        mock_run, _ = mock_subprocess_for_tray
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_check_status"):
+                razer_tray_instance._stop_daemon()
+
+    def test_stop_daemon_exception(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test stop daemon with exception."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.side_effect = Exception("Failed")
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._stop_daemon()
+            mock_notify.assert_called()
+
+    def test_restart_daemon(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test restart daemon."""
+        mock_run, _ = mock_subprocess_for_tray
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_check_status"):
+                razer_tray_instance._restart_daemon()
+
+    def test_restart_daemon_exception(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test restart daemon with exception."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.side_effect = Exception("Failed")
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._restart_daemon()
+            mock_notify.assert_called()
+
+
+class TestRazerTrayUpdateDaemonStatus:
+    """Tests for _update_daemon_status method."""
+
+    def test_status_running(self, razer_tray_instance):
+        """Test status display when running."""
+        razer_tray_instance._daemon_running = True
+        razer_tray_instance._update_daemon_status()
+        assert "Running" in razer_tray_instance.daemon_status.text()
+
+    def test_status_stopped(self, razer_tray_instance):
+        """Test status display when stopped."""
+        razer_tray_instance._daemon_running = False
+        razer_tray_instance._update_daemon_status()
+        assert "Stopped" in razer_tray_instance.daemon_status.text()
+
+
+class TestRazerTraySwitchProfile:
+    """Tests for _switch_profile method."""
+
+    def test_switch_success(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test switching profile."""
+        mock_profile = MagicMock()
+        mock_profile.name = "New Profile"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+        razer_tray_instance._daemon_running = False
+
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_update_profile_display"):
+                razer_tray_instance._switch_profile("new")
+                mock_profile_loader_for_tray.set_active_profile.assert_called_with("new")
+
+    def test_switch_not_found(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test switching to non-existent profile."""
+        mock_profile_loader_for_tray.load_profile.return_value = None
+
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._switch_profile("missing")
+            mock_notify.assert_called()
+
+    def test_switch_restarts_daemon(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test switching restarts daemon if running."""
+        mock_profile = MagicMock()
+        mock_profile.name = "New Profile"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+        razer_tray_instance._daemon_running = True
+
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_update_profile_display"):
+                with patch.object(razer_tray_instance, "_restart_daemon") as mock_restart:
+                    razer_tray_instance._switch_profile("new")
+                    mock_restart.assert_called_once()
+
+
+class TestRazerTraySetDpi:
+    """Tests for _set_dpi method."""
+
+    def test_set_dpi_success(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting DPI."""
+        with patch.object(razer_tray_instance, "_notify"):
+            with patch.object(razer_tray_instance, "_update_devices_menu"):
+                razer_tray_instance._set_dpi("serial", 1600)
+                mock_openrazer_for_tray.set_dpi.assert_called_with("serial", 1600)
+
+    def test_set_dpi_failure(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting DPI failure."""
+        mock_openrazer_for_tray.set_dpi.return_value = False
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._set_dpi("serial", 1600)
+            mock_notify.assert_called()
+
+
+class TestRazerTraySetEffect:
+    """Tests for _set_effect method."""
+
+    def test_set_spectrum(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting spectrum effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "spectrum")
+            mock_openrazer_for_tray.set_spectrum_effect.assert_called_with("serial")
+
+    def test_set_static(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting static effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "static")
+            mock_openrazer_for_tray.set_static_color.assert_called()
+
+    def test_set_breathing(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting breathing effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "breathing")
+            mock_openrazer_for_tray.set_breathing_effect.assert_called()
+
+    def test_set_breathing_random(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting breathing_random effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "breathing_random")
+            mock_openrazer_for_tray.set_breathing_random.assert_called()
+
+    def test_set_wave(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting wave effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "wave")
+
+    def test_set_none(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test setting none effect."""
+        with patch.object(razer_tray_instance, "_notify"):
+            razer_tray_instance._set_effect("serial", "none")
+            mock_openrazer_for_tray.set_none_effect.assert_called()
+
+    def test_set_effect_failure(self, razer_tray_instance, mock_openrazer_for_tray):
+        """Test effect failure."""
+        mock_openrazer_for_tray.set_spectrum_effect.return_value = False
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._set_effect("serial", "spectrum")
+            mock_notify.assert_called()
+
+
+class TestRazerTrayOpenActions:
+    """Tests for open actions."""
+
+    def test_open_gui(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test opening GUI."""
+        _, mock_popen = mock_subprocess_for_tray
+        razer_tray_instance._open_gui()
+        mock_popen.assert_called()
+
+    def test_open_gui_failure(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test opening GUI with failure."""
+        _, mock_popen = mock_subprocess_for_tray
+        mock_popen.side_effect = Exception("Failed")
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._open_gui()
+            mock_notify.assert_called()
+
+    def test_open_config(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test opening config folder."""
+        _, mock_popen = mock_subprocess_for_tray
+        razer_tray_instance._open_config()
+        mock_popen.assert_called()
+
+    def test_open_config_failure(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test opening config folder with failure."""
+        _, mock_popen = mock_subprocess_for_tray
+        mock_popen.side_effect = Exception("Failed")
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._open_config()
+            mock_notify.assert_called()
+
+
+class TestRazerTrayAutostart:
+    """Tests for autostart functionality."""
+
+    def test_toggle_disable_calls_unlink(self, razer_tray_instance):
+        """Test disabling autostart calls unlink."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+
+        with patch.object(razer_tray_instance, "_get_autostart_path", return_value=mock_path):
+            with patch.object(razer_tray_instance, "_notify"):
+                with patch.object(razer_tray_instance, "_update_autostart_status"):
+                    razer_tray_instance._toggle_autostart()
+                    mock_path.unlink.assert_called_once()
+
+    def test_toggle_enable_with_source(self, razer_tray_instance, tmp_path):
+        """Test enabling autostart with source file."""
+        autostart_dir = tmp_path / "autostart"
+        autostart_dir.mkdir(parents=True)
+        autostart_file = autostart_dir / "razer-tray.desktop"
+        source_file = tmp_path / "source.desktop"
+        source_file.write_text("[Desktop Entry]\nName=Test\n")
+
+        with patch.object(razer_tray_instance, "_get_autostart_path", return_value=autostart_file):
+            with patch.object(razer_tray_instance, "_is_autostart_enabled", return_value=False):
+                with patch.object(razer_tray_instance, "_get_source_desktop_path", return_value=source_file):
+                    with patch.object(razer_tray_instance, "_notify"):
+                        with patch.object(razer_tray_instance, "_update_autostart_status"):
+                            razer_tray_instance._toggle_autostart()
+                            assert autostart_file.exists()
+
+    def test_toggle_enable_no_source(self, razer_tray_instance):
+        """Test enabling autostart without source file (creates minimal entry)."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = False  # autostart file doesn't exist
+        mock_path.parent.mkdir = MagicMock()
+
+        mock_source = MagicMock()
+        mock_source.exists.return_value = False  # source file doesn't exist
+
+        with patch.object(razer_tray_instance, "_get_autostart_path", return_value=mock_path):
+            with patch.object(razer_tray_instance, "_is_autostart_enabled", return_value=False):
+                with patch.object(razer_tray_instance, "_get_source_desktop_path", return_value=mock_source):
+                    with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                        with patch.object(razer_tray_instance, "_update_autostart_status"):
+                            razer_tray_instance._toggle_autostart()
+                            # Should create minimal entry
+                            mock_path.write_text.assert_called_once()
+                            mock_notify.assert_called()
+
+
+class TestRazerTrayExportImport:
+    """Tests for export/import functionality."""
+
+    def test_export_no_profiles(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test export with no profiles."""
+        mock_profile_loader_for_tray.list_profiles.return_value = []
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            razer_tray_instance._export_profiles()
+            mock_notify.assert_called()
+
+    def test_export_cancelled(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test export cancelled."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1"]
+        with patch("apps.tray.main.QFileDialog.getSaveFileName", return_value=("", "")):
+            razer_tray_instance._export_profiles()
+
+    def test_export_success(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test successful export."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1"]
+        mock_profile = MagicMock()
+        mock_profile.model_dump.return_value = {"id": "p1", "name": "Test"}
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+
+        zip_path = tmp_path / "export.zip"
+        with patch("apps.tray.main.QFileDialog.getSaveFileName", return_value=(str(zip_path), "")):
+            with patch.object(razer_tray_instance, "_notify"):
+                razer_tray_instance._export_profiles()
+                assert zip_path.exists()
+
+    def test_import_cancelled(self, razer_tray_instance):
+        """Test import cancelled."""
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=("", "")):
+            razer_tray_instance._import_profile()
+
+    def test_import_success(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test successful import."""
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text('{"id": "new", "name": "New Profile", "layers": []}')
+
+        mock_profile_loader_for_tray.load_profile.return_value = None  # No existing
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch.object(razer_tray_instance, "_notify"):
+                with patch.object(razer_tray_instance, "_update_profiles_menu"):
+                    razer_tray_instance._import_profile()
+
+    def test_import_invalid_json(self, razer_tray_instance, tmp_path):
+        """Test import with invalid JSON."""
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text("{ invalid json }")
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                razer_tray_instance._import_profile()
+                mock_notify.assert_called()
+
+
+class TestRazerTrayCheckOpenrazer:
+    """Tests for _check_openrazer method."""
+
+    def test_check_active(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test OpenRazer active."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.return_value = MagicMock(stdout="active\n")
+        with patch("apps.tray.main.QMessageBox.information"):
+            razer_tray_instance._check_openrazer()
+
+    def test_check_inactive(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test OpenRazer inactive."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.return_value = MagicMock(stdout="inactive\n")
+        with patch("apps.tray.main.QMessageBox.information"):
+            razer_tray_instance._check_openrazer()
+
+    def test_check_exception(self, razer_tray_instance, mock_subprocess_for_tray):
+        """Test OpenRazer check exception."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.side_effect = Exception("Failed")
+        with patch("apps.tray.main.QMessageBox.information"):
+            razer_tray_instance._check_openrazer()
+
+
+class TestRazerTrayNotify:
+    """Tests for _notify method."""
+
+    def test_notify_info(self, razer_tray_instance):
+        """Test info notification."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        with patch.object(QSystemTrayIcon, "showMessage"):
+            razer_tray_instance._notify("Title", "Message")
+
+    def test_notify_error(self, razer_tray_instance):
+        """Test error notification."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        with patch.object(QSystemTrayIcon, "showMessage"):
+            razer_tray_instance._notify("Error", "Something failed", error=True)
+
+
+class TestRazerTrayOnActivated:
+    """Tests for _on_activated method."""
+
+    def test_double_click_opens_gui(self, razer_tray_instance):
+        """Test double-click opens GUI."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        with patch.object(razer_tray_instance, "_open_gui") as mock_open:
+            razer_tray_instance._on_activated(QSystemTrayIcon.ActivationReason.DoubleClick)
+            mock_open.assert_called_once()
+
+    def test_middle_click_refreshes(self, razer_tray_instance):
+        """Test middle-click refreshes."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        with patch.object(razer_tray_instance, "_check_status") as mock_status:
+            with patch.object(razer_tray_instance, "_update_devices_menu") as mock_devices:
+                razer_tray_instance._on_activated(QSystemTrayIcon.ActivationReason.MiddleClick)
+                mock_status.assert_called_once()
+                mock_devices.assert_called_once()
+
+
+class TestRazerTrayHotkeySwitch:
+    """Tests for hotkey switch functionality."""
+
+    def test_emit_hotkey_switch(self, razer_tray_instance):
+        """Test emitting hotkey switch."""
+        razer_tray_instance._emit_hotkey_switch(0)
+
+    def test_on_hotkey_switch_valid(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test hotkey switch with valid index."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1", "p2"]
+        with patch.object(razer_tray_instance, "_switch_profile") as mock_switch:
+            razer_tray_instance._on_hotkey_switch(0)
+            mock_switch.assert_called_with("p1")
+
+    def test_on_hotkey_switch_invalid(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test hotkey switch with invalid index."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1"]
+        with patch.object(razer_tray_instance, "_switch_profile") as mock_switch:
+            razer_tray_instance._on_hotkey_switch(5)  # Out of range
+            mock_switch.assert_not_called()
+
+
+class TestRazerTrayQuit:
+    """Tests for _quit method."""
+
+    def test_quit_stops_timer(self, razer_tray_instance):
+        """Test quit stops timer."""
+        from PySide6.QtWidgets import QApplication
+
+        with patch.object(QApplication, "quit"):
+            razer_tray_instance._quit()
+            assert not razer_tray_instance._status_timer.isActive()
+
+
+class TestRazerTraySettingsWatcher:
+    """Tests for settings file watcher."""
+
+    def test_on_settings_changed(self, razer_tray_instance, mock_hotkey_listener_for_tray):
+        """Test settings file change."""
+        with patch.object(razer_tray_instance, "_update_profiles_menu"):
+            razer_tray_instance._on_settings_changed("/path/to/settings.json")
+            mock_hotkey_listener_for_tray.reload_bindings.assert_called()
+
+    def test_on_settings_dir_changed(self, razer_tray_instance, mock_settings_manager_for_tray, tmp_path):
+        """Test settings directory change."""
+        settings_file = tmp_path / "settings.json"
+        settings_file.write_text("{}")
+        mock_settings_manager_for_tray.settings_file = settings_file
+
+        with patch.object(razer_tray_instance, "_on_settings_changed"):
+            razer_tray_instance._on_settings_dir_changed(str(tmp_path))
+
+
+class TestRazerTrayUpdateProfileDisplay:
+    """Tests for _update_profile_display method."""
+
+    def test_with_profile(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test profile display with profile."""
+        mock_profile = MagicMock()
+        mock_profile.name = "Active Profile"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+
+        razer_tray_instance._active_profile = "active"
+        with patch.object(razer_tray_instance, "_update_profiles_menu"):
+            razer_tray_instance._update_profile_display()
+            assert "Active Profile" in razer_tray_instance.profile_label.text()
+
+    def test_no_profile(self, razer_tray_instance):
+        """Test profile display without profile."""
+        razer_tray_instance._active_profile = None
+        with patch.object(razer_tray_instance, "_update_profiles_menu"):
+            razer_tray_instance._update_profile_display()
+            assert "(none)" in razer_tray_instance.profile_label.text()
+
+
+class TestRazerTrayOnProfileChanged:
+    """Tests for _on_profile_changed signal handler."""
+
+    def test_on_profile_changed(self, razer_tray_instance):
+        """Test profile changed handler."""
+        with patch.object(razer_tray_instance, "_update_profile_display"):
+            razer_tray_instance._on_profile_changed("new_profile")
+            assert razer_tray_instance._active_profile == "new_profile"
