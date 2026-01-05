@@ -954,3 +954,546 @@ class TestRazerControlsWidgetMethods:
         widget = RazerControlsWidget(bridge=mock_bridge)
         # Just verify it doesn't crash
         widget.close()
+
+
+class TestMainWindowMethods:
+    """Tests for MainWindow methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_deps(self):
+        """Mock all MainWindow dependencies."""
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
+            "apps.gui.main_window.DeviceRegistry"
+        ) as mock_registry, patch(
+            "apps.gui.main_window.OpenRazerBridge"
+        ) as mock_bridge, patch(
+            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        ) as mock_subprocess:
+            mock_loader.return_value.list_profiles.return_value = []
+            mock_loader.return_value.get_active_profile_id.return_value = None
+            mock_registry.return_value.list_devices.return_value = []
+            mock_bridge.return_value.connect.return_value = False
+            mock_bridge.return_value.discover_devices.return_value = []
+            yield {
+                "loader": mock_loader,
+                "registry": mock_registry,
+                "bridge": mock_bridge,
+                "subprocess": mock_subprocess,
+            }
+
+    def test_main_window_instantiation(self, qapp, mock_deps):
+        """Test MainWindow can be instantiated with mocked deps."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        assert window is not None
+        assert window.windowTitle() == "Razer Control Center"
+        window.close()
+
+    def test_main_window_has_tabs(self, qapp, mock_deps):
+        """Test MainWindow creates expected tabs."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        tab_count = window.tabs.count()
+        # Devices, Bindings, Macros, App, Lighting, Zone, DPI, Battery, Daemon
+        assert tab_count >= 8
+        window.close()
+
+    def test_main_window_has_statusbar(self, qapp, mock_deps):
+        """Test MainWindow has status bar."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        assert window.statusbar is not None
+        window.close()
+
+    def test_main_window_has_menu(self, qapp, mock_deps):
+        """Test MainWindow has menu bar."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        menubar = window.menuBar()
+        assert menubar is not None
+        window.close()
+
+    def test_close_event_stops_timer(self, qapp, mock_deps):
+        """Test closeEvent stops the refresh timer."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        assert window.refresh_timer.isActive()
+        window.close()
+        assert not window.refresh_timer.isActive()
+
+
+class TestMainWindowProfileHandling:
+    """Tests for MainWindow profile handling."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_deps(self):
+        """Mock all MainWindow dependencies."""
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
+            "apps.gui.main_window.DeviceRegistry"
+        ) as mock_registry, patch(
+            "apps.gui.main_window.OpenRazerBridge"
+        ) as mock_bridge, patch(
+            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        ) as mock_subprocess:
+            mock_loader.return_value.list_profiles.return_value = []
+            mock_loader.return_value.get_active_profile_id.return_value = None
+            mock_registry.return_value.list_devices.return_value = []
+            mock_bridge.return_value.connect.return_value = False
+            mock_bridge.return_value.discover_devices.return_value = []
+            yield {
+                "loader": mock_loader,
+                "registry": mock_registry,
+                "bridge": mock_bridge,
+                "subprocess": mock_subprocess,
+            }
+
+    def test_on_profile_selected(self, qapp, mock_deps):
+        """Test _on_profile_selected loads profile."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        mock_profile = Profile(id="test", name="Test", input_devices=[], layers=[])
+        mock_deps["loader"].return_value.load_profile.return_value = mock_profile
+
+        window = MainWindow()
+        window._on_profile_selected("test")
+
+        assert window.current_profile == mock_profile
+        mock_deps["loader"].return_value.load_profile.assert_called_with("test")
+        window.close()
+
+    def test_on_profile_selected_not_found(self, qapp, mock_deps):
+        """Test _on_profile_selected handles missing profile."""
+        from apps.gui.main_window import MainWindow
+
+        mock_deps["loader"].return_value.load_profile.return_value = None
+
+        window = MainWindow()
+        window._on_profile_selected("nonexistent")
+
+        assert window.current_profile is None
+        window.close()
+
+    def test_on_profile_created(self, qapp, mock_deps):
+        """Test _on_profile_created saves profile."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        profile = Profile(id="new", name="New Profile", input_devices=[], layers=[])
+        window._on_profile_created(profile)
+
+        mock_deps["loader"].return_value.save_profile.assert_called_with(profile)
+        window.close()
+
+    def test_on_profile_deleted(self, qapp, mock_deps):
+        """Test _on_profile_deleted removes profile."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        window.current_profile = Profile(
+            id="to-delete", name="Delete Me", input_devices=[], layers=[]
+        )
+        window._on_profile_deleted("to-delete")
+
+        mock_deps["loader"].return_value.delete_profile.assert_called_with("to-delete")
+        assert window.current_profile is None
+        window.close()
+
+
+class TestMainWindowDaemonControls:
+    """Tests for MainWindow daemon control methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_deps(self):
+        """Mock all MainWindow dependencies."""
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
+            "apps.gui.main_window.DeviceRegistry"
+        ) as mock_registry, patch(
+            "apps.gui.main_window.OpenRazerBridge"
+        ) as mock_bridge, patch(
+            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        ) as mock_subprocess:
+            mock_loader.return_value.list_profiles.return_value = []
+            mock_loader.return_value.get_active_profile_id.return_value = None
+            mock_registry.return_value.list_devices.return_value = []
+            mock_bridge.return_value.connect.return_value = False
+            mock_bridge.return_value.discover_devices.return_value = []
+            yield {
+                "loader": mock_loader,
+                "registry": mock_registry,
+                "bridge": mock_bridge,
+                "subprocess": mock_subprocess,
+            }
+
+    def test_update_daemon_status_running(self, qapp, mock_deps):
+        """Test _update_daemon_status when daemon is running."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._update_daemon_status()
+
+            assert "Running" in window.daemon_status_label.text()
+            window.close()
+
+    def test_update_daemon_status_stopped(self, qapp, mock_deps):
+        """Test _update_daemon_status when daemon is stopped."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 1
+            window = MainWindow()
+            window._update_daemon_status()
+
+            assert "Stopped" in window.daemon_status_label.text()
+            window.close()
+
+    def test_update_daemon_status_exception(self, qapp, mock_deps):
+        """Test _update_daemon_status handles exception."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.side_effect = Exception("Test error")
+            window = MainWindow()
+            window._update_daemon_status()
+
+            assert "Unknown" in window.daemon_status_label.text()
+            window.close()
+
+    def test_start_daemon(self, qapp, mock_deps):
+        """Test _start_daemon calls systemctl."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._start_daemon()
+
+            # Check systemctl start was called
+            calls = [str(c) for c in mock_run.call_args_list]
+            assert any("start" in str(c) for c in calls)
+            window.close()
+
+    def test_stop_daemon(self, qapp, mock_deps):
+        """Test _stop_daemon calls systemctl."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._stop_daemon()
+
+            calls = [str(c) for c in mock_run.call_args_list]
+            assert any("stop" in str(c) for c in calls)
+            window.close()
+
+    def test_restart_daemon(self, qapp, mock_deps):
+        """Test _restart_daemon calls systemctl."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._restart_daemon()
+
+            calls = [str(c) for c in mock_run.call_args_list]
+            assert any("restart" in str(c) for c in calls)
+            window.close()
+
+    def test_enable_autostart(self, qapp, mock_deps):
+        """Test _enable_autostart calls systemctl enable."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._enable_autostart()
+
+            calls = [str(c) for c in mock_run.call_args_list]
+            assert any("enable" in str(c) for c in calls)
+            window.close()
+
+    def test_disable_autostart(self, qapp, mock_deps):
+        """Test _disable_autostart calls systemctl disable."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            window = MainWindow()
+            window._disable_autostart()
+
+            calls = [str(c) for c in mock_run.call_args_list]
+            assert any("disable" in str(c) for c in calls)
+            window.close()
+
+
+class TestMainWindowSignalHandlers:
+    """Tests for MainWindow signal handlers."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_deps(self):
+        """Mock all MainWindow dependencies."""
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
+            "apps.gui.main_window.DeviceRegistry"
+        ) as mock_registry, patch(
+            "apps.gui.main_window.OpenRazerBridge"
+        ) as mock_bridge, patch(
+            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        ) as mock_subprocess:
+            mock_loader.return_value.list_profiles.return_value = []
+            mock_loader.return_value.get_active_profile_id.return_value = None
+            mock_registry.return_value.list_devices.return_value = []
+            mock_bridge.return_value.connect.return_value = False
+            mock_bridge.return_value.discover_devices.return_value = []
+            yield {
+                "loader": mock_loader,
+                "registry": mock_registry,
+                "bridge": mock_bridge,
+                "subprocess": mock_subprocess,
+            }
+
+    def test_on_bindings_changed_with_profile(self, qapp, mock_deps):
+        """Test _on_bindings_changed saves bindings."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        window.current_profile = Profile(
+            id="test", name="Test", input_devices=[], layers=[]
+        )
+        window._on_bindings_changed()
+
+        mock_deps["loader"].return_value.save_profile.assert_called()
+        window.close()
+
+    def test_on_bindings_changed_no_profile(self, qapp, mock_deps):
+        """Test _on_bindings_changed does nothing without profile."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        window.current_profile = None
+        window._on_bindings_changed()
+
+        # Should not crash, should not save
+        window.close()
+
+    def test_on_macros_changed_with_profile(self, qapp, mock_deps):
+        """Test _on_macros_changed saves macros."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        window.current_profile = Profile(
+            id="test", name="Test", input_devices=[], layers=[]
+        )
+        window._on_macros_changed([])
+
+        mock_deps["loader"].return_value.save_profile.assert_called()
+        window.close()
+
+    def test_on_app_patterns_changed_with_profile(self, qapp, mock_deps):
+        """Test _on_app_patterns_changed saves patterns."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        window.current_profile = Profile(
+            id="test", name="Test", input_devices=[], layers=[]
+        )
+        window._on_app_patterns_changed()
+
+        mock_deps["loader"].return_value.save_profile.assert_called()
+        window.close()
+
+    def test_on_razer_device_selected(self, qapp, mock_deps):
+        """Test _on_razer_device_selected updates editors."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        mock_device = MagicMock()
+        mock_device.configure_mock(name="Test Device")
+        mock_device.serial = "TEST123"
+        mock_device.has_matrix = False
+        mock_device.max_dpi = 16000
+        mock_device.supported_zones = []
+
+        window._on_razer_device_selected(mock_device)
+        # Should not crash
+        window.close()
+
+    def test_refresh_devices(self, qapp, mock_deps):
+        """Test _refresh_devices refreshes all device views."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        window._refresh_devices()
+        # Should not crash
+        window.close()
+
+    def test_apply_device_selection_no_profile(self, qapp, mock_deps):
+        """Test _apply_device_selection shows warning without profile."""
+        from apps.gui.main_window import MainWindow
+
+        window = MainWindow()
+        window.current_profile = None
+
+        with patch("apps.gui.main_window.QMessageBox.warning") as mock_warning:
+            window._apply_device_selection()
+            mock_warning.assert_called_once()
+        window.close()
+
+    def test_apply_device_selection_with_profile(self, qapp, mock_deps):
+        """Test _apply_device_selection saves selection."""
+        from apps.gui.main_window import MainWindow
+        from crates.profile_schema import Profile
+
+        window = MainWindow()
+        window.current_profile = Profile(
+            id="test", name="Test", input_devices=[], layers=[]
+        )
+
+        # Mock get_selected_devices
+        window.device_list.get_selected_devices = MagicMock(return_value=["dev1"])
+        window._apply_device_selection()
+
+        mock_deps["loader"].return_value.save_profile.assert_called()
+        window.close()
+
+
+class TestMainWindowDialogs:
+    """Tests for MainWindow dialog methods."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_deps(self):
+        """Mock all MainWindow dependencies."""
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
+            "apps.gui.main_window.DeviceRegistry"
+        ) as mock_registry, patch(
+            "apps.gui.main_window.OpenRazerBridge"
+        ) as mock_bridge, patch(
+            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        ) as mock_subprocess:
+            mock_loader.return_value.list_profiles.return_value = []
+            mock_loader.return_value.get_active_profile_id.return_value = None
+            mock_registry.return_value.list_devices.return_value = []
+            mock_bridge.return_value.connect.return_value = False
+            mock_bridge.return_value.discover_devices.return_value = []
+            yield {
+                "loader": mock_loader,
+                "registry": mock_registry,
+                "bridge": mock_bridge,
+                "subprocess": mock_subprocess,
+            }
+
+    def test_show_about(self, qapp, mock_deps):
+        """Test _show_about opens about dialog."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.QMessageBox.about") as mock_about:
+            window = MainWindow()
+            window._show_about()
+            mock_about.assert_called_once()
+            window.close()
+
+    def test_run_setup_wizard(self, qapp, mock_deps):
+        """Test _run_setup_wizard opens wizard."""
+        from apps.gui.main_window import MainWindow
+
+        with patch(
+            "apps.gui.widgets.setup_wizard.SetupWizard"
+        ) as mock_wizard:
+            mock_wizard.return_value.exec.return_value = 0
+            window = MainWindow()
+            window._run_setup_wizard()
+            mock_wizard.assert_called_once()
+            window.close()
+
+    def test_configure_hotkeys(self, qapp, mock_deps):
+        """Test _configure_hotkeys opens hotkey dialog."""
+        from apps.gui.main_window import MainWindow
+
+        with patch(
+            "apps.gui.widgets.hotkey_editor.HotkeyEditorDialog"
+        ) as mock_dialog:
+            mock_dialog.return_value.exec.return_value = 0
+            window = MainWindow()
+            window._configure_hotkeys()
+            mock_dialog.assert_called_once()
+            window.close()
+
+    def test_on_low_battery(self, qapp, mock_deps):
+        """Test _on_low_battery shows warning."""
+        from apps.gui.main_window import MainWindow
+
+        with patch("apps.gui.main_window.QMessageBox.warning") as mock_warning:
+            window = MainWindow()
+            window._on_low_battery("Test Mouse", 15)
+            mock_warning.assert_called_once()
+            # Check the message contains device name and level
+            call_args = mock_warning.call_args
+            assert "Test Mouse" in str(call_args)
+            assert "15" in str(call_args)
+            window.close()

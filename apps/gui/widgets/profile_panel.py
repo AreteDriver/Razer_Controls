@@ -163,6 +163,11 @@ class ProfilePanel(QWidget):
         if not profile_ids:
             self.active_label.setText("Active: None")
 
+    def refresh(self):
+        """Refresh the profile list from the current loader."""
+        if self.profile_loader:
+            self.load_profiles(self.profile_loader)
+
     def _on_profile_selected(self, row: int):
         """Handle profile selection."""
         if row < 0:

@@ -50,9 +50,9 @@ class MainWindow(QMainWindow):
         # Current state
         self.current_profile: Profile | None = None
 
-        # Set up UI
-        self._setup_ui()
+        # Set up UI (statusbar first since daemon tab uses it)
         self._setup_statusbar()
+        self._setup_ui()
 
         # Load data
         self._load_initial_data()
@@ -465,9 +465,11 @@ class MainWindow(QMainWindow):
             self.daemon_status_label.setText("Unknown")
             self.daemon_status_label.setStyleSheet("color: #888888;")
 
-        # Check autostart
+        # Check autostart (block signals to avoid triggering toggle during init)
         service_path = Path.home() / ".config" / "systemd" / "user" / "razer-remap-daemon.service"
+        self.autostart_check.blockSignals(True)
         self.autostart_check.setChecked(service_path.exists())
+        self.autostart_check.blockSignals(False)
 
     def _start_daemon(self):
         """Start the remap daemon."""
