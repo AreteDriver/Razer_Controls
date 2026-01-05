@@ -1,0 +1,117 @@
+{
+  "id": "razer_deathadder_v2",
+  "name": "Razer DeathAdder V2",
+  "category": "mouse",
+  "device_name_patterns": [
+    ".*deathadder.*v2.*",
+    ".*DeathAdder V2.*"
+  ],
+  "base_width": 70,
+  "base_height": 127,
+  "outline_path": [
+    [0.5, 0.0],
+    [0.78, 0.08],
+    [0.92, 0.22],
+    [1.0, 0.42],
+    [0.98, 0.62],
+    [0.88, 0.82],
+    [0.72, 0.94],
+    [0.5, 1.0],
+    [0.28, 0.94],
+    [0.12, 0.82],
+    [0.02, 0.62],
+    [0.0, 0.42],
+    [0.08, 0.22],
+    [0.22, 0.08]
+  ],
+  "buttons": [
+    {
+      "id": "left_click",
+      "label": "Left Click",
+      "x": 0.06,
+      "y": 0.02,
+      "width": 0.42,
+      "height": 0.35,
+      "shape_type": "rect",
+      "input_code": "BTN_LEFT"
+    },
+    {
+      "id": "right_click",
+      "label": "Right Click",
+      "x": 0.52,
+      "y": 0.02,
+      "width": 0.42,
+      "height": 0.35,
+      "shape_type": "rect",
+      "input_code": "BTN_RIGHT"
+    },
+    {
+      "id": "scroll_wheel",
+      "label": "Scroll Wheel",
+      "x": 0.36,
+      "y": 0.10,
+      "width": 0.28,
+      "height": 0.20,
+      "shape_type": "ellipse",
+      "input_code": "BTN_MIDDLE"
+    },
+    {
+      "id": "dpi_up",
+      "label": "DPI Up",
+      "x": 0.40,
+      "y": 0.38,
+      "width": 0.20,
+      "height": 0.06,
+      "shape_type": "rect"
+    },
+    {
+      "id": "dpi_down",
+      "label": "DPI Down",
+      "x": 0.40,
+      "y": 0.45,
+      "width": 0.20,
+      "height": 0.06,
+      "shape_type": "rect"
+    },
+    {
+      "id": "side_forward",
+      "label": "Mouse 5",
+      "x": 0.0,
+      "y": 0.38,
+      "width": 0.10,
+      "height": 0.10,
+      "shape_type": "rect",
+      "input_code": "BTN_FORWARD"
+    },
+    {
+      "id": "side_back",
+      "label": "Mouse 4",
+      "x": 0.0,
+      "y": 0.50,
+      "width": 0.10,
+      "height": 0.10,
+      "shape_type": "rect",
+      "input_code": "BTN_BACK"
+    },
+    {
+      "id": "scroll_zone",
+      "label": "Scroll LED",
+      "x": 0.38,
+      "y": 0.28,
+      "width": 0.24,
+      "height": 0.08,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "logo_zone",
+      "label": "Logo",
+      "x": 0.28,
+      "y": 0.58,
+      "width": 0.44,
+      "height": 0.16,
+      "shape_type": "ellipse",
+      "is_zone": true
+    }
+  ]
+}

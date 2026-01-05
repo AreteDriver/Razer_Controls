@@ -27,6 +27,7 @@ from .widgets.app_matcher import AppMatcherWidget
 from .widgets.battery_monitor import BatteryMonitorWidget
 from .widgets.binding_editor import BindingEditorWidget
 from .widgets.device_list import DeviceListWidget
+from .widgets.device_visual import DeviceVisualWidget
 from .widgets.dpi_editor import DPIStageEditor
 from .widgets.macro_editor import MacroEditorWidget
 from .widgets.profile_panel import ProfilePanel
@@ -105,6 +106,11 @@ class MainWindow(QMainWindow):
         self.razer_tab = RazerControlsWidget(self.openrazer)
         self.razer_tab.device_selected.connect(self._on_razer_device_selected)
         self.tabs.addTab(self.razer_tab, "Lighting & DPI")
+
+        # Device View tab (visual device layout)
+        self.device_view_tab = QWidget()
+        self._setup_device_view_tab()
+        self.tabs.addTab(self.device_view_tab, "Device View")
 
         # Zone Lighting tab (per-key RGB)
         self.zone_editor = ZoneEditorWidget(self.openrazer)
@@ -218,6 +224,50 @@ class MainWindow(QMainWindow):
         self.binding_editor = BindingEditorWidget()
         self.binding_editor.bindings_changed.connect(self._on_bindings_changed)
         layout.addWidget(self.binding_editor)
+
+    def _setup_device_view_tab(self):
+        """Set up the device view tab with visual device layout."""
+        layout = QVBoxLayout(self.device_view_tab)
+
+        # Device visual widget
+        self.device_visual = DeviceVisualWidget()
+        self.device_visual.button_clicked.connect(self._on_device_button_clicked)
+        self.device_visual.zone_clicked.connect(self._on_device_zone_clicked)
+        layout.addWidget(self.device_visual, 1)
+
+        # Info label
+        info = QLabel(
+            "Select a device from Lighting & DPI tab to see its visual layout.\n"
+            "Click buttons to configure bindings, click zones to set RGB colors."
+        )
+        info.setStyleSheet("color: #888888; padding: 8px;")
+        layout.addWidget(info)
+
+    def _on_device_button_clicked(self, button_id: str, input_code: str):
+        """Handle button click on device visual."""
+        self.statusbar.showMessage(f"Button clicked: {button_id} ({input_code})")
+
+    def _on_device_zone_clicked(self, zone_id: str):
+        """Handle zone click on device visual - open color picker."""
+        from PySide6.QtWidgets import QColorDialog
+
+        current_device = getattr(self, "_current_razer_device", None)
+        if not current_device:
+            self.statusbar.showMessage("Select a device first")
+            return
+
+        color = QColorDialog.getColor()
+        if color.isValid():
+            # Set the zone color in the visual widget
+            self.device_visual.set_zone_color(zone_id, color)
+            # Try to apply to actual device
+            try:
+                self.openrazer.set_static_color(
+                    current_device, color.red(), color.green(), color.blue()
+                )
+                self.statusbar.showMessage(f"Set {zone_id} to {color.name()}")
+            except Exception as e:
+                self.statusbar.showMessage(f"Failed to set color: {e}")
 
     def _setup_daemon_tab(self):
         """Set up the daemon control tab."""
@@ -393,9 +443,19 @@ class MainWindow(QMainWindow):
         )
 
     def _on_razer_device_selected(self, device):
-        """Handle Razer device selection - update DPI and zone editors."""
+        """Handle Razer device selection - update DPI, zone, and visual editors."""
         self.dpi_editor.set_device(device)
         self.zone_editor.set_device(device)
+
+        # Update device visual
+        self._current_razer_device = device
+        if device:
+            self.device_visual.set_device(
+                device.name,
+                device.device_type,
+                device.matrix_cols if hasattr(device, "matrix_cols") else None,
+            )
+            self.device_visual.clear_zone_colors()
 
     def _on_zone_config_changed(self):
         """Handle zone lighting config change."""

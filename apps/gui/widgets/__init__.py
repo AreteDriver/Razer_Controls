@@ -4,6 +4,7 @@ from .app_matcher import AppMatcherWidget
 from .battery_monitor import BatteryMonitorWidget
 from .binding_editor import BindingEditorWidget
 from .device_list import DeviceListWidget
+from .device_visual import DeviceVisualWidget
 from .dpi_editor import DPIStageEditor
 from .hotkey_editor import HotkeyEditorDialog, HotkeyEditorWidget
 from .macro_editor import MacroEditorWidget
@@ -17,6 +18,7 @@ __all__ = [
     "BatteryMonitorWidget",
     "BindingEditorWidget",
     "DeviceListWidget",
+    "DeviceVisualWidget",
     "DPIStageEditor",
     "HotkeyEditorDialog",
     "HotkeyEditorWidget",

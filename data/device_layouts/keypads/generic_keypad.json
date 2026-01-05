@@ -1,0 +1,46 @@
+{
+  "id": "generic_keypad",
+  "name": "Generic Keypad",
+  "category": "keypad",
+  "device_name_patterns": [],
+  "base_width": 180,
+  "base_height": 200,
+  "outline_path": [
+    [0.0, 0.0],
+    [1.0, 0.0],
+    [1.0, 0.75],
+    [0.85, 0.75],
+    [0.85, 1.0],
+    [0.15, 1.0],
+    [0.15, 0.75],
+    [0.0, 0.75]
+  ],
+  "buttons": [
+    {"id": "key_01", "label": "1", "x": 0.08, "y": 0.08, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_1"},
+    {"id": "key_02", "label": "2", "x": 0.25, "y": 0.08, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_2"},
+    {"id": "key_03", "label": "3", "x": 0.42, "y": 0.08, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_3"},
+    {"id": "key_04", "label": "4", "x": 0.59, "y": 0.08, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_4"},
+    {"id": "key_05", "label": "5", "x": 0.76, "y": 0.08, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_5"},
+
+    {"id": "key_06", "label": "6", "x": 0.08, "y": 0.26, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_Q"},
+    {"id": "key_07", "label": "7", "x": 0.25, "y": 0.26, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_W"},
+    {"id": "key_08", "label": "8", "x": 0.42, "y": 0.26, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_E"},
+    {"id": "key_09", "label": "9", "x": 0.59, "y": 0.26, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_R"},
+    {"id": "key_10", "label": "10", "x": 0.76, "y": 0.26, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_T"},
+
+    {"id": "key_11", "label": "11", "x": 0.08, "y": 0.44, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_A"},
+    {"id": "key_12", "label": "12", "x": 0.25, "y": 0.44, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_S"},
+    {"id": "key_13", "label": "13", "x": 0.42, "y": 0.44, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_D"},
+    {"id": "key_14", "label": "14", "x": 0.59, "y": 0.44, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_F"},
+    {"id": "key_15", "label": "15", "x": 0.76, "y": 0.44, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_G"},
+
+    {"id": "key_16", "label": "16", "x": 0.08, "y": 0.62, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_Z"},
+    {"id": "key_17", "label": "17", "x": 0.25, "y": 0.62, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_X"},
+    {"id": "key_18", "label": "18", "x": 0.42, "y": 0.62, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_C"},
+    {"id": "key_19", "label": "19", "x": 0.59, "y": 0.62, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_V"},
+    {"id": "key_20", "label": "20", "x": 0.76, "y": 0.62, "width": 0.14, "height": 0.14, "shape_type": "rect", "input_code": "KEY_B"},
+
+    {"id": "thumbstick", "label": "Thumbstick", "x": 0.35, "y": 0.82, "width": 0.30, "height": 0.15, "shape_type": "ellipse"},
+    {"id": "thumb_button", "label": "Thumb", "x": 0.70, "y": 0.82, "width": 0.20, "height": 0.15, "shape_type": "rect", "input_code": "BTN_THUMB"}
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "generic_keyboard",
+  "name": "Generic Keyboard",
+  "category": "keyboard",
+  "device_name_patterns": [],
+  "base_width": 450,
+  "base_height": 150,
+  "outline_path": [
+    [0.0, 0.0],
+    [1.0, 0.0],
+    [1.0, 1.0],
+    [0.0, 1.0]
+  ],
+  "buttons": [
+    {
+      "id": "zone_function",
+      "label": "Function Keys",
+      "x": 0.18,
+      "y": 0.05,
+      "width": 0.58,
+      "height": 0.15,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_numbers",
+      "label": "Number Row",
+      "x": 0.02,
+      "y": 0.22,
+      "width": 0.82,
+      "height": 0.15,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_qwerty",
+      "label": "QWERTY",
+      "x": 0.02,
+      "y": 0.39,
+      "width": 0.80,
+      "height": 0.15,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_home",
+      "label": "Home Row",
+      "x": 0.02,
+      "y": 0.56,
+      "width": 0.78,
+      "height": 0.15,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_bottom",
+      "label": "Bottom Row",
+      "x": 0.02,
+      "y": 0.73,
+      "width": 0.78,
+      "height": 0.15,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_arrows",
+      "label": "Arrows",
+      "x": 0.82,
+      "y": 0.56,
+      "width": 0.16,
+      "height": 0.32,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_numpad",
+      "label": "Numpad",
+      "x": 0.86,
+      "y": 0.22,
+      "width": 0.12,
+      "height": 0.32,
+      "shape_type": "rect",
+      "is_zone": true
+    },
+    {
+      "id": "zone_logo",
+      "label": "Logo",
+      "x": 0.02,
+      "y": 0.05,
+      "width": 0.12,
+      "height": 0.15,
+      "shape_type": "ellipse",
+      "is_zone": true
+    }
+  ]
+}
