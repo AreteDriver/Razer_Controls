@@ -1340,3 +1340,96 @@ class TestMainGuard:
                     break
 
         assert has_main_guard, "main guard not found"
+
+
+class TestFinalCoverage:
+    """Tests for remaining uncovered lines."""
+
+    def test_show_binding_no_output(self, temp_config):
+        """Test cmd_show with binding that has no output_keys or macro_id (line 114)."""
+        config_dir, loader = temp_config
+
+        # Create a binding with action but no output_keys and no macro_id
+        profile = Profile(
+            id="no-output",
+            name="No Output",
+            input_devices=["test"],
+            layers=[
+                Layer(
+                    id="base",
+                    name="Base",
+                    bindings=[
+                        Binding(
+                            input_code="BTN_SIDE",
+                            action_type=ActionType.DISABLED,
+                            output_keys=[],  # Empty list, no output
+                            macro_id=None,
+                        ),
+                    ],
+                ),
+            ],
+        )
+        loader.save_profile(profile)
+
+        args = argparse.Namespace(config_dir=config_dir, profile_id="no-output")
+
+        with patch("sys.stdout", new=StringIO()) as mock_out:
+            result = cmd_show(args)
+
+        assert result == 0
+        assert "(none)" in mock_out.getvalue()
+
+    def test_import_stdin_yaml_fallback(self, temp_config):
+        """Test importing YAML from stdin when JSON parsing fails (lines 397-398)."""
+        import yaml
+
+        config_dir, _ = temp_config
+
+        # YAML that is NOT valid JSON
+        yaml_data = """
+id: yaml-stdin
+name: YAML Stdin
+input_devices: []
+layers: []
+"""
+
+        args = argparse.Namespace(
+            config_dir=config_dir,
+            file="-",
+            force=False,
+            new_id=None,
+        )
+
+        with patch("sys.stdin.read", return_value=yaml_data):
+            with patch("sys.stdout", new=StringIO()) as mock_out:
+                result = cmd_import(args)
+
+        assert result == 0
+        assert "Imported profile: yaml-stdin" in mock_out.getvalue()
+
+    def test_devices_other_type(self, temp_config):
+        """Test cmd_devices with device that's neither mouse nor keyboard (line 524)."""
+        config_dir, _ = temp_config
+
+        # Create a mock device that is neither mouse nor keyboard
+        # The stable_id must contain "razer" to be treated as a Razer device
+        mock_device = MagicMock()
+        mock_device.stable_id = "razer-other-device-123"
+        mock_device.name = "Other Device"
+        mock_device.is_mouse = False
+        mock_device.is_keyboard = False
+        mock_device.event_path = "/dev/input/event99"
+
+        mock_registry = MagicMock()
+        mock_registry.scan_devices.return_value = [mock_device]
+
+        args = argparse.Namespace(config_dir=config_dir)
+
+        with patch("tools.profile_cli.DeviceRegistry", return_value=mock_registry):
+            with patch("sys.stdout", new=StringIO()) as mock_out:
+                result = cmd_devices(args)
+
+        assert result == 0
+        output = mock_out.getvalue()
+        assert "razer-other-device-123" in output
+        assert "other" in output.lower()
