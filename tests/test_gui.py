@@ -2786,6 +2786,346 @@ class TestDPIStageEditorMethods:
         widget.close()
 
 
+class TestDPIStageItemCoverage:
+    """Extended coverage tests for DPIStageItem."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_slider_rounding(self, qapp):
+        """Test slider value is rounded to nearest 100."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=800, max_dpi=16000, index=0)
+        # The slider rounding logic triggers when the value changes
+        # Use 851 which rounds to 900 (Python banker's rounding: round(8.5)=8, round(8.51)=9)
+        item._on_slider_changed(851)
+        # Should be rounded to 900 in spin
+        assert item.spin.value() == 900
+        item.close()
+
+    def test_bar_color_low_dpi(self, qapp):
+        """Test bar color for low DPI (< 25%)."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=2000, max_dpi=16000, index=0)  # 12.5%
+        # Blue color for low DPI
+        assert "3498db" in item.dpi_bar.styleSheet()
+        item.close()
+
+    def test_bar_color_medium_dpi(self, qapp):
+        """Test bar color for medium DPI (25-50%)."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=6000, max_dpi=16000, index=0)  # 37.5%
+        # Green color for medium DPI
+        assert "2ecc71" in item.dpi_bar.styleSheet()
+        item.close()
+
+    def test_bar_color_high_dpi(self, qapp):
+        """Test bar color for high DPI (50-75%)."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=10000, max_dpi=16000, index=0)  # 62.5%
+        # Yellow color for high DPI
+        assert "f1c40f" in item.dpi_bar.styleSheet()
+        item.close()
+
+    def test_bar_color_very_high_dpi(self, qapp):
+        """Test bar color for very high DPI (> 75%)."""
+        from apps.gui.widgets.dpi_editor import DPIStageItem
+
+        item = DPIStageItem(dpi=14000, max_dpi=16000, index=0)  # 87.5%
+        # Red color for very high DPI
+        assert "e74c3c" in item.dpi_bar.styleSheet()
+        item.close()
+
+
+class TestDPIStageEditorCoverage:
+    """Extended coverage tests for DPIStageEditor."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.get_dpi.return_value = (800, 800)
+        bridge.get_max_dpi.return_value = 16000
+        bridge.set_dpi.return_value = True
+        return bridge
+
+    @pytest.fixture
+    def mock_device(self):
+        device = MagicMock()
+        device.name = "Test Mouse"
+        device.has_dpi = True
+        device.max_dpi = 16000
+        device.dpi = (800, 800)
+        device.serial = "test-serial"
+        return device
+
+    def test_set_device_with_device(self, qapp, mock_bridge, mock_device):
+        """Test setting a device with DPI support."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        assert editor.current_device == mock_device
+        assert len(editor._stage_items) > 0
+        assert editor.add_btn.isEnabled()
+        assert editor.apply_btn.isEnabled()
+        editor.close()
+
+    def test_set_device_none(self, qapp, mock_bridge, mock_device):
+        """Test setting device to None clears editor."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+        assert len(editor._stage_items) > 0
+
+        # Now set to None
+        editor.set_device(None)
+
+        assert editor.current_device is None
+        assert len(editor._stage_items) == 0
+        assert not editor.add_btn.isEnabled()
+        assert not editor.apply_btn.isEnabled()
+        editor.close()
+
+    def test_set_device_clears_existing(self, qapp, mock_bridge, mock_device):
+        """Test setting a new device clears existing stages."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+        initial_count = len(editor._stage_items)
+
+        # Set same device again - should recreate stages
+        editor.set_device(mock_device)
+        assert len(editor._stage_items) == initial_count  # Same number
+        editor.close()
+
+    def test_set_config_with_device(self, qapp, mock_bridge, mock_device):
+        """Test set_config with a device selected."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+        from crates.profile_schema import DPIConfig
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        config = DPIConfig(stages=[400, 800, 1200, 1600], active_stage=2)
+        editor.set_config(config)
+
+        assert len(editor._stage_items) == 4
+        assert editor._active_stage == 2
+        editor.close()
+
+    def test_add_stage(self, qapp, mock_bridge, mock_device):
+        """Test adding a new stage."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+        initial_count = len(editor._stage_items)
+
+        editor._add_stage()
+
+        assert len(editor._stage_items) == initial_count + 1
+        editor.close()
+
+    def test_add_stage_max_reached(self, qapp, mock_bridge, mock_device):
+        """Test adding stage at maximum shows message."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        # Add stages until max
+        while len(editor._stage_items) < editor.MAX_STAGES:
+            editor._add_stage()
+
+        with patch.object(QMessageBox, "information") as mock_info:
+            editor._add_stage()
+            mock_info.assert_called_once()
+        editor.close()
+
+    def test_add_stage_no_device(self, qapp, mock_bridge):
+        """Test adding stage without device does nothing."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor._add_stage()
+        assert len(editor._stage_items) == 0
+        editor.close()
+
+    def test_remove_stage(self, qapp, mock_bridge, mock_device):
+        """Test removing a stage."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        # Add an extra stage
+        editor._add_stage()
+        count_before = len(editor._stage_items)
+
+        # Remove the last stage
+        editor._remove_stage(editor._stage_items[-1])
+
+        assert len(editor._stage_items) == count_before - 1
+        editor.close()
+
+    def test_remove_stage_last_one(self, qapp, mock_bridge, mock_device):
+        """Test cannot remove the last stage."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+        from crates.profile_schema import DPIConfig
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        # Set config with only 1 stage
+        config = DPIConfig(stages=[800], active_stage=0)
+        editor.set_config(config)
+        assert len(editor._stage_items) == 1
+
+        with patch.object(QMessageBox, "warning") as mock_warn:
+            editor._remove_stage(editor._stage_items[0])
+            mock_warn.assert_called_once()
+        assert len(editor._stage_items) == 1
+        editor.close()
+
+    def test_remove_stage_adjusts_active(self, qapp, mock_bridge, mock_device):
+        """Test removing active stage adjusts active index."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+        from crates.profile_schema import DPIConfig
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        config = DPIConfig(stages=[400, 800, 1600], active_stage=2)
+        editor.set_config(config)
+
+        # Remove the last (active) stage
+        editor._remove_stage(editor._stage_items[-1])
+
+        # Active stage should be adjusted
+        assert editor._active_stage == 1
+        editor.close()
+
+    def test_set_active_stage_out_of_range(self, qapp, mock_bridge, mock_device):
+        """Test setting active stage out of range does nothing."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+        initial_active = editor._active_stage
+
+        editor._set_active_stage(100)  # Way out of range
+
+        # Should not change
+        assert editor._active_stage == initial_active
+        editor.close()
+
+    def test_apply_preset(self, qapp, mock_bridge, mock_device):
+        """Test applying a preset configuration."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        preset = [400, 800, 1600]
+        editor._apply_preset(preset)
+
+        assert len(editor._stage_items) == 3
+        assert editor._stage_items[0].get_dpi() == 400
+        assert editor._stage_items[1].get_dpi() == 800
+        assert editor._stage_items[2].get_dpi() == 1600
+        editor.close()
+
+    def test_apply_preset_no_device(self, qapp, mock_bridge):
+        """Test applying preset without device does nothing."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor._apply_preset([400, 800])
+        assert len(editor._stage_items) == 0
+        editor.close()
+
+    def test_apply_to_device_success(self, qapp, mock_bridge, mock_device):
+        """Test applying DPI to device successfully."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        with patch.object(QMessageBox, "information") as mock_info:
+            editor._apply_to_device()
+            mock_info.assert_called_once()
+        editor.close()
+
+    def test_apply_to_device_failure(self, qapp, mock_bridge, mock_device):
+        """Test applying DPI to device with failure."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        mock_bridge.set_dpi.return_value = False
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        with patch.object(QMessageBox, "warning") as mock_warn:
+            editor._apply_to_device()
+            mock_warn.assert_called_once()
+        editor.close()
+
+    def test_apply_to_device_no_device(self, qapp, mock_bridge):
+        """Test applying DPI without device does nothing."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        # Should not crash
+        editor._apply_to_device()
+        editor.close()
+
+    def test_on_stage_changed_emits_signal(self, qapp, mock_bridge, mock_device):
+        """Test stage changed emits signal."""
+        from apps.gui.widgets.dpi_editor import DPIStageEditor
+
+        editor = DPIStageEditor(bridge=mock_bridge)
+        editor.set_device(mock_device)
+
+        signal_emitted = []
+        editor.stages_changed.connect(lambda stages: signal_emitted.append(stages))
+
+        editor._on_stage_changed()
+
+        assert len(signal_emitted) == 1
+        assert isinstance(signal_emitted[0], list)
+        editor.close()
+
+
 class TestBindingEditorMethods:
     """Tests for BindingEditorWidget methods."""
 
@@ -4160,6 +4500,296 @@ class TestZoneItem:
         item = ZoneItem(zone)
         assert item.zone.name == "WASD"
         item.close()
+
+
+class TestZoneEditorCoverage:
+    """Extended coverage tests for ZoneEditorWidget."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_bridge(self):
+        bridge = MagicMock()
+        bridge.discover_devices.return_value = []
+        bridge.set_matrix_colors.return_value = True
+        return bridge
+
+    @pytest.fixture
+    def mock_matrix_device(self):
+        device = MagicMock()
+        device.name = "Razer BlackWidow"
+        device.has_matrix = True
+        device.matrix_rows = 6
+        device.matrix_cols = 22
+        device.serial = "test-serial"
+        return device
+
+    def test_set_device_with_matrix(self, qapp, mock_bridge, mock_matrix_device):
+        """Test setting a matrix device creates zones."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        assert widget.current_device == mock_matrix_device
+        assert len(widget.zone_items) > 0  # Should have created zone items
+        assert widget.apply_btn.isEnabled()
+        widget.close()
+
+    def test_set_device_clears_existing(self, qapp, mock_bridge, mock_matrix_device):
+        """Test setting a new device clears existing zones."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+        first_count = len(widget.zone_items)
+        assert first_count > 0
+
+        # Set same device again - should clear and recreate
+        widget.set_device(mock_matrix_device)
+        assert len(widget.zone_items) > 0
+        widget.close()
+
+    def test_on_zone_color_changed(self, qapp, mock_bridge, mock_matrix_device):
+        """Test zone color change emits config_changed signal."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        signal_emitted = []
+        widget.config_changed.connect(lambda: signal_emitted.append(True))
+
+        # Trigger color change on a zone
+        zone_id = list(widget.zone_items.keys())[0]
+        widget._on_zone_color_changed(zone_id, (255, 0, 0))
+
+        assert len(signal_emitted) == 1
+        widget.close()
+
+    def test_on_preset_changed_select_preset(self, qapp, mock_bridge, mock_matrix_device):
+        """Test applying a preset sets zone colors."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Apply gaming preset
+        widget._on_preset_changed("Gaming")
+
+        # Preset combo should reset to placeholder
+        assert widget.preset_combo.currentIndex() == 0
+        widget.close()
+
+    def test_on_preset_changed_placeholder(self, qapp, mock_bridge, mock_matrix_device):
+        """Test selecting placeholder does nothing."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Should not error when selecting placeholder
+        widget._on_preset_changed("(Select preset)")
+        widget.close()
+
+    def test_fill_all_zones(self, qapp, mock_bridge, mock_matrix_device):
+        """Test filling all zones with a color."""
+        from PySide6.QtWidgets import QColorDialog
+        from PySide6.QtGui import QColor
+
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Mock color dialog to return a color
+        with patch.object(QColorDialog, "getColor", return_value=QColor(255, 128, 64)):
+            widget._fill_all_zones()
+
+        # All zones should have that color
+        for item in widget.zone_items.values():
+            assert item.get_color() == (255, 128, 64)
+        widget.close()
+
+    def test_fill_all_zones_cancel(self, qapp, mock_bridge, mock_matrix_device):
+        """Test canceling fill dialog does nothing."""
+        from PySide6.QtWidgets import QColorDialog
+        from PySide6.QtGui import QColor
+
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Set a known color first
+        for item in widget.zone_items.values():
+            item.set_color((100, 100, 100))
+
+        # Mock color dialog to return invalid (cancelled)
+        invalid_color = QColor()
+        with patch.object(QColorDialog, "getColor", return_value=invalid_color):
+            widget._fill_all_zones()
+
+        # Colors should be unchanged
+        for item in widget.zone_items.values():
+            assert item.get_color() == (100, 100, 100)
+        widget.close()
+
+    def test_clear_all_zones_with_zones(self, qapp, mock_bridge, mock_matrix_device):
+        """Test clearing all zones sets them to black."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Set some colors first
+        for item in widget.zone_items.values():
+            item.set_color((255, 128, 64))
+
+        widget._clear_all_zones()
+
+        # All zones should be black
+        for item in widget.zone_items.values():
+            assert item.get_color() == (0, 0, 0)
+        widget.close()
+
+    def test_apply_to_device(self, qapp, mock_bridge, mock_matrix_device):
+        """Test applying zone colors to device."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        # Set some colors
+        zone_id = list(widget.zone_items.keys())[0]
+        widget.zone_items[zone_id].set_color((255, 0, 0))
+
+        widget._apply_to_device()
+
+        # Bridge should have been called
+        mock_bridge.set_matrix_colors.assert_called_once()
+        widget.close()
+
+    def test_apply_to_device_no_device(self, qapp, mock_bridge):
+        """Test apply to device with no device does nothing."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget._apply_to_device()
+        mock_bridge.set_matrix_colors.assert_not_called()
+        widget.close()
+
+    def test_set_zone_colors_with_zones(self, qapp, mock_bridge, mock_matrix_device):
+        """Test setting zone colors with existing zones."""
+        from apps.gui.widgets.zone_editor import ZoneEditorWidget
+
+        widget = ZoneEditorWidget(bridge=mock_bridge)
+        widget.set_device(mock_matrix_device)
+
+        zone_id = list(widget.zone_items.keys())[0]
+        widget.set_zone_colors({zone_id: (64, 128, 192)})
+
+        assert widget.zone_items[zone_id].get_color() == (64, 128, 192)
+        widget.close()
+
+
+class TestZoneItemCoverage:
+    """Extended coverage tests for ZoneItem."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_zone_item_color_changed_signal(self, qapp):
+        """Test ZoneItem emits color_changed signal."""
+        from apps.gui.widgets.zone_editor import ZoneItem
+        from crates.zone_definitions import KeyPosition, Zone, ZoneType
+
+        zone = Zone(
+            id="test_zone",
+            name="Test Zone",
+            zone_type=ZoneType.QWERTY_ROW,
+            keys=[KeyPosition(row=0, col=0)],
+        )
+        item = ZoneItem(zone)
+
+        signal_emitted = []
+        item.color_changed.connect(lambda zone_id, color: signal_emitted.append((zone_id, color)))
+
+        # Trigger color change
+        item._on_color_changed((255, 128, 64))
+
+        assert len(signal_emitted) == 1
+        assert signal_emitted[0] == ("test_zone", (255, 128, 64))
+        item.close()
+
+
+class TestZoneColorButtonCoverage:
+    """Extended coverage tests for ZoneColorButton."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_pick_color_accepted(self, qapp):
+        """Test color picker when color is accepted."""
+        from PySide6.QtWidgets import QColorDialog
+        from PySide6.QtGui import QColor
+
+        from apps.gui.widgets.zone_editor import ZoneColorButton
+
+        btn = ZoneColorButton((100, 100, 100))
+
+        signal_emitted = []
+        btn.color_changed.connect(lambda color: signal_emitted.append(color))
+
+        # Mock color dialog to return a valid color
+        with patch.object(QColorDialog, "getColor", return_value=QColor(255, 0, 128)):
+            btn._pick_color()
+
+        assert btn.get_color() == (255, 0, 128)
+        assert len(signal_emitted) == 1
+        assert signal_emitted[0] == (255, 0, 128)
+        btn.close()
+
+    def test_pick_color_cancelled(self, qapp):
+        """Test color picker when cancelled."""
+        from PySide6.QtWidgets import QColorDialog
+        from PySide6.QtGui import QColor
+
+        from apps.gui.widgets.zone_editor import ZoneColorButton
+
+        btn = ZoneColorButton((100, 100, 100))
+
+        signal_emitted = []
+        btn.color_changed.connect(lambda color: signal_emitted.append(color))
+
+        # Mock color dialog to return invalid (cancelled)
+        invalid_color = QColor()
+        with patch.object(QColorDialog, "getColor", return_value=invalid_color):
+            btn._pick_color()
+
+        # Color should be unchanged
+        assert btn.get_color() == (100, 100, 100)
+        assert len(signal_emitted) == 0
+        btn.close()
 
 
 class TestBatteryMonitorMethods:
