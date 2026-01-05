@@ -438,7 +438,7 @@ class TestCmdRecord:
                             mock_ecodes.EV_KEY = 1
                             with patch("tools.macro_cli.time.sleep"):
                                 with patch.object(Path, "write_text"):
-                                    with patch("sys.stdout", new=StringIO()) as mock_out:
+                                    with patch("sys.stdout", new=StringIO()):
                                         result = cmd_record(args)
 
         assert result == 0
@@ -542,7 +542,7 @@ class TestCmdRecord:
                             with patch("tools.macro_cli.ecodes") as mock_ecodes:
                                 mock_ecodes.EV_KEY = 1
                                 with patch("tools.macro_cli.time.sleep"):
-                                    with patch("sys.stdout", new=StringIO()) as mock_out:
+                                    with patch("sys.stdout", new=StringIO()):
                                         result = cmd_record(args)
 
             assert result == 0
@@ -616,7 +616,7 @@ class TestCmdRecord:
                             with patch("tools.macro_cli.time.sleep"):
                                 with patch.object(Path, "write_text"):
                                     with patch("sys.stdout", new=StringIO()):
-                                        result = cmd_record(args)
+                                        cmd_record(args)
 
         # Verify callback was set
         mock_recorder.set_event_callback.assert_called_once()
@@ -1298,7 +1298,7 @@ class TestCmdPlayVerboseCallback:
             args = argparse.Namespace(file=f.name, speed=1.0, yes=True, verbose=True)
 
             with patch("tools.macro_cli.MacroPlayer", return_value=mock_player):
-                with patch("sys.stdout", new=StringIO()) as mock_out:
+                with patch("sys.stdout", new=StringIO()):
                     result = cmd_play(args)
 
                     # Now invoke the callback to test lines 186-187

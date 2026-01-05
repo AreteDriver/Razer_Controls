@@ -85,13 +85,13 @@ class TestGUIMainFunction:
 
     def test_main_with_existing_profiles(self):
         """Test main() with existing profiles skips wizard."""
-        with patch("apps.gui.main.QApplication") as mock_qapp, patch(
-            "apps.gui.main.ProfileLoader"
-        ) as mock_loader, patch("apps.gui.main.MainWindow") as mock_window, patch(
-            "apps.gui.theme.apply_dark_theme"
-        ), patch(
-            "apps.gui.main.sys.exit"
-        ) as mock_exit:
+        with (
+            patch("apps.gui.main.QApplication") as mock_qapp,
+            patch("apps.gui.main.ProfileLoader") as mock_loader,
+            patch("apps.gui.main.MainWindow") as mock_window,
+            patch("apps.gui.theme.apply_dark_theme"),
+            patch("apps.gui.main.sys.exit") as mock_exit,
+        ):
             # Setup: profiles exist
             mock_loader.return_value.list_profiles.return_value = ["profile1"]
             mock_qapp.return_value.exec.return_value = 0
@@ -107,15 +107,14 @@ class TestGUIMainFunction:
 
     def test_main_first_run_wizard_accepted(self):
         """Test main() on first run shows wizard and continues if accepted."""
-        with patch("apps.gui.main.QApplication") as mock_qapp, patch(
-            "apps.gui.main.ProfileLoader"
-        ) as mock_loader, patch("apps.gui.main.MainWindow") as mock_window, patch(
-            "apps.gui.theme.apply_dark_theme"
-        ), patch(
-            "apps.gui.main.sys.exit"
-        ) as mock_exit, patch(
-            "apps.gui.widgets.setup_wizard.SetupWizard"
-        ) as mock_wizard:
+        with (
+            patch("apps.gui.main.QApplication") as mock_qapp,
+            patch("apps.gui.main.ProfileLoader") as mock_loader,
+            patch("apps.gui.main.MainWindow") as mock_window,
+            patch("apps.gui.theme.apply_dark_theme"),
+            patch("apps.gui.main.sys.exit"),
+            patch("apps.gui.widgets.setup_wizard.SetupWizard") as mock_wizard,
+        ):
             from PySide6.QtWidgets import QDialog
 
             # Setup: no profiles, wizard accepted
@@ -136,15 +135,14 @@ class TestGUIMainFunction:
 
     def test_main_first_run_wizard_cancelled(self):
         """Test main() exits if user cancels setup wizard."""
-        with patch("apps.gui.main.QApplication") as mock_qapp, patch(
-            "apps.gui.main.ProfileLoader"
-        ) as mock_loader, patch("apps.gui.main.MainWindow") as mock_window, patch(
-            "apps.gui.theme.apply_dark_theme"
-        ), patch(
-            "apps.gui.main.sys.exit", side_effect=SystemExit(0)
-        ) as mock_exit, patch(
-            "apps.gui.widgets.setup_wizard.SetupWizard"
-        ) as mock_wizard:
+        with (
+            patch("apps.gui.main.QApplication") as mock_qapp,
+            patch("apps.gui.main.ProfileLoader") as mock_loader,
+            patch("apps.gui.main.MainWindow") as mock_window,
+            patch("apps.gui.theme.apply_dark_theme"),
+            patch("apps.gui.main.sys.exit", side_effect=SystemExit(0)) as mock_exit,
+            patch("apps.gui.widgets.setup_wizard.SetupWizard") as mock_wizard,
+        ):
             from PySide6.QtWidgets import QDialog
 
             # Setup: no profiles, wizard rejected
@@ -167,12 +165,12 @@ class TestGUIMainFunction:
 
     def test_main_sets_app_properties(self):
         """Test main() sets application name and organization."""
-        with patch("apps.gui.main.QApplication") as mock_qapp, patch(
-            "apps.gui.main.ProfileLoader"
-        ) as mock_loader, patch("apps.gui.main.MainWindow"), patch(
-            "apps.gui.theme.apply_dark_theme"
-        ), patch(
-            "apps.gui.main.sys.exit"
+        with (
+            patch("apps.gui.main.QApplication") as mock_qapp,
+            patch("apps.gui.main.ProfileLoader") as mock_loader,
+            patch("apps.gui.main.MainWindow"),
+            patch("apps.gui.theme.apply_dark_theme"),
+            patch("apps.gui.main.sys.exit"),
         ):
             mock_loader.return_value.list_profiles.return_value = ["profile1"]
             mock_qapp.return_value.exec.return_value = 0
@@ -181,12 +179,8 @@ class TestGUIMainFunction:
 
             main()
 
-            mock_qapp.return_value.setApplicationName.assert_called_with(
-                "Razer Control Center"
-            )
-            mock_qapp.return_value.setOrganizationName.assert_called_with(
-                "RazerControlCenter"
-            )
+            mock_qapp.return_value.setApplicationName.assert_called_with("Razer Control Center")
+            mock_qapp.return_value.setOrganizationName.assert_called_with("RazerControlCenter")
             mock_qapp.return_value.setStyle.assert_called_with("Fusion")
 
 
@@ -559,7 +553,9 @@ class TestHotkeyCapture:
 
         event = MagicMock(spec=QKeyEvent)
         event.key.return_value = Qt.Key.Key_3
-        event.modifiers.return_value = Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.ControlModifier
+        event.modifiers.return_value = (
+            Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.ControlModifier
+        )
 
         widget.keyPressEvent(event)
 
@@ -609,8 +605,10 @@ class TestHotkeyEditorWidget:
         """Test HotkeyEditorWidget can be created."""
         from unittest.mock import patch
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager"), \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager"),
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
 
             from apps.gui.widgets.hotkey_editor import HotkeyEditorWidget
@@ -626,8 +624,10 @@ class TestHotkeyEditorWidget:
 
         from crates.profile_schema import HotkeyBinding
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
 
             mock_settings = MagicMock()
@@ -654,8 +654,10 @@ class TestHotkeyEditorWidget:
 
         from PySide6.QtCore import Qt
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager"), \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager"),
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
 
             from apps.gui.widgets.hotkey_editor import HotkeyEditorWidget
@@ -673,8 +675,10 @@ class TestHotkeyEditorWidget:
 
         from crates.profile_schema import HotkeyBinding
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             MockSettings.return_value.load.return_value = MagicMock(
                 hotkeys=MagicMock(profile_hotkeys=[])
@@ -697,8 +701,10 @@ class TestHotkeyEditorWidget:
 
         from crates.profile_schema import HotkeyBinding
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             MockSettings.return_value.load.return_value = MagicMock(
                 hotkeys=MagicMock(profile_hotkeys=[])
@@ -726,8 +732,10 @@ class TestHotkeyEditorWidget:
 
         from PySide6.QtWidgets import QMessageBox
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             MockSettings.return_value.load.return_value = MagicMock(
                 hotkeys=MagicMock(profile_hotkeys=[])
@@ -752,8 +760,10 @@ class TestHotkeyEditorWidget:
 
         from PySide6.QtWidgets import QMessageBox
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             MockSettings.return_value.load.return_value = MagicMock(
                 hotkeys=MagicMock(profile_hotkeys=[])
@@ -777,14 +787,15 @@ class TestHotkeyEditorWidget:
 
         from crates.profile_schema import HotkeyBinding
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             mock_settings = MagicMock()
             # Use real HotkeyBinding objects
             mock_settings.hotkeys.profile_hotkeys = [
-                HotkeyBinding(key=str(i + 1), modifiers=["ctrl", "shift"])
-                for i in range(9)
+                HotkeyBinding(key=str(i + 1), modifiers=["ctrl", "shift"]) for i in range(9)
             ]
             MockSettings.return_value.load.return_value = mock_settings
             MockSettings.return_value.save.return_value = True
@@ -810,14 +821,15 @@ class TestHotkeyEditorWidget:
 
         from crates.profile_schema import HotkeyBinding
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings, \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager") as MockSettings,
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
             mock_settings = MagicMock()
             # Use real HotkeyBinding objects
             mock_settings.hotkeys.profile_hotkeys = [
-                HotkeyBinding(key=str(i + 1), modifiers=["ctrl", "shift"])
-                for i in range(9)
+                HotkeyBinding(key=str(i + 1), modifiers=["ctrl", "shift"]) for i in range(9)
             ]
             MockSettings.return_value.load.return_value = mock_settings
             MockSettings.return_value.save.return_value = False
@@ -849,8 +861,10 @@ class TestHotkeyEditorDialog:
         """Test HotkeyEditorDialog can be created."""
         from unittest.mock import patch
 
-        with patch("apps.gui.widgets.hotkey_editor.SettingsManager"), \
-             patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader:
+        with (
+            patch("apps.gui.widgets.hotkey_editor.SettingsManager"),
+            patch("apps.gui.widgets.hotkey_editor.ProfileLoader") as MockLoader,
+        ):
             MockLoader.return_value.list_profiles.return_value = []
 
             from apps.gui.widgets.hotkey_editor import HotkeyEditorDialog
@@ -1252,14 +1266,16 @@ class TestMacroEditorMethods:
         from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
         widget = MacroEditorWidget()
-        widget.set_macros([
-            MacroAction(
-                id="m1",
-                name="Test",
-                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
-                repeat_count=1,
-            )
-        ])
+        widget.set_macros(
+            [
+                MacroAction(
+                    id="m1",
+                    name="Test",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                    repeat_count=1,
+                )
+            ]
+        )
         widget.macro_list.setCurrentRow(0)
         widget.steps_list.setCurrentRow(0)
 
@@ -1638,14 +1654,16 @@ class TestMacroEditorExtendedCoverage:
         from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
         widget = MacroEditorWidget()
-        widget.set_macros([
-            MacroAction(
-                id="m1",
-                name="Test",
-                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
-                repeat_count=1,
-            )
-        ])
+        widget.set_macros(
+            [
+                MacroAction(
+                    id="m1",
+                    name="Test",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                    repeat_count=1,
+                )
+            ]
+        )
         widget.macro_list.setCurrentRow(0)
         widget.steps_list.setCurrentRow(0)
 
@@ -1680,14 +1698,16 @@ class TestMacroEditorExtendedCoverage:
         from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
         widget = MacroEditorWidget()
-        widget.set_macros([
-            MacroAction(
-                id="m1",
-                name="Test",
-                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
-                repeat_count=1,
-            )
-        ])
+        widget.set_macros(
+            [
+                MacroAction(
+                    id="m1",
+                    name="Test",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                    repeat_count=1,
+                )
+            ]
+        )
         widget.macro_list.setCurrentRow(0)
         # No step selected
         widget.steps_list.clearSelection()
@@ -1750,15 +1770,17 @@ class TestMacroEditorExtendedCoverage:
         from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
         widget = MacroEditorWidget()
-        widget.set_macros([
-            MacroAction(
-                id="m1",
-                name="Test Macro",
-                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
-                repeat_count=2,
-                repeat_delay_ms=50,
-            )
-        ])
+        widget.set_macros(
+            [
+                MacroAction(
+                    id="m1",
+                    name="Test Macro",
+                    steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                    repeat_count=2,
+                    repeat_delay_ms=50,
+                )
+            ]
+        )
         widget.macro_list.setCurrentRow(0)
 
         with patch.object(QMessageBox, "information") as mock_info:
@@ -1847,9 +1869,10 @@ class TestMacroEditorFinalCoverage:
 
         widget = MacroEditorWidget()
         # Create a valid step then mock the type attribute
-        step = MacroStep(type="key_press", key="A")
+        MacroStep(type="key_press", key="A")
         # Override with a mock to simulate unknown type path
         from unittest.mock import MagicMock
+
         mock_step = MagicMock()
         mock_step.type = "UNKNOWN_TYPE"
         mock_step.key = None
@@ -1893,17 +1916,19 @@ class TestMacroEditorFinalCoverage:
         from crates.profile_schema import MacroAction, MacroStep, MacroStepType
 
         widget = MacroEditorWidget()
-        widget.set_macros([
-            MacroAction(
-                id="m1",
-                name="Test",
-                steps=[
-                    MacroStep(type=MacroStepType.KEY_PRESS, key="A"),
-                    MacroStep(type=MacroStepType.KEY_PRESS, key="B"),
-                ],
-                repeat_count=1,
-            )
-        ])
+        widget.set_macros(
+            [
+                MacroAction(
+                    id="m1",
+                    name="Test",
+                    steps=[
+                        MacroStep(type=MacroStepType.KEY_PRESS, key="A"),
+                        MacroStep(type=MacroStepType.KEY_PRESS, key="B"),
+                    ],
+                    repeat_count=1,
+                )
+            ]
+        )
         widget.macro_list.setCurrentRow(0)
 
         # Simulate reorder by calling the method
@@ -2371,8 +2396,6 @@ class TestProfilePanelMethods:
 
     def test_activate_profile(self, qapp):
         """Test activating a profile."""
-        from PySide6.QtCore import Qt
-        from PySide6.QtWidgets import QListWidgetItem
 
         from apps.gui.widgets.profile_panel import ProfilePanel
         from crates.profile_schema import Layer, Profile
@@ -2424,8 +2447,8 @@ class TestProfilePanelMethods:
         widget.close()
 
 
-class TestNewProfileDialog:
-    """Tests for NewProfileDialog."""
+class TestNewProfileDialogExtended:
+    """Extended tests for NewProfileDialog."""
 
     @pytest.fixture
     def qapp(self):
@@ -2436,8 +2459,8 @@ class TestNewProfileDialog:
             app = QApplication([])
         yield app
 
-    def test_dialog_instantiation(self, qapp):
-        """Test NewProfileDialog can be created."""
+    def test_dialog_window_title(self, qapp):
+        """Test NewProfileDialog has correct window title."""
         from apps.gui.widgets.profile_panel import NewProfileDialog
 
         dialog = NewProfileDialog()
@@ -2517,14 +2540,15 @@ class TestProfilePanelImportExport:
         from unittest.mock import patch
 
         from apps.gui.widgets.profile_panel import ProfilePanel
-        from crates.profile_schema import Layer, Profile
 
         # Create test file
         profile_data = {
             "id": "imported",
             "name": "Imported Profile",
             "description": "Test",
-            "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+            "layers": [
+                {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+            ],
         }
         test_file = tmp_path / "test.json"
         test_file.write_text(json.dumps(profile_data))
@@ -2538,8 +2562,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
 
@@ -2559,7 +2585,9 @@ class TestProfilePanelImportExport:
             "id": "yaml_profile",
             "name": "YAML Profile",
             "description": "Test",
-            "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+            "layers": [
+                {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+            ],
         }
         test_file = tmp_path / "test.yaml"
         test_file.write_text(yaml.dump(profile_data))
@@ -2573,8 +2601,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(test_file), "YAML Files (*.yaml)")
             widget._import_profile()
 
@@ -2595,7 +2625,9 @@ class TestProfilePanelImportExport:
                 "id": "wrapped",
                 "name": "Wrapped Profile",
                 "description": "",
-                "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+                "layers": [
+                    {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+                ],
             },
         }
         test_file = tmp_path / "wrapped.json"
@@ -2610,8 +2642,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
 
@@ -2632,7 +2666,9 @@ class TestProfilePanelImportExport:
             "id": "existing",
             "name": "Existing Profile",
             "description": "",
-            "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+            "layers": [
+                {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+            ],
         }
         test_file = tmp_path / "existing.json"
         test_file.write_text(json.dumps(profile_data))
@@ -2653,9 +2689,11 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes), \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes),
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
 
@@ -2676,7 +2714,9 @@ class TestProfilePanelImportExport:
             "id": "existing",
             "name": "Existing Profile",
             "description": "",
-            "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+            "layers": [
+                {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+            ],
         }
         test_file = tmp_path / "existing.json"
         test_file.write_text(json.dumps(profile_data))
@@ -2696,8 +2736,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No),
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
 
@@ -2715,7 +2757,9 @@ class TestProfilePanelImportExport:
             "id": "fail",
             "name": "Fail Profile",
             "description": "",
-            "layers": [{"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}],
+            "layers": [
+                {"id": "base", "name": "Base", "bindings": [], "hold_modifier_input_code": None}
+            ],
         }
         test_file = tmp_path / "fail.json"
         test_file.write_text(json.dumps(profile_data))
@@ -2729,8 +2773,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.warning") as mock_warn:
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.warning") as mock_warn,
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
             mock_warn.assert_called()
@@ -2753,8 +2799,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit:
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit,
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
             mock_crit.assert_called()
@@ -2779,8 +2827,10 @@ class TestProfilePanelImportExport:
         widget = ProfilePanel()
         widget.load_profiles(loader)
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit:
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getOpenFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit,
+        ):
             mock_fd.return_value = (str(test_file), "JSON Files (*.json)")
             widget._import_profile()
             mock_crit.assert_called()
@@ -2790,9 +2840,6 @@ class TestProfilePanelImportExport:
     def test_export_profile_cancelled(self, qapp):
         """Test export does nothing when file dialog cancelled."""
         from unittest.mock import patch
-
-        from PySide6.QtCore import Qt
-        from PySide6.QtWidgets import QListWidgetItem
 
         from apps.gui.widgets.profile_panel import ProfilePanel
         from crates.profile_schema import Layer, Profile
@@ -2843,8 +2890,10 @@ class TestProfilePanelImportExport:
 
         output_file = tmp_path / "export.json"
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(output_file), "JSON Files (*.json)")
             widget._export_profile()
 
@@ -2881,8 +2930,10 @@ class TestProfilePanelImportExport:
 
         output_file = tmp_path / "export.yaml"
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(output_file), "YAML Files (*.yaml)")
             widget._export_profile()
 
@@ -2894,7 +2945,6 @@ class TestProfilePanelImportExport:
 
     def test_export_profile_adds_json_extension(self, qapp, tmp_path):
         """Test export adds .json extension if missing."""
-        import json
         from unittest.mock import patch
 
         from apps.gui.widgets.profile_panel import ProfilePanel
@@ -2918,8 +2968,10 @@ class TestProfilePanelImportExport:
         # File without extension
         output_file = tmp_path / "noext"
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.information"):
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.information"),
+        ):
             mock_fd.return_value = (str(output_file), "JSON Files (*.json)")
             widget._export_profile()
 
@@ -2962,8 +3014,10 @@ class TestProfilePanelImportExport:
         # Path that can't be written
         output_file = tmp_path / "readonly" / "test.json"
 
-        with patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd, \
-             patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit:
+        with (
+            patch("apps.gui.widgets.profile_panel.QFileDialog.getSaveFileName") as mock_fd,
+            patch("apps.gui.widgets.profile_panel.QMessageBox.critical") as mock_crit,
+        ):
             mock_fd.return_value = (str(output_file), "JSON Files (*.json)")
             widget._export_profile()
             mock_crit.assert_called()
@@ -3490,7 +3544,12 @@ class TestBindingEditorMethods:
             description="",
             layers=[
                 Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None),
-                Layer(id="hypershift", name="Hypershift", bindings=[], hold_modifier_input_code="BTN_SIDE"),
+                Layer(
+                    id="hypershift",
+                    name="Hypershift",
+                    bindings=[],
+                    hold_modifier_input_code="BTN_SIDE",
+                ),
             ],
         )
         widget.load_profile(profile)
@@ -3514,7 +3573,9 @@ class TestBindingEditorMethods:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["F13"]),
+                        Binding(
+                            input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["F13"]
+                        ),
                     ],
                     hold_modifier_input_code=None,
                 )
@@ -3541,7 +3602,9 @@ class TestBindingEditorMethods:
         from crates.profile_schema import ActionType, Binding
 
         widget = BindingEditorWidget()
-        binding = Binding(input_code="BTN_SIDE", action_type=ActionType.CHORD, output_keys=["CTRL", "C"])
+        binding = Binding(
+            input_code="BTN_SIDE", action_type=ActionType.CHORD, output_keys=["CTRL", "C"]
+        )
         result = widget._format_binding(binding)
         assert "CTRL+C" in result
         widget.close()
@@ -3552,7 +3615,9 @@ class TestBindingEditorMethods:
         from crates.profile_schema import ActionType, Binding
 
         widget = BindingEditorWidget()
-        binding = Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="test_macro")
+        binding = Binding(
+            input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="test_macro"
+        )
         result = widget._format_binding(binding)
         assert "Macro" in result
         assert "test_macro" in result
@@ -3610,7 +3675,12 @@ class TestBindingEditorMethods:
             description="",
             layers=[
                 Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None),
-                Layer(id="hypershift", name="Hypershift", bindings=[], hold_modifier_input_code="BTN_SIDE"),
+                Layer(
+                    id="hypershift",
+                    name="Hypershift",
+                    bindings=[],
+                    hold_modifier_input_code="BTN_SIDE",
+                ),
             ],
         )
         widget.load_profile(profile)
@@ -3663,7 +3733,9 @@ class TestLayerDialog:
         from apps.gui.widgets.binding_editor import LayerDialog
         from crates.profile_schema import Layer
 
-        layer = Layer(id="test", name="Test Layer", bindings=[], hold_modifier_input_code="BTN_SIDE")
+        layer = Layer(
+            id="test", name="Test Layer", bindings=[], hold_modifier_input_code="BTN_SIDE"
+        )
         dialog = LayerDialog(layer=layer)
         assert dialog.windowTitle() == "Edit Layer"
         assert dialog.name_edit.text() == "Test Layer"
@@ -3934,7 +4006,9 @@ class TestBindingEditorInteractive:
                     id="base",
                     name="Base",
                     bindings=[
-                        Binding(input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["F13"]),
+                        Binding(
+                            input_code="BTN_SIDE", action_type=ActionType.KEY, output_keys=["F13"]
+                        ),
                     ],
                     hold_modifier_input_code=None,
                 ),
@@ -4036,7 +4110,9 @@ class TestBindingEditorInteractive:
             description="",
             layers=[
                 Layer(id="base", name="Base", bindings=[], hold_modifier_input_code=None),
-                Layer(id="layer2", name="To Delete", bindings=[], hold_modifier_input_code="BTN_SIDE"),
+                Layer(
+                    id="layer2", name="To Delete", bindings=[], hold_modifier_input_code="BTN_SIDE"
+                ),
             ],
         )
         widget.load_profile(profile)
@@ -4087,7 +4163,9 @@ class TestBindingEditorInteractive:
         widget = widget_with_profile
         initial_bindings = len(widget.current_profile.layers[0].bindings)
 
-        mock_binding = Binding(input_code="BTN_EXTRA", action_type=ActionType.KEY, output_keys=["F14"])
+        mock_binding = Binding(
+            input_code="BTN_EXTRA", action_type=ActionType.KEY, output_keys=["F14"]
+        )
 
         with patch("apps.gui.widgets.binding_editor.BindingDialog") as MockDialog:
             mock_dialog = MagicMock()
@@ -4237,7 +4315,9 @@ class TestBindingEditorCoverage:
         from crates.profile_schema import ActionType, Binding, MacroAction
 
         macros = [MacroAction(id="test_macro", name="Test", steps=[], repeat_count=1)]
-        binding = Binding(input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="test_macro")
+        binding = Binding(
+            input_code="BTN_SIDE", action_type=ActionType.MACRO, macro_id="test_macro"
+        )
         dialog = BindingDialog(binding=binding, macros=macros)
         assert dialog.macro_combo.currentData() == "test_macro"
         dialog.close()
@@ -4399,7 +4479,7 @@ class TestBindingEditorCoverage:
         """Test _edit_binding from double-click (lines 689-691)."""
         from unittest.mock import MagicMock, patch
 
-        from PySide6.QtWidgets import QDialog, QListWidgetItem
+        from PySide6.QtWidgets import QDialog
 
         from apps.gui.widgets.binding_editor import BindingEditorWidget
         from crates.profile_schema import ActionType, Binding, Layer, Profile
@@ -4409,7 +4489,9 @@ class TestBindingEditorCoverage:
         profile = Profile(
             id="test",
             name="Test",
-            layers=[Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)],
+            layers=[
+                Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)
+            ],
         )
         widget.load_profile(profile)
 
@@ -4437,7 +4519,9 @@ class TestBindingEditorCoverage:
         profile = Profile(
             id="test",
             name="Test",
-            layers=[Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)],
+            layers=[
+                Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)
+            ],
         )
         widget.load_profile(profile)
         widget.bindings_list.setCurrentRow(0)
@@ -4465,7 +4549,9 @@ class TestBindingEditorCoverage:
         profile = Profile(
             id="test",
             name="Test",
-            layers=[Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)],
+            layers=[
+                Layer(id="base", name="Base", bindings=[binding], hold_modifier_input_code=None)
+            ],
         )
         widget.load_profile(profile)
 
@@ -4765,8 +4851,10 @@ class TestAppMatcherMethods:
         )
         widget.load_profile(profile)
 
-        with patch("apps.gui.widgets.app_matcher.AddPatternDialog") as MockDialog, \
-             patch.object(QMessageBox, "warning") as mock_warn:
+        with (
+            patch("apps.gui.widgets.app_matcher.AddPatternDialog") as MockDialog,
+            patch.object(QMessageBox, "warning") as mock_warn,
+        ):
             mock_dialog = MagicMock()
             mock_dialog.exec.return_value = QDialog.DialogCode.Accepted
             mock_dialog.get_pattern.return_value = "STEAM"  # Case insensitive match
@@ -5209,7 +5297,12 @@ class TestZoneItem:
             id="wasd",
             name="WASD",
             zone_type=ZoneType.ASDF_ROW,
-            keys=[KeyPosition(row=1, col=1), KeyPosition(row=2, col=0), KeyPosition(row=2, col=1), KeyPosition(row=2, col=2)],
+            keys=[
+                KeyPosition(row=1, col=1),
+                KeyPosition(row=2, col=0),
+                KeyPosition(row=2, col=1),
+                KeyPosition(row=2, col=2),
+            ],
         )
         item = ZoneItem(zone)
         assert item.zone.name == "WASD"
@@ -5315,8 +5408,8 @@ class TestZoneEditorCoverage:
 
     def test_fill_all_zones(self, qapp, mock_bridge, mock_matrix_device):
         """Test filling all zones with a color."""
-        from PySide6.QtWidgets import QColorDialog
         from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
 
         from apps.gui.widgets.zone_editor import ZoneEditorWidget
 
@@ -5334,8 +5427,8 @@ class TestZoneEditorCoverage:
 
     def test_fill_all_zones_cancel(self, qapp, mock_bridge, mock_matrix_device):
         """Test canceling fill dialog does nothing."""
-        from PySide6.QtWidgets import QColorDialog
         from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
 
         from apps.gui.widgets.zone_editor import ZoneEditorWidget
 
@@ -5464,8 +5557,8 @@ class TestZoneColorButtonCoverage:
 
     def test_pick_color_accepted(self, qapp):
         """Test color picker when color is accepted."""
-        from PySide6.QtWidgets import QColorDialog
         from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
 
         from apps.gui.widgets.zone_editor import ZoneColorButton
 
@@ -5485,8 +5578,8 @@ class TestZoneColorButtonCoverage:
 
     def test_pick_color_cancelled(self, qapp):
         """Test color picker when cancelled."""
-        from PySide6.QtWidgets import QColorDialog
         from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
 
         from apps.gui.widgets.zone_editor import ZoneColorButton
 
@@ -6113,8 +6206,9 @@ class TestSetupWizard:
 
     def test_wizard_get_troubleshooting_text_no_issues(self, qapp):
         """Test troubleshooting text when no issues detected."""
-        from apps.gui.widgets.setup_wizard import SetupWizard
         from pathlib import Path
+
+        from apps.gui.widgets.setup_wizard import SetupWizard
 
         with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
             with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
@@ -6140,8 +6234,9 @@ class TestSetupWizard:
 
     def test_wizard_get_troubleshooting_text_uinput_missing(self, qapp):
         """Test troubleshooting detects missing uinput."""
-        from apps.gui.widgets.setup_wizard import SetupWizard
         from pathlib import Path
+
+        from apps.gui.widgets.setup_wizard import SetupWizard
 
         with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
             with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
@@ -6157,8 +6252,9 @@ class TestSetupWizard:
 
     def test_wizard_get_troubleshooting_text_not_in_input_group(self, qapp):
         """Test troubleshooting detects user not in input group."""
-        from apps.gui.widgets.setup_wizard import SetupWizard
         from pathlib import Path
+
+        from apps.gui.widgets.setup_wizard import SetupWizard
 
         with patch("apps.gui.widgets.setup_wizard.DeviceRegistry") as mock_registry:
             with patch("apps.gui.widgets.setup_wizard.ProfileLoader") as mock_loader:
@@ -6640,13 +6736,14 @@ class TestMainWindowMethods:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -6722,13 +6819,14 @@ class TestMainWindowProfileHandling:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -6813,13 +6911,14 @@ class TestMainWindowDaemonControls:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -6952,13 +7051,14 @@ class TestMainWindowSignalHandlers:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -6977,9 +7077,7 @@ class TestMainWindowSignalHandlers:
         from crates.profile_schema import Profile
 
         window = MainWindow()
-        window.current_profile = Profile(
-            id="test", name="Test", input_devices=[], layers=[]
-        )
+        window.current_profile = Profile(id="test", name="Test", input_devices=[], layers=[])
         window._on_bindings_changed()
 
         mock_deps["loader"].return_value.save_profile.assert_called()
@@ -7002,9 +7100,7 @@ class TestMainWindowSignalHandlers:
         from crates.profile_schema import Profile
 
         window = MainWindow()
-        window.current_profile = Profile(
-            id="test", name="Test", input_devices=[], layers=[]
-        )
+        window.current_profile = Profile(id="test", name="Test", input_devices=[], layers=[])
         window._on_macros_changed([])
 
         mock_deps["loader"].return_value.save_profile.assert_called()
@@ -7016,9 +7112,7 @@ class TestMainWindowSignalHandlers:
         from crates.profile_schema import Profile
 
         window = MainWindow()
-        window.current_profile = Profile(
-            id="test", name="Test", input_devices=[], layers=[]
-        )
+        window.current_profile = Profile(id="test", name="Test", input_devices=[], layers=[])
         window._on_app_patterns_changed()
 
         mock_deps["loader"].return_value.save_profile.assert_called()
@@ -7067,9 +7161,7 @@ class TestMainWindowSignalHandlers:
         from crates.profile_schema import Profile
 
         window = MainWindow()
-        window.current_profile = Profile(
-            id="test", name="Test", input_devices=[], layers=[]
-        )
+        window.current_profile = Profile(id="test", name="Test", input_devices=[], layers=[])
 
         # Mock get_selected_devices
         window.device_list.get_selected_devices = MagicMock(return_value=["dev1"])
@@ -7096,13 +7188,14 @@ class TestMainWindowDialogs:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -7129,9 +7222,7 @@ class TestMainWindowDialogs:
         """Test _run_setup_wizard opens wizard."""
         from apps.gui.main_window import MainWindow
 
-        with patch(
-            "apps.gui.widgets.setup_wizard.SetupWizard"
-        ) as mock_wizard:
+        with patch("apps.gui.widgets.setup_wizard.SetupWizard") as mock_wizard:
             mock_wizard.return_value.exec.return_value = 0
             window = MainWindow()
             window._run_setup_wizard()
@@ -7142,9 +7233,7 @@ class TestMainWindowDialogs:
         """Test _configure_hotkeys opens hotkey dialog."""
         from apps.gui.main_window import MainWindow
 
-        with patch(
-            "apps.gui.widgets.hotkey_editor.HotkeyEditorDialog"
-        ) as mock_dialog:
+        with patch("apps.gui.widgets.hotkey_editor.HotkeyEditorDialog") as mock_dialog:
             mock_dialog.return_value.exec.return_value = 0
             window = MainWindow()
             window._configure_hotkeys()
@@ -7183,13 +7272,14 @@ class TestMainWindowCoverage:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -7208,12 +7298,11 @@ class TestMainWindowCoverage:
 
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch("apps.gui.main_window.subprocess.run", return_value=mock_run_result),
         ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
@@ -7342,8 +7431,9 @@ class TestMainWindowCoverage:
 
     def test_start_daemon_called_process_error(self, qapp, mock_deps):
         """Test _start_daemon handles CalledProcessError."""
-        from apps.gui.main_window import MainWindow
         import subprocess
+
+        from apps.gui.main_window import MainWindow
 
         window = MainWindow()
 
@@ -7479,13 +7569,14 @@ class TestMainWindowDeviceVisual:
         """Mock all MainWindow dependencies."""
         mock_run_result = MagicMock()
         mock_run_result.returncode = 0
-        with patch("apps.gui.main_window.ProfileLoader") as mock_loader, patch(
-            "apps.gui.main_window.DeviceRegistry"
-        ) as mock_registry, patch(
-            "apps.gui.main_window.OpenRazerBridge"
-        ) as mock_bridge, patch(
-            "apps.gui.main_window.subprocess.run", return_value=mock_run_result
-        ) as mock_subprocess:
+        with (
+            patch("apps.gui.main_window.ProfileLoader") as mock_loader,
+            patch("apps.gui.main_window.DeviceRegistry") as mock_registry,
+            patch("apps.gui.main_window.OpenRazerBridge") as mock_bridge,
+            patch(
+                "apps.gui.main_window.subprocess.run", return_value=mock_run_result
+            ) as mock_subprocess,
+        ):
             mock_loader.return_value.list_profiles.return_value = []
             mock_loader.return_value.get_active_profile_id.return_value = None
             mock_registry.return_value.list_devices.return_value = []
@@ -7525,8 +7616,9 @@ class TestMainWindowDeviceVisual:
 
     def test_on_device_zone_clicked_color_cancelled(self, qapp, mock_deps):
         """Test _on_device_zone_clicked when color dialog cancelled."""
-        from apps.gui.main_window import MainWindow
         from PySide6.QtWidgets import QColorDialog
+
+        from apps.gui.main_window import MainWindow
 
         window = MainWindow()
         mock_device = MagicMock()
@@ -7547,8 +7639,9 @@ class TestMainWindowDeviceVisual:
 
     def test_on_device_zone_clicked_color_success(self, qapp, mock_deps):
         """Test _on_device_zone_clicked with valid color."""
-        from apps.gui.main_window import MainWindow
         from PySide6.QtWidgets import QColorDialog
+
+        from apps.gui.main_window import MainWindow
 
         window = MainWindow()
         mock_device = MagicMock()
@@ -7568,17 +7661,16 @@ class TestMainWindowDeviceVisual:
             window._on_device_zone_clicked("zone_1")
 
             # Verify color was set (lines 262-268)
-            window.openrazer.set_static_color.assert_called_with(
-                mock_device, 255, 128, 64
-            )
+            window.openrazer.set_static_color.assert_called_with(mock_device, 255, 128, 64)
             assert "zone_1" in window.statusbar.currentMessage()
             assert "#ff8040" in window.statusbar.currentMessage()
         window.close()
 
     def test_on_device_zone_clicked_color_exception(self, qapp, mock_deps):
         """Test _on_device_zone_clicked handles device exception."""
-        from apps.gui.main_window import MainWindow
         from PySide6.QtWidgets import QColorDialog
+
+        from apps.gui.main_window import MainWindow
 
         window = MainWindow()
         mock_device = MagicMock()

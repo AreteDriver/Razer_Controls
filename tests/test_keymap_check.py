@@ -6,8 +6,6 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from tools.keymap_check import cmd_check, cmd_info, cmd_list, cmd_validate, main
 
 
@@ -202,7 +200,9 @@ class TestCmdValidate:
         profile = {
             "id": "test",
             "name": "Test Profile",
-            "layers": [{"id": "layer1", "name": "Layer 1", "hold_modifier_input_code": "INVALID_KEY"}],
+            "layers": [
+                {"id": "layer1", "name": "Layer 1", "hold_modifier_input_code": "INVALID_KEY"}
+            ],
         }
         profile_path = tmp_path / "bad_modifier.json"
         profile_path.write_text(json.dumps(profile))
@@ -232,7 +232,9 @@ class TestCmdValidate:
         profile = {
             "id": "test",
             "name": "Test Profile",
-            "layers": [{"id": "layer1", "name": "Layer 1", "bindings": [{"input_code": "INVALID"}]}],
+            "layers": [
+                {"id": "layer1", "name": "Layer 1", "bindings": [{"input_code": "INVALID"}]}
+            ],
         }
         profile_path = tmp_path / "bad_input.json"
         profile_path.write_text(json.dumps(profile))
@@ -294,7 +296,9 @@ class TestCmdValidate:
                 {
                     "id": "layer1",
                     "name": "Layer 1",
-                    "bindings": [{"input_code": "A", "action_type": "macro", "macro_id": "missing_macro"}],
+                    "bindings": [
+                        {"input_code": "A", "action_type": "macro", "macro_id": "missing_macro"}
+                    ],
                 }
             ],
             "macros": [],

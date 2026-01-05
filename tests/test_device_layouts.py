@@ -1,7 +1,6 @@
 """Tests for device layout module."""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest

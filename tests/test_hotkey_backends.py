@@ -101,7 +101,9 @@ class TestPortalGlobalShortcuts:
             with patch("pydbus.SessionBus") as mock_bus:
                 mock_portal = MagicMock()
                 # Return XML without GlobalShortcuts interface
-                mock_portal.Introspect.return_value = "<node><interface name='org.freedesktop.portal.Other'/></node>"
+                mock_portal.Introspect.return_value = (
+                    "<node><interface name='org.freedesktop.portal.Other'/></node>"
+                )
                 mock_bus.return_value.get.return_value = mock_portal
                 backend = PortalGlobalShortcuts(lambda x: None)
                 assert not backend.is_available()
@@ -111,7 +113,9 @@ class TestPortalGlobalShortcuts:
         with patch.dict(os.environ, {"XDG_SESSION_TYPE": "wayland"}):
             with patch("pydbus.SessionBus") as mock_bus:
                 mock_portal = MagicMock()
-                mock_portal.Introspect.return_value = "<node><interface name='org.freedesktop.portal.GlobalShortcuts'/></node>"
+                mock_portal.Introspect.return_value = (
+                    "<node><interface name='org.freedesktop.portal.GlobalShortcuts'/></node>"
+                )
                 mock_bus.return_value.get.return_value = mock_portal
                 backend = PortalGlobalShortcuts(lambda x: None)
                 assert backend.is_available()
@@ -601,42 +605,49 @@ class TestX11Hotkeys:
         """Normalize ctrl_l to ctrl."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.ctrl_l) == "ctrl"
 
     def test_normalize_key_ctrl_right(self):
         """Normalize ctrl_r to ctrl."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.ctrl_r) == "ctrl"
 
     def test_normalize_key_shift_left(self):
         """Normalize shift_l to shift."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.shift_l) == "shift"
 
     def test_normalize_key_shift_right(self):
         """Normalize shift_r to shift."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.shift_r) == "shift"
 
     def test_normalize_key_alt_left(self):
         """Normalize alt_l to alt."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.alt_l) == "alt"
 
     def test_normalize_key_alt_right(self):
         """Normalize alt_r to alt."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         assert backend._normalize_key(keyboard.Key.alt_r) == "alt"
 
     def test_normalize_key_function_keys(self):
         """Normalize function keys F1-F12."""
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
+
         for i in range(1, 13):
             key = getattr(keyboard.Key, f"f{i}")
             assert backend._normalize_key(key) == f"f{i}"
@@ -645,6 +656,7 @@ class TestX11Hotkeys:
         """Normalize character keys."""
         backend = X11Hotkeys(lambda x: None)
         from pynput.keyboard import KeyCode
+
         # Lowercase char
         key = KeyCode(char="a")
         assert backend._normalize_key(key) == "a"
@@ -656,6 +668,7 @@ class TestX11Hotkeys:
         """Normalize number keys via vk codes."""
         backend = X11Hotkeys(lambda x: None)
         from pynput.keyboard import KeyCode
+
         # Number 1 (vk 49)
         key = KeyCode(vk=49)
         assert backend._normalize_key(key) == "1"
@@ -670,6 +683,7 @@ class TestX11Hotkeys:
         """Normalize letter keys via vk codes."""
         backend = X11Hotkeys(lambda x: None)
         from pynput.keyboard import KeyCode
+
         # Letter A (vk 65)
         key = KeyCode(vk=65)
         assert backend._normalize_key(key) == "a"
@@ -682,6 +696,7 @@ class TestX11Hotkeys:
         backend = X11Hotkeys(lambda x: None)
         from pynput import keyboard
         from pynput.keyboard import KeyCode
+
         # Unknown special key
         result = backend._normalize_key(keyboard.Key.caps_lock)
         assert result is None
@@ -693,6 +708,7 @@ class TestX11Hotkeys:
         """_on_press should add normalized key to current_keys."""
         backend = X11Hotkeys(lambda x: None)
         from pynput.keyboard import KeyCode
+
         key = KeyCode(char="a")
         backend._on_press(key)
         assert "a" in backend._current_keys
@@ -706,6 +722,7 @@ class TestX11Hotkeys:
         backend._current_keys = {"ctrl"}
 
         from pynput.keyboard import KeyCode
+
         key = KeyCode(char="a")
         backend._on_press(key)
 
@@ -722,6 +739,7 @@ class TestX11Hotkeys:
         backend._triggered = {"profile_0"}  # Already triggered
 
         from pynput.keyboard import KeyCode
+
         key = KeyCode(char="a")
         backend._on_press(key)
 
@@ -733,6 +751,7 @@ class TestX11Hotkeys:
         backend._current_keys = {"ctrl", "a"}
 
         from pynput.keyboard import KeyCode
+
         key = KeyCode(char="a")
         backend._on_release(key)
 
@@ -748,6 +767,7 @@ class TestX11Hotkeys:
         backend._triggered = {"profile_0"}
 
         from pynput.keyboard import KeyCode
+
         key = KeyCode(char="a")
         backend._on_release(key)
 

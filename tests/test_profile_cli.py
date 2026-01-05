@@ -1381,7 +1381,6 @@ class TestFinalCoverage:
 
     def test_import_stdin_yaml_fallback(self, temp_config):
         """Test importing YAML from stdin when JSON parsing fails (lines 397-398)."""
-        import yaml
 
         config_dir, _ = temp_config
 

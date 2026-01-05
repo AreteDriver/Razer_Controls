@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication
 
 from apps.gui.widgets.device_visual import ButtonBindingDialog, DeviceVisualWidget
 from apps.gui.widgets.device_visual.button_binding_dialog import (
@@ -122,7 +122,9 @@ class TestKeyCaptureWidget:
         widget = KeyCaptureWidget()
 
         # Simulate pressing 'A'
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier, "A")
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier, "A"
+        )
         widget.keyPressEvent(event)
 
         assert widget._captured_key == "KEY_A"
@@ -132,7 +134,9 @@ class TestKeyCaptureWidget:
         """Test capturing a number key."""
         widget = KeyCaptureWidget()
 
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_5, Qt.KeyboardModifier.NoModifier, "5")
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_5, Qt.KeyboardModifier.NoModifier, "5"
+        )
         widget.keyPressEvent(event)
 
         assert widget._captured_key == "KEY_5"
@@ -183,7 +187,9 @@ class TestKeyCaptureWidget:
         """Test capturing a key in QT_TO_EVDEV mapping."""
         widget = KeyCaptureWidget()
 
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier
+        )
         widget.keyPressEvent(event)
 
         assert widget._captured_key == "KEY_ESC"
@@ -201,7 +207,9 @@ class TestKeyCaptureWidget:
         """Test capturing space key."""
         widget = KeyCaptureWidget()
 
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier, " ")
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier, " "
+        )
         widget.keyPressEvent(event)
 
         assert widget._captured_key == "KEY_SPACE"
@@ -212,7 +220,9 @@ class TestKeyCaptureWidget:
         widget._captured_key = "PREVIOUS"  # Set initial value
 
         # Key with no text representation (like Print Screen without mapping)
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.NoModifier, "")
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.NoModifier, ""
+        )
         widget.keyPressEvent(event)
 
         # Should not change - no valid capture
@@ -224,7 +234,9 @@ class TestKeyCaptureWidget:
         widget._captured_key = "PREVIOUS"
 
         # Special character
-        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.NoModifier, "@")
+        event = QKeyEvent(
+            QKeyEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.NoModifier, "@"
+        )
         widget.keyPressEvent(event)
 
         # Should not change - @ is not alphanumeric
@@ -429,9 +441,7 @@ class TestDeviceVisualWidget:
         """Test set_device when registry finds a layout."""
         widget = DeviceVisualWidget()
 
-        with patch.object(
-            widget._registry, "get_layout_for_device", return_value=sample_layout
-        ):
+        with patch.object(widget._registry, "get_layout_for_device", return_value=sample_layout):
             widget.set_device("Test Mouse", "mouse", 1)
 
         assert widget._layout == sample_layout
@@ -440,9 +450,12 @@ class TestDeviceVisualWidget:
         """Test set_device using fallback layout."""
         widget = DeviceVisualWidget()
 
-        with patch.object(widget._registry, "get_layout_for_device", return_value=None), patch(
-            "apps.gui.widgets.device_visual.device_visual_widget.get_fallback_layout"
-        ) as mock_fallback:
+        with (
+            patch.object(widget._registry, "get_layout_for_device", return_value=None),
+            patch(
+                "apps.gui.widgets.device_visual.device_visual_widget.get_fallback_layout"
+            ) as mock_fallback,
+        ):
             mock_layout = MagicMock()
             mock_layout.id = "fallback"
             mock_fallback.return_value = mock_layout
@@ -773,7 +786,7 @@ class TestDeviceVisualWidget:
 
             # Should have zone-specific actions
             calls = mock_menu_instance.addAction.call_args_list
-            action_names = [str(call) for call in calls]
+            [str(call) for call in calls]
             assert any("Set Zone Color" in str(c) for c in calls)
             assert any("Reset Zone Color" in str(c) for c in calls)
 
@@ -1193,7 +1206,7 @@ class TestKeyCaptureWidgetEdgeCases:
             QKeyEvent.Type.KeyPress,
             Qt.Key.Key_unknown,
             Qt.KeyboardModifier.NoModifier,
-            "x"  # lowercase letter
+            "x",  # lowercase letter
         )
         widget.keyPressEvent(event)
 
@@ -1209,7 +1222,7 @@ class TestKeyCaptureWidgetEdgeCases:
             QKeyEvent.Type.KeyPress,
             Qt.Key.Key_unknown,  # Not in QT_TO_EVDEV
             Qt.KeyboardModifier.NoModifier,
-            "7"  # digit text
+            "7",  # digit text
         )
         widget.keyPressEvent(event)
 
