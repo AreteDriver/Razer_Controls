@@ -1,5 +1,7 @@
 # Razer Control Center for Linux
 
+![Razer Control Center](docs/banner.png)
+
 [![PyPI](https://img.shields.io/pypi/v/razer-control-center)](https://pypi.org/project/razer-control-center/)
 [![Python](https://img.shields.io/pypi/pyversions/razer-control-center)](https://pypi.org/project/razer-control-center/)
 [![CI](https://github.com/AreteDriver/Razer_Controls/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/Razer_Controls/actions/workflows/ci.yml)
