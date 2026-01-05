@@ -1408,7 +1408,7 @@ layers: []
         assert "Imported profile: yaml-stdin" in mock_out.getvalue()
 
     def test_devices_other_type(self, temp_config):
-        """Test cmd_devices with device that's neither mouse nor keyboard (line 524)."""
+        """Test cmd_devices with device that's neither mouse nor keyboard (line 525)."""
         config_dir, _ = temp_config
 
         # Create a mock device that is neither mouse nor keyboard
@@ -1433,3 +1433,57 @@ layers: []
         output = mock_out.getvalue()
         assert "razer-other-device-123" in output
         assert "other" in output.lower()
+
+    def test_devices_keyboard_type(self, temp_config):
+        """Test cmd_devices with keyboard device (line 524)."""
+        config_dir, _ = temp_config
+
+        mock_device = MagicMock()
+        mock_device.stable_id = "razer-keyboard-456"
+        mock_device.name = "Razer Keyboard"
+        mock_device.is_mouse = False
+        mock_device.is_keyboard = True
+        mock_device.event_path = "/dev/input/event10"
+
+        mock_registry = MagicMock()
+        mock_registry.scan_devices.return_value = [mock_device]
+
+        args = argparse.Namespace(config_dir=config_dir)
+
+        with patch("tools.profile_cli.DeviceRegistry", return_value=mock_registry):
+            with patch("sys.stdout", new=StringIO()) as mock_out:
+                result = cmd_devices(args)
+
+        assert result == 0
+        output = mock_out.getvalue()
+        assert "razer-keyboard-456" in output
+        assert "keyboard" in output.lower()
+
+    def test_import_generic_exception(self, temp_config):
+        """Test importing profile that causes generic Exception (lines 413-415)."""
+        config_dir, _ = temp_config
+
+        # Create valid JSON that will fail Profile validation with a non-JSON/YAML error
+        invalid_profile = {
+            "id": "bad",
+            "name": "Bad",
+            "input_devices": [],
+            "layers": [{"id": 123}],  # Layer.id must be string, not int
+        }
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(invalid_profile, f)
+            f.flush()
+
+            args = argparse.Namespace(
+                config_dir=config_dir,
+                file=f.name,
+                force=False,
+                new_id=None,
+            )
+
+            with patch("sys.stdout", new=StringIO()) as mock_out:
+                result = cmd_import(args)
+
+        assert result == 1
+        assert "Invalid profile data" in mock_out.getvalue()
