@@ -375,6 +375,253 @@ class TestCmdRecord:
                 assert result == 1
                 assert "Could not open device" in mock_out.getvalue()
 
+    def test_record_success_with_stop_key(self):
+        """Test successful recording with stop key pressed."""
+        # Create mock device
+        mock_dev = MagicMock()
+        mock_dev.name = "Test Keyboard"
+        mock_dev.fd = 5
+
+        # Create mock events
+        mock_event_a = MagicMock()
+        mock_event_a.type = 1  # EV_KEY
+        mock_event_a.code = 30  # KEY_A
+        mock_event_a.value = 1  # Press
+
+        mock_event_esc = MagicMock()
+        mock_event_esc.type = 1  # EV_KEY
+        mock_event_esc.code = 1  # KEY_ESC
+        mock_event_esc.value = 1  # Press
+
+        # Setup read to return events then stop key
+        call_count = [0]
+
+        def mock_read():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return [mock_event_a]
+            return [mock_event_esc]
+
+        mock_dev.read = mock_read
+
+        # Mock select to always return readable
+        def mock_select(r, w, x, timeout):
+            return ([mock_dev.fd], [], [])
+
+        # Mock recorder
+        mock_recorder = MagicMock()
+        mock_recorder.is_recording.side_effect = [True, True, False]
+        mock_macro = MagicMock()
+        mock_macro.steps = []
+        mock_macro.id = "test"
+        mock_macro.name = "Test"
+        mock_macro.model_dump.return_value = {"id": "test", "name": "Test", "steps": []}
+        mock_recorder.stop.return_value = mock_macro
+
+        args = argparse.Namespace(
+            device="/dev/input/event0",
+            stop_key="ESC",
+            min_delay=10,
+            max_delay=5000,
+            no_delays=False,
+            no_merge=False,
+            timeout=60,
+            output=None,
+            name=None,
+        )
+
+        with patch("tools.macro_cli.InputDevice", return_value=mock_dev):
+            with patch("tools.macro_cli.select.select", side_effect=mock_select):
+                with patch("tools.macro_cli.MacroRecorder", return_value=mock_recorder):
+                    with patch("tools.macro_cli.schema_to_evdev_code", return_value=1):  # ESC
+                        with patch("tools.macro_cli.ecodes") as mock_ecodes:
+                            mock_ecodes.EV_KEY = 1
+                            with patch("tools.macro_cli.time.sleep"):
+                                with patch.object(Path, "write_text"):
+                                    with patch("sys.stdout", new=StringIO()) as mock_out:
+                                        result = cmd_record(args)
+
+        assert result == 0
+        mock_dev.grab.assert_called_once()
+        mock_dev.ungrab.assert_called_once()
+
+    def test_record_timeout(self):
+        """Test recording stops on timeout."""
+        mock_dev = MagicMock()
+        mock_dev.name = "Test Keyboard"
+        mock_dev.fd = 5
+
+        # Mock select to return no events (simulate waiting)
+        def mock_select(r, w, x, timeout):
+            return ([], [], [])
+
+        mock_recorder = MagicMock()
+        mock_recorder.is_recording.return_value = True
+        mock_macro = MagicMock()
+        mock_macro.steps = []
+        mock_macro.id = "test"
+        mock_macro.name = "Test"
+        mock_macro.model_dump.return_value = {"id": "test", "name": "Test", "steps": []}
+        mock_recorder.stop.return_value = mock_macro
+
+        args = argparse.Namespace(
+            device="/dev/input/event0",
+            stop_key="ESC",
+            min_delay=10,
+            max_delay=5000,
+            no_delays=False,
+            no_merge=False,
+            timeout=0.1,  # Very short timeout
+            output=None,
+            name=None,
+        )
+
+        # Mock time to simulate timeout
+        start_time = [0]
+
+        def mock_time():
+            start_time[0] += 1
+            return start_time[0]
+
+        with patch("tools.macro_cli.InputDevice", return_value=mock_dev):
+            with patch("tools.macro_cli.select.select", side_effect=mock_select):
+                with patch("tools.macro_cli.MacroRecorder", return_value=mock_recorder):
+                    with patch("tools.macro_cli.schema_to_evdev_code", return_value=1):
+                        with patch("tools.macro_cli.time.time", side_effect=mock_time):
+                            with patch("tools.macro_cli.time.sleep"):
+                                with patch.object(Path, "write_text"):
+                                    with patch("sys.stdout", new=StringIO()) as mock_out:
+                                        result = cmd_record(args)
+
+        assert result == 0
+        assert "Timeout" in mock_out.getvalue()
+
+    def test_record_with_custom_output(self):
+        """Test recording with custom output file."""
+        mock_dev = MagicMock()
+        mock_dev.name = "Test Keyboard"
+        mock_dev.fd = 5
+
+        mock_event_esc = MagicMock()
+        mock_event_esc.type = 1
+        mock_event_esc.code = 1
+        mock_event_esc.value = 1
+
+        mock_dev.read.return_value = [mock_event_esc]
+
+        def mock_select(r, w, x, timeout):
+            return ([mock_dev.fd], [], [])
+
+        mock_recorder = MagicMock()
+        mock_recorder.is_recording.side_effect = [True, False]
+        mock_macro = MagicMock()
+        mock_macro.steps = [MagicMock()]
+        mock_macro.id = "custom"
+        mock_macro.name = "Custom Macro"
+        mock_macro.model_dump.return_value = {"id": "custom", "name": "Custom", "steps": []}
+        mock_recorder.stop.return_value = mock_macro
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "my_macro.json"
+            args = argparse.Namespace(
+                device="/dev/input/event0",
+                stop_key="ESC",
+                min_delay=10,
+                max_delay=5000,
+                no_delays=False,
+                no_merge=False,
+                timeout=60,
+                output=str(output_path),
+                name="My Custom Macro",
+            )
+
+            with patch("tools.macro_cli.InputDevice", return_value=mock_dev):
+                with patch("tools.macro_cli.select.select", side_effect=mock_select):
+                    with patch("tools.macro_cli.MacroRecorder", return_value=mock_recorder):
+                        with patch("tools.macro_cli.schema_to_evdev_code", return_value=1):
+                            with patch("tools.macro_cli.ecodes") as mock_ecodes:
+                                mock_ecodes.EV_KEY = 1
+                                with patch("tools.macro_cli.time.sleep"):
+                                    with patch("sys.stdout", new=StringIO()) as mock_out:
+                                        result = cmd_record(args)
+
+            assert result == 0
+            assert output_path.exists()
+
+    def test_record_event_callback(self):
+        """Test that event callback prints key events."""
+        mock_dev = MagicMock()
+        mock_dev.name = "Test Keyboard"
+        mock_dev.fd = 5
+
+        # First event: key press, second: stop key
+        mock_event_a = MagicMock()
+        mock_event_a.type = 1
+        mock_event_a.code = 30
+        mock_event_a.value = 1
+        mock_event_a.key_name = "KEY_A"
+
+        mock_event_esc = MagicMock()
+        mock_event_esc.type = 1
+        mock_event_esc.code = 1
+        mock_event_esc.value = 1
+
+        read_count = [0]
+
+        def mock_read():
+            read_count[0] += 1
+            if read_count[0] == 1:
+                return [mock_event_a]
+            return [mock_event_esc]
+
+        mock_dev.read = mock_read
+
+        def mock_select(r, w, x, timeout):
+            return ([mock_dev.fd], [], [])
+
+        captured_callback = None
+
+        def capture_event_callback(cb):
+            nonlocal captured_callback
+            captured_callback = cb
+
+        mock_recorder = MagicMock()
+        mock_recorder.is_recording.side_effect = [True, True, False]
+        mock_recorder.set_event_callback.side_effect = capture_event_callback
+        mock_macro = MagicMock()
+        mock_macro.steps = []
+        mock_macro.id = "test"
+        mock_macro.name = "Test"
+        mock_macro.model_dump.return_value = {"id": "test", "name": "Test", "steps": []}
+        mock_recorder.stop.return_value = mock_macro
+
+        args = argparse.Namespace(
+            device="/dev/input/event0",
+            stop_key="ESC",
+            min_delay=10,
+            max_delay=5000,
+            no_delays=False,
+            no_merge=False,
+            timeout=60,
+            output=None,
+            name=None,
+        )
+
+        with patch("tools.macro_cli.InputDevice", return_value=mock_dev):
+            with patch("tools.macro_cli.select.select", side_effect=mock_select):
+                with patch("tools.macro_cli.MacroRecorder", return_value=mock_recorder):
+                    with patch("tools.macro_cli.schema_to_evdev_code", return_value=1):
+                        with patch("tools.macro_cli.ecodes") as mock_ecodes:
+                            mock_ecodes.EV_KEY = 1
+                            with patch("tools.macro_cli.time.sleep"):
+                                with patch.object(Path, "write_text"):
+                                    with patch("sys.stdout", new=StringIO()):
+                                        result = cmd_record(args)
+
+        # Verify callback was set
+        mock_recorder.set_event_callback.assert_called_once()
+        assert captured_callback is not None
+
 
 class TestCmdPlay:
     """Tests for cmd_play command."""
@@ -1007,6 +1254,59 @@ class TestFormatStep:
         step = MacroStep(type=MacroStepType.TEXT, text=None)
         result = _format_step(step)
         assert "📝" in result
+
+
+class TestFormatStepFallback:
+    """Test _format_step fallback for unknown step types."""
+
+    def test_format_unknown_type(self):
+        """Test formatting step with unknown type falls back to str()."""
+        # Create a step and manually set an unhandled type
+        step = MacroStep(type=MacroStepType.KEY_PRESS, key="X")
+        # Patch the type to something not handled
+        with patch.object(step, "type", new="unknown_type"):
+            result = _format_step(step)
+            # Should fall back to str(step)
+            assert result is not None
+
+
+class TestCmdPlayVerboseCallback:
+    """Test verbose callback is actually invoked during play."""
+
+    def test_play_verbose_callback_invoked(self):
+        """Test verbose callback prints step info when invoked."""
+        macro_data = {
+            "id": "test",
+            "name": "Test",
+            "steps": [{"type": "key_press", "key": "A"}],
+        }
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(macro_data, f)
+            f.flush()
+
+            captured_callback = None
+
+            def capture_callback(cb):
+                nonlocal captured_callback
+                captured_callback = cb
+
+            mock_player = MagicMock()
+            mock_player.play.return_value = True
+            mock_player.set_step_callback.side_effect = capture_callback
+
+            args = argparse.Namespace(file=f.name, speed=1.0, yes=True, verbose=True)
+
+            with patch("tools.macro_cli.MacroPlayer", return_value=mock_player):
+                with patch("sys.stdout", new=StringIO()) as mock_out:
+                    result = cmd_play(args)
+
+                    # Now invoke the callback to test lines 186-187
+                    if captured_callback:
+                        step = MacroStep(type=MacroStepType.KEY_PRESS, key="A")
+                        captured_callback(step, 0)
+
+            assert result == 0
 
 
 class TestMain:

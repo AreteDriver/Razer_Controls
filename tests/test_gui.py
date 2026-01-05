@@ -1445,6 +1445,361 @@ class TestRecordingWorker:
         assert worker._should_stop is True
 
 
+class TestRecordingDialogFullCoverage:
+    """Extended tests for RecordingDialog coverage."""
+
+    @pytest.fixture(autouse=True)
+    def mock_gi_module(self):
+        """Mock gi module to prevent GLib registration conflicts with Qt."""
+        # Create mock GLib module
+        mock_glib = MagicMock()
+        mock_glib.UserDirectory = MagicMock()
+        mock_gi = MagicMock()
+        mock_gi.repository = MagicMock()
+        mock_gi.repository.GLib = mock_glib
+
+        # Patch before any imports that might trigger GLib
+        with patch.dict(
+            "sys.modules",
+            {
+                "gi": mock_gi,
+                "gi.repository": mock_gi.repository,
+                "gi.repository.GLib": mock_glib,
+            },
+        ):
+            yield
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    @pytest.fixture
+    def mock_evdev(self):
+        """Mock evdev module for tests."""
+        mock_evdev_module = MagicMock()
+        mock_evdev_module.list_devices.return_value = []
+        mock_evdev_module.ecodes.EV_KEY = 1
+        with patch.dict("sys.modules", {"evdev": mock_evdev_module}):
+            yield mock_evdev_module
+
+    def test_recording_dialog_instantiation(self, qapp, mock_evdev):
+        """Test RecordingDialog can be instantiated."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        dialog = RecordingDialog()
+        assert dialog.windowTitle() == "Record Macro from Device"
+        assert dialog.device_combo is not None
+        assert dialog.stop_key_combo is not None
+        assert dialog.timeout_spin is not None
+        dialog.close()
+
+    def test_recording_dialog_setup_ui(self, qapp, mock_evdev):
+        """Test dialog UI setup."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        dialog = RecordingDialog()
+
+        # Check UI elements exist
+        assert dialog.status_label is not None
+        assert dialog.key_log is not None
+        assert dialog.start_btn is not None
+        assert dialog.stop_btn is not None
+        assert dialog.accept_btn is not None
+
+        # Default states
+        assert not dialog.stop_btn.isEnabled()
+        assert not dialog.accept_btn.isEnabled()
+        dialog.close()
+
+    def test_recording_dialog_populate_devices_no_evdev(self, qapp):
+        """Test device population when evdev not installed."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        with patch.dict("sys.modules", {"evdev": None}):
+            dialog = RecordingDialog()
+            # Should show "evdev not installed"
+            assert dialog.device_combo.count() >= 1
+            dialog.close()
+
+    def test_recording_dialog_populate_devices_with_devices(self, qapp):
+        """Test device population with mock devices."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        mock_device = MagicMock()
+        mock_device.name = "Test Keyboard"
+        mock_device.capabilities.return_value = {1: []}  # EV_KEY = 1
+
+        mock_evdev_module = MagicMock()
+        mock_evdev_module.list_devices.return_value = ["/dev/input/event0"]
+        mock_evdev_module.InputDevice.return_value = mock_device
+        mock_evdev_module.ecodes.EV_KEY = 1
+
+        with patch.dict("sys.modules", {"evdev": mock_evdev_module}):
+            dialog = RecordingDialog()
+            # Should have the device
+            assert dialog.device_combo.count() >= 1
+            dialog.close()
+
+    def test_recording_dialog_start_recording_no_device(self, qapp, mock_evdev):
+        """Test start recording with no valid device."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        dialog = RecordingDialog()
+        dialog.device_combo.clear()
+        dialog.device_combo.addItem("No devices", None)
+
+        with patch.object(QMessageBox, "warning") as mock_warning:
+            dialog._start_recording()
+            mock_warning.assert_called_once()
+        dialog.close()
+
+    def test_recording_dialog_on_step_recorded(self, qapp, mock_evdev):
+        """Test handling recorded key step."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        dialog = RecordingDialog()
+        dialog._on_step_recorded("A ↓")
+        assert "A ↓" in dialog.key_log.toPlainText()
+        dialog.close()
+
+    def test_recording_dialog_on_recording_finished(self, qapp, mock_evdev):
+        """Test handling recording completion."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+        from crates.profile_schema import MacroAction, MacroStep, MacroStepType
+
+        dialog = RecordingDialog()
+
+        macro = MacroAction(
+            id="test",
+            name="Test",
+            steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+            repeat_count=1,
+        )
+        dialog._on_recording_finished(macro)
+
+        assert "1 steps" in dialog.status_label.text()
+        assert dialog.accept_btn.isEnabled()
+        dialog.close()
+
+    def test_recording_dialog_on_error(self, qapp, mock_evdev):
+        """Test handling recording error."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.macro_editor import RecordingDialog
+
+        dialog = RecordingDialog()
+
+        with patch.object(QMessageBox, "critical") as mock_critical:
+            dialog._on_error("Test error")
+            mock_critical.assert_called_once()
+        dialog.close()
+
+    def test_recording_dialog_get_recorded_macro(self, qapp, mock_evdev):
+        """Test getting the recorded macro."""
+        from apps.gui.widgets.macro_editor import RecordingDialog
+        from crates.profile_schema import MacroAction
+
+        dialog = RecordingDialog()
+
+        # Initially no macro
+        assert dialog.get_recorded_macro() is None
+
+        # After recording
+        macro = MacroAction(id="test", name="Test", steps=[], repeat_count=1)
+        dialog._recorded_macro = macro
+        assert dialog.get_recorded_macro() == macro
+        dialog.close()
+
+
+class TestMacroEditorExtendedCoverage:
+    """Extended tests for MacroEditorWidget coverage."""
+
+    @pytest.fixture
+    def qapp(self):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        yield app
+
+    def test_edit_step(self, qapp):
+        """Test editing a step."""
+        from PySide6.QtWidgets import QDialog
+
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction, MacroStep, MacroStepType
+
+        widget = MacroEditorWidget()
+        widget.set_macros([
+            MacroAction(
+                id="m1",
+                name="Test",
+                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                repeat_count=1,
+            )
+        ])
+        widget.macro_list.setCurrentRow(0)
+        widget.steps_list.setCurrentRow(0)
+
+        new_step = MacroStep(type=MacroStepType.KEY_PRESS, key="B")
+        with patch("apps.gui.widgets.macro_editor.StepEditorDialog") as MockDialog:
+            mock_dialog = MagicMock()
+            mock_dialog.exec.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.get_step.return_value = new_step
+            MockDialog.return_value = mock_dialog
+
+            widget._edit_step()
+
+        assert widget._current_macro.steps[0].key == "B"
+        widget.close()
+
+    def test_edit_step_no_selection(self, qapp):
+        """Test editing step with no selection does nothing."""
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction
+
+        widget = MacroEditorWidget()
+        widget.set_macros([MacroAction(id="m1", name="Test", steps=[], repeat_count=1)])
+        widget.macro_list.setCurrentRow(0)
+
+        # No step selected - should not crash
+        widget._edit_step()
+        widget.close()
+
+    def test_delete_step_no_selection(self, qapp):
+        """Test deleting step with no selection does nothing."""
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction, MacroStep, MacroStepType
+
+        widget = MacroEditorWidget()
+        widget.set_macros([
+            MacroAction(
+                id="m1",
+                name="Test",
+                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                repeat_count=1,
+            )
+        ])
+        widget.macro_list.setCurrentRow(0)
+        # No step selected
+        widget.steps_list.clearSelection()
+
+        widget._delete_step()
+        # Step should still exist
+        assert len(widget._current_macro.steps) == 1
+        widget.close()
+
+    def test_delete_step_no_macro(self, qapp):
+        """Test deleting step with no macro does nothing."""
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+
+        widget = MacroEditorWidget()
+        widget._current_macro = None
+        widget._delete_step()  # Should not crash
+        widget.close()
+
+    def test_toggle_recording_start(self, qapp):
+        """Test toggle recording starts recording."""
+        from PySide6.QtWidgets import QDialog
+
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction
+
+        widget = MacroEditorWidget()
+        widget.set_macros([MacroAction(id="m1", name="Test", steps=[], repeat_count=1)])
+        widget.macro_list.setCurrentRow(0)
+        widget._recording = False
+
+        # Mock RecordingDialog to return rejected (cancel)
+        with patch("apps.gui.widgets.macro_editor.RecordingDialog") as MockDialog:
+            mock_dialog = MagicMock()
+            mock_dialog.exec.return_value = QDialog.DialogCode.Rejected
+            MockDialog.return_value = mock_dialog
+
+            widget._toggle_recording()
+
+        # Recording was attempted
+        MockDialog.assert_called_once()
+        widget.close()
+
+    def test_toggle_recording_stop(self, qapp):
+        """Test toggle recording stops recording."""
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+
+        widget = MacroEditorWidget()
+        widget._recording = True
+
+        widget._toggle_recording()
+
+        assert not widget._recording
+        widget.close()
+
+    def test_test_macro(self, qapp):
+        """Test showing macro test dialog."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction, MacroStep, MacroStepType
+
+        widget = MacroEditorWidget()
+        widget.set_macros([
+            MacroAction(
+                id="m1",
+                name="Test Macro",
+                steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="A")],
+                repeat_count=2,
+                repeat_delay_ms=50,
+            )
+        ])
+        widget.macro_list.setCurrentRow(0)
+
+        with patch.object(QMessageBox, "information") as mock_info:
+            widget._test_macro()
+            mock_info.assert_called_once()
+            # Check message contains macro name
+            call_args = mock_info.call_args
+            assert "Test Macro" in call_args[0][2]
+        widget.close()
+
+    def test_test_macro_no_steps(self, qapp):
+        """Test test macro with no steps does nothing."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+        from crates.profile_schema import MacroAction
+
+        widget = MacroEditorWidget()
+        widget.set_macros([MacroAction(id="m1", name="Test", steps=[], repeat_count=1)])
+        widget.macro_list.setCurrentRow(0)
+
+        with patch.object(QMessageBox, "information") as mock_info:
+            widget._test_macro()
+            mock_info.assert_not_called()
+        widget.close()
+
+    def test_test_macro_no_macro(self, qapp):
+        """Test test macro with no macro selected does nothing."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from apps.gui.widgets.macro_editor import MacroEditorWidget
+
+        widget = MacroEditorWidget()
+        widget._current_macro = None
+
+        with patch.object(QMessageBox, "information") as mock_info:
+            widget._test_macro()
+            mock_info.assert_not_called()
+        widget.close()
+
+
 class TestNewProfileDialog:
     """Tests for NewProfileDialog."""
 

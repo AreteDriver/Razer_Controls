@@ -125,7 +125,7 @@ def cmd_record(args) -> int:
         except Exception:
             pass
 
-    if not recorder.is_recording():
+    if recorder.is_recording():
         macro = recorder.stop()
 
     # Show results
