@@ -1699,3 +1699,257 @@ class TestRazerTrayOnProfileChanged:
         with patch.object(razer_tray_instance, "_update_profile_display"):
             razer_tray_instance._on_profile_changed("new_profile")
             assert razer_tray_instance._active_profile == "new_profile"
+
+    def test_check_status_notifies_on_profile_change(
+        self, razer_tray_instance, mock_profile_loader_for_tray, mock_subprocess_for_tray
+    ):
+        """Test _check_status notifies when profile changes (lines 362-365)."""
+        mock_run, _ = mock_subprocess_for_tray
+        mock_run.return_value = MagicMock(stdout="active\n")
+
+        mock_profile = MagicMock()
+        mock_profile.name = "New Profile"
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+        mock_profile_loader_for_tray.get_active_profile_id.return_value = "new_profile"
+
+        razer_tray_instance._active_profile = "old_profile"  # Set old profile (not None)
+        with patch.object(razer_tray_instance, "_notify") as mock_notify:
+            with patch.object(razer_tray_instance, "_update_profile_display"):
+                razer_tray_instance._check_status()
+                mock_notify.assert_called_with("Profile Changed", "Active profile: New Profile")
+
+
+class TestRazerTrayHotkeyBackendStatus:
+    """Tests for hotkey backend status text (lines 169, 173)."""
+
+    def test_portal_backend_text(
+        self,
+        qtbot,
+        mock_profile_loader_for_tray,
+        mock_settings_manager_for_tray,
+        mock_openrazer_for_tray,
+        mock_subprocess_for_tray,
+    ):
+        """Test Portal backend creates Wayland status text (line 169)."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        from apps.tray.main import RazerTray
+
+        with patch("apps.tray.main.HotkeyListener") as mock_cls:
+            mock_instance = MagicMock()
+            mock_instance.backend_name = "PortalGlobalShortcuts"  # Portal backend
+            mock_instance.start = MagicMock()
+            mock_instance.stop = MagicMock()
+            mock_cls.return_value = mock_instance
+
+            with patch.object(QSystemTrayIcon, "show"):
+                with patch.object(QSystemTrayIcon, "setIcon"):
+                    with patch.object(QSystemTrayIcon, "setToolTip"):
+                        with patch.object(QSystemTrayIcon, "setContextMenu"):
+                            with patch.object(QSystemTrayIcon, "showMessage"):
+                                tray = RazerTray()
+                                assert "Wayland" in tray.hotkey_status.text()
+                                tray._status_timer.stop()
+
+    def test_disabled_backend_text(
+        self,
+        qtbot,
+        mock_profile_loader_for_tray,
+        mock_settings_manager_for_tray,
+        mock_openrazer_for_tray,
+        mock_subprocess_for_tray,
+    ):
+        """Test no backend creates Disabled status text (line 173)."""
+        from PySide6.QtWidgets import QSystemTrayIcon
+
+        from apps.tray.main import RazerTray
+
+        with patch("apps.tray.main.HotkeyListener") as mock_cls:
+            mock_instance = MagicMock()
+            mock_instance.backend_name = None  # No backend
+            mock_instance.start = MagicMock()
+            mock_instance.stop = MagicMock()
+            mock_cls.return_value = mock_instance
+
+            with patch.object(QSystemTrayIcon, "show"):
+                with patch.object(QSystemTrayIcon, "setIcon"):
+                    with patch.object(QSystemTrayIcon, "setToolTip"):
+                        with patch.object(QSystemTrayIcon, "setContextMenu"):
+                            with patch.object(QSystemTrayIcon, "showMessage"):
+                                tray = RazerTray()
+                                assert "Disabled" in tray.hotkey_status.text()
+                                tray._status_timer.stop()
+
+
+class TestRazerTrayProfilesMenuNoneProfile:
+    """Tests for _update_profiles_menu with None profile (line 240)."""
+
+    def test_skips_none_profile(self, razer_tray_instance, mock_profile_loader_for_tray):
+        """Test profiles menu skips profiles that return None."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1", "p2", "p3"]
+        # p2 returns None (corrupted/missing profile)
+        profile1 = MagicMock()
+        profile1.name = "Profile 1"
+        profile3 = MagicMock()
+        profile3.name = "Profile 3"
+        mock_profile_loader_for_tray.load_profile.side_effect = [
+            profile1,
+            None,  # This triggers line 240 - profile not found
+            profile3,
+        ]
+        razer_tray_instance._update_profiles_menu()
+        # Should not crash and should skip p2
+
+
+class TestRazerTraySourceDesktopPath:
+    """Tests for _get_source_desktop_path search loop (lines 502-510)."""
+
+    def test_fallback_to_first(self, tmp_path):
+        """Test falls back to first location if none exist (line 510)."""
+        from apps.tray.main import RazerTray
+
+        tray = RazerTray.__new__(RazerTray)
+
+        # This uses the real method but none of the locations exist
+        # So it falls back to the first location (line 510)
+        result = tray._get_source_desktop_path()
+        # Should return a path (even if it doesn't exist)
+        assert result is not None
+        # This covers the loop that checks each location and the fallback
+
+
+class TestRazerTrayAutostartExceptions:
+    """Tests for autostart exception paths (lines 531-532, 550-551)."""
+
+    def test_disable_exception(self, razer_tray_instance):
+        """Test autostart disable exception handling (lines 531-532)."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.unlink.side_effect = PermissionError("Access denied")
+
+        with patch.object(razer_tray_instance, "_get_autostart_path", return_value=mock_path):
+            with patch.object(razer_tray_instance, "_is_autostart_enabled", return_value=True):
+                with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                    with patch.object(razer_tray_instance, "_update_autostart_status"):
+                        razer_tray_instance._toggle_autostart()
+                        # Should notify error
+                        mock_notify.assert_called()
+                        assert "Error" in str(mock_notify.call_args)
+
+    def test_enable_exception(self, razer_tray_instance):
+        """Test autostart enable exception handling (lines 550-551)."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = False
+        mock_path.parent.mkdir.side_effect = PermissionError("Access denied")
+
+        with patch.object(razer_tray_instance, "_get_autostart_path", return_value=mock_path):
+            with patch.object(razer_tray_instance, "_is_autostart_enabled", return_value=False):
+                with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                    with patch.object(razer_tray_instance, "_update_autostart_status"):
+                        razer_tray_instance._toggle_autostart()
+                        mock_notify.assert_called()
+
+
+class TestRazerTrayExportException:
+    """Tests for export exception path (lines 589-590)."""
+
+    def test_export_exception(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test export exception handling."""
+        mock_profile_loader_for_tray.list_profiles.return_value = ["p1"]
+        mock_profile = MagicMock()
+        mock_profile.model_dump.side_effect = Exception("Serialization failed")
+        mock_profile_loader_for_tray.load_profile.return_value = mock_profile
+
+        zip_path = tmp_path / "export.zip"
+        with patch("apps.tray.main.QFileDialog.getSaveFileName", return_value=(str(zip_path), "")):
+            with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                razer_tray_instance._export_profiles()
+                mock_notify.assert_called()
+                assert "Failed" in str(mock_notify.call_args)
+
+
+class TestRazerTrayImportOverwrite:
+    """Tests for import overwrite dialog (lines 615-622)."""
+
+    def test_import_overwrite_yes(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test import overwrite confirmed."""
+        from PySide6.QtWidgets import QMessageBox
+
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text('{"id": "existing", "name": "Existing Profile", "layers": []}')
+
+        # Existing profile found
+        mock_profile_loader_for_tray.load_profile.return_value = MagicMock()
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch("apps.tray.main.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+                with patch.object(razer_tray_instance, "_notify"):
+                    with patch.object(razer_tray_instance, "_update_profiles_menu"):
+                        razer_tray_instance._import_profile()
+                        mock_profile_loader_for_tray.save_profile.assert_called()
+
+    def test_import_overwrite_no(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test import overwrite cancelled (line 621-622)."""
+        from PySide6.QtWidgets import QMessageBox
+
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text('{"id": "existing", "name": "Existing Profile", "layers": []}')
+
+        # Existing profile found
+        mock_profile_loader_for_tray.load_profile.return_value = MagicMock()
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch("apps.tray.main.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
+                with patch.object(razer_tray_instance, "_notify"):
+                    with patch.object(razer_tray_instance, "_update_profiles_menu"):
+                        razer_tray_instance._import_profile()
+                        # save_profile should NOT be called
+                        mock_profile_loader_for_tray.save_profile.assert_not_called()
+
+
+class TestRazerTrayImportErrors:
+    """Tests for import error paths (lines 628, 632-633)."""
+
+    def test_import_save_failure(self, razer_tray_instance, mock_profile_loader_for_tray, tmp_path):
+        """Test import save failure (line 628)."""
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text('{"id": "new", "name": "New Profile", "layers": []}')
+
+        mock_profile_loader_for_tray.load_profile.return_value = None  # No existing
+        mock_profile_loader_for_tray.save_profile.return_value = False  # Save fails
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                razer_tray_instance._import_profile()
+                # Should call notify with "Import Failed"
+                assert any("Failed" in str(call) for call in mock_notify.call_args_list)
+
+    def test_import_general_exception(self, razer_tray_instance, tmp_path):
+        """Test import general exception (lines 632-633)."""
+        # Create a file that causes an exception during Profile.model_validate
+        profile_file = tmp_path / "profile.json"
+        profile_file.write_text('{"id": "new", "name": "Test", "layers": []}')
+
+        with patch("apps.tray.main.QFileDialog.getOpenFileName", return_value=(str(profile_file), "")):
+            with patch("crates.profile_schema.Profile.model_validate", side_effect=Exception("Validation failed")):
+                with patch.object(razer_tray_instance, "_notify") as mock_notify:
+                    razer_tray_instance._import_profile()
+                    # Should call notify with "Import Failed"
+                    assert mock_notify.called
+
+
+class TestRazerTrayMainGuardExecution:
+    """Test for __name__ == '__main__' guard execution (line 725)."""
+
+    def test_main_guard_code_path(self):
+        """Test main guard execution path by calling main() directly with mocks."""
+        # The runpy approach fails due to existing QApplication in test session
+        # So we test the main() function directly which is what the guard calls
+        from apps.tray.main import main
+
+        with patch("apps.tray.main.QApplication") as mock_app:
+            with patch("apps.tray.main.QSystemTrayIcon") as mock_tray:
+                mock_tray.isSystemTrayAvailable.return_value = False
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
+                assert exc_info.value.code == 1

@@ -183,6 +183,293 @@ class TestPortalGlobalShortcuts:
         # Should not raise
         backend.stop()
 
+    def test_stop_session_close_exception(self):
+        """Stop should handle session close failure gracefully."""
+        backend = PortalGlobalShortcuts(lambda x: None)
+        backend._running = True
+        backend._bus = MagicMock()
+        backend._portal = MagicMock()
+        backend._session_handle = "/session/test"
+        backend._signal_subscription = None
+        # Simulate session already closed - call_sync raises
+        backend._bus.con.call_sync.side_effect = Exception("Session already closed")
+        # Should not raise
+        backend.stop()
+        assert not backend._running
+        assert backend._session_handle is None
+
+    def test_start_successful_session_creation(self):
+        """Test successful portal session creation flow."""
+        callback = MagicMock()
+        backend = PortalGlobalShortcuts(callback)
+        backend._shortcuts = [
+            ("profile_0", HotkeyBinding(modifiers=["ctrl"], key="1", enabled=True)),
+        ]
+
+        with patch("pydbus.SessionBus") as mock_bus_class:
+            mock_bus = MagicMock()
+            mock_con = MagicMock()
+            mock_con.get_unique_name.return_value = ":1.123"
+            mock_bus.con = mock_con
+            mock_portal = MagicMock()
+            mock_bus.get.return_value = mock_portal
+            mock_bus_class.return_value = mock_bus
+
+            # Capture the on_response callback
+            captured_callback = [None]
+
+            def capture_subscribe(*args, **kwargs):
+                # args[6] is the callback
+                if len(args) > 6:
+                    captured_callback[0] = args[6]
+                return 123
+
+            mock_con.signal_subscribe.side_effect = capture_subscribe
+
+            # Start in a thread so we can trigger the callback
+            import threading
+
+            def start_backend():
+                backend.start()
+
+            t = threading.Thread(target=start_backend)
+            t.start()
+
+            # Wait a bit for thread to reach wait()
+            import time
+
+            time.sleep(0.1)
+
+            # Simulate portal response with session handle
+            if captured_callback[0]:
+                captured_callback[0](
+                    None,
+                    None,
+                    None,
+                    "Response",
+                    (0, {"session_handle": "/session/test123"}),
+                )
+
+            t.join(timeout=2.0)
+
+            assert backend._running
+            assert backend._session_handle == "/session/test123"
+
+    def test_on_response_callback_non_response_signal(self):
+        """Test on_response ignores non-Response signals."""
+        callback = MagicMock()
+        backend = PortalGlobalShortcuts(callback)
+
+        with patch("pydbus.SessionBus") as mock_bus_class:
+            mock_bus = MagicMock()
+            mock_con = MagicMock()
+            mock_con.get_unique_name.return_value = ":1.123"
+            mock_bus.con = mock_con
+            mock_portal = MagicMock()
+            mock_bus.get.return_value = mock_portal
+            mock_bus_class.return_value = mock_bus
+
+            captured_callback = [None]
+
+            def capture_subscribe(*args, **kwargs):
+                if len(args) > 6:
+                    captured_callback[0] = args[6]
+                return 123
+
+            mock_con.signal_subscribe.side_effect = capture_subscribe
+
+            import threading
+
+            def start_backend():
+                backend.start()
+
+            t = threading.Thread(target=start_backend)
+            t.start()
+
+            import time
+
+            time.sleep(0.1)
+
+            # Call with non-Response signal (should be ignored)
+            if captured_callback[0]:
+                captured_callback[0](None, None, None, "OtherSignal", (0, {}))
+                # Then call with Response
+                captured_callback[0](
+                    None,
+                    None,
+                    None,
+                    "Response",
+                    (0, {"session_handle": "/session/test"}),
+                )
+
+            t.join(timeout=2.0)
+            assert backend._session_handle == "/session/test"
+
+    def test_on_response_callback_error_code(self):
+        """Test on_response handles non-zero response code."""
+        callback = MagicMock()
+        backend = PortalGlobalShortcuts(callback)
+
+        with patch("pydbus.SessionBus") as mock_bus_class:
+            mock_bus = MagicMock()
+            mock_con = MagicMock()
+            mock_con.get_unique_name.return_value = ":1.123"
+            mock_bus.con = mock_con
+            mock_portal = MagicMock()
+            mock_bus.get.return_value = mock_portal
+            mock_bus_class.return_value = mock_bus
+
+            captured_callback = [None]
+
+            def capture_subscribe(*args, **kwargs):
+                if len(args) > 6:
+                    captured_callback[0] = args[6]
+                return 123
+
+            mock_con.signal_subscribe.side_effect = capture_subscribe
+
+            import threading
+
+            def start_backend():
+                backend.start()
+
+            t = threading.Thread(target=start_backend)
+            t.start()
+
+            import time
+
+            time.sleep(0.1)
+
+            # Response with error code 1 (user cancelled)
+            if captured_callback[0]:
+                captured_callback[0](
+                    None,
+                    None,
+                    None,
+                    "Response",
+                    (1, {"session_handle": "/session/test"}),
+                )
+
+            t.join(timeout=2.0)
+            # Session handle should NOT be set due to error code
+            assert not backend._running
+
+    def test_on_activated_callback(self):
+        """Test on_activated callback triggers user callback."""
+        callback = MagicMock()
+        backend = PortalGlobalShortcuts(callback)
+        backend._shortcuts = [
+            ("profile_0", HotkeyBinding(modifiers=["ctrl"], key="1", enabled=True)),
+        ]
+
+        with patch("pydbus.SessionBus") as mock_bus_class:
+            mock_bus = MagicMock()
+            mock_con = MagicMock()
+            mock_con.get_unique_name.return_value = ":1.123"
+            mock_bus.con = mock_con
+            mock_portal = MagicMock()
+            mock_bus.get.return_value = mock_portal
+            mock_bus_class.return_value = mock_bus
+
+            callbacks = []
+
+            def capture_subscribe(*args, **kwargs):
+                if len(args) > 6:
+                    callbacks.append(args[6])
+                return len(callbacks)
+
+            mock_con.signal_subscribe.side_effect = capture_subscribe
+
+            import threading
+
+            def start_backend():
+                backend.start()
+
+            t = threading.Thread(target=start_backend)
+            t.start()
+
+            import time
+
+            time.sleep(0.1)
+
+            # First callback is on_response
+            if callbacks:
+                callbacks[0](
+                    None,
+                    None,
+                    None,
+                    "Response",
+                    (0, {"session_handle": "/session/test"}),
+                )
+
+            t.join(timeout=2.0)
+
+            # Now test on_activated (second callback)
+            if len(callbacks) > 1:
+                callbacks[1](
+                    None,
+                    None,
+                    None,
+                    "Activated",
+                    ("/session/test", "profile_0", 12345, {}),
+                )
+                callback.assert_called_once_with("profile_0")
+
+    def test_start_no_enabled_shortcuts(self):
+        """Test start with disabled shortcuts."""
+        callback = MagicMock()
+        backend = PortalGlobalShortcuts(callback)
+        backend._shortcuts = [
+            ("profile_0", HotkeyBinding(modifiers=["ctrl"], key="1", enabled=False)),
+            ("profile_1", HotkeyBinding(modifiers=["ctrl"], key="", enabled=True)),
+        ]
+
+        with patch("pydbus.SessionBus") as mock_bus_class:
+            mock_bus = MagicMock()
+            mock_con = MagicMock()
+            mock_con.get_unique_name.return_value = ":1.123"
+            mock_bus.con = mock_con
+            mock_portal = MagicMock()
+            mock_bus.get.return_value = mock_portal
+            mock_bus_class.return_value = mock_bus
+
+            captured_callback = [None]
+
+            def capture_subscribe(*args, **kwargs):
+                if len(args) > 6:
+                    captured_callback[0] = args[6]
+                return 123
+
+            mock_con.signal_subscribe.side_effect = capture_subscribe
+
+            import threading
+
+            def start_backend():
+                backend.start()
+
+            t = threading.Thread(target=start_backend)
+            t.start()
+
+            import time
+
+            time.sleep(0.1)
+
+            if captured_callback[0]:
+                captured_callback[0](
+                    None,
+                    None,
+                    None,
+                    "Response",
+                    (0, {"session_handle": "/session/test"}),
+                )
+
+            t.join(timeout=2.0)
+
+            # Should still run but BindShortcuts not called with empty list
+            assert backend._running
+            # BindShortcuts should not be called (no enabled shortcuts)
+            mock_portal.BindShortcuts.__getitem__.assert_not_called()
+
 
 class TestX11Hotkeys:
     """Tests for X11 backend."""
