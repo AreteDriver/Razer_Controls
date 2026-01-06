@@ -768,16 +768,16 @@ class TestJSONLayouts:
             assert layout.id == "razer_deathadder_v2"
 
     def test_basilisk_v3_layout(self):
-        """Test Basilisk V3 layout is loaded correctly."""
+        """Test Basilisk V2/V3 layout is loaded correctly."""
         DeviceLayoutRegistry._initialized = False
         DeviceLayoutRegistry._instance = None
 
         registry = DeviceLayoutRegistry()
         registry.load_layouts()
 
-        layout = registry.get_layout("razer_basilisk_v3")
+        layout = registry.get_layout("razer_basilisk")
         assert layout is not None
-        assert layout.name == "Razer Basilisk V3"
+        assert layout.name == "Razer Basilisk V2/V3"
         assert layout.category == DeviceCategory.MOUSE
         # Should have many buttons including DPI clutch and multi-paddle
         assert len(layout.buttons) >= 12
@@ -856,7 +856,7 @@ class TestJSONLayouts:
 
         layout = registry.get_layout_for_device("Razer Basilisk V3 Pro")
         assert layout is not None
-        assert layout.id == "razer_basilisk_v3"
+        assert layout.id == "razer_basilisk"
 
     def test_pattern_matching_naga(self):
         """Test Naga pattern matching."""

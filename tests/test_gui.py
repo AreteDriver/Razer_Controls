@@ -4710,7 +4710,11 @@ class TestBindingEditorCoverage:
             base_width=100,
             base_height=100,
             outline_path=[(0, 0), (1, 0), (1, 1), (0, 1)],
-            buttons=[ButtonShape(id="btn1", x=0, y=0, width=0.5, height=0.5, label="B1", input_code="BTN_LEFT")],
+            buttons=[
+                ButtonShape(
+                    id="btn1", x=0, y=0, width=0.5, height=0.5, label="B1", input_code="BTN_LEFT"
+                )
+            ],
         )
 
         mock_registry = MagicMock()
@@ -4721,7 +4725,9 @@ class TestBindingEditorCoverage:
         widget.device_combo.addItem("Test Device", "test_layout")
         widget.device_combo.setCurrentIndex(0)
 
-        with patch("apps.gui.widgets.binding_editor.DeviceLayoutRegistry", return_value=mock_registry):
+        with patch(
+            "apps.gui.widgets.binding_editor.DeviceLayoutRegistry", return_value=mock_registry
+        ):
             widget._on_device_combo_changed()
 
         widget.close()
@@ -4826,7 +4832,11 @@ class TestBindingEditorCoverage:
             base_width=100,
             base_height=100,
             outline_path=[(0, 0), (1, 0), (1, 1), (0, 1)],
-            buttons=[ButtonShape(id="btn1", x=0, y=0, width=0.5, height=0.5, label="B1", input_code="BTN_LEFT")],
+            buttons=[
+                ButtonShape(
+                    id="btn1", x=0, y=0, width=0.5, height=0.5, label="B1", input_code="BTN_LEFT"
+                )
+            ],
         )
         widget.device_visual._layout = mock_layout
 
@@ -4896,7 +4906,9 @@ class TestBindingEditorCoverage:
         from crates.profile_schema import ActionType, Binding
 
         widget = BindingEditorWidget()
-        binding = Binding(input_code="BTN_LEFT", action_type=ActionType.CHORD, output_keys=["ctrl", "shift", "a"])
+        binding = Binding(
+            input_code="BTN_LEFT", action_type=ActionType.CHORD, output_keys=["ctrl", "shift", "a"]
+        )
         result = widget._format_binding_short(binding)
         assert result == "ctrl+shift"
         widget.close()
@@ -4907,7 +4919,9 @@ class TestBindingEditorCoverage:
         from crates.profile_schema import ActionType, Binding
 
         widget = BindingEditorWidget()
-        binding = Binding(input_code="BTN_LEFT", action_type=ActionType.MACRO, macro_id="test_macro")
+        binding = Binding(
+            input_code="BTN_LEFT", action_type=ActionType.MACRO, macro_id="test_macro"
+        )
         result = widget._format_binding_short(binding)
         assert result == "Macro"
         widget.close()
@@ -4952,7 +4966,9 @@ class TestBindingEditorCoverage:
 
         widget = BindingEditorWidget()
         widget.current_profile = None
-        macro = MacroAction(id="m1", name="Test", steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="a")])
+        macro = MacroAction(
+            id="m1", name="Test", steps=[MacroStep(type=MacroStepType.KEY_PRESS, key="a")]
+        )
         widget._edit_macro_dialog(macro)  # Should early return
         widget.close()
 

@@ -368,23 +368,29 @@ def schema_to_evdev_code(schema_name: str) -> int | None:
     Returns:
         Integer evdev code, or None if not found
     """
+    # Normalize: single letters should be uppercase
+    normalized = schema_name
+    if len(schema_name) == 1 and schema_name.isalpha():
+        normalized = schema_name.upper()
+
     # Direct lookup in our mapping
-    if schema_name in SCHEMA_TO_UINPUT:
-        return SCHEMA_TO_UINPUT[schema_name]
+    if normalized in SCHEMA_TO_UINPUT:
+        return SCHEMA_TO_UINPUT[normalized]
 
     # Try reverse lookup
-    evdev_name = SCHEMA_TO_EVDEV.get(schema_name, schema_name)
+    evdev_name = SCHEMA_TO_EVDEV.get(normalized, normalized)
     code = getattr(ecodes, evdev_name, None)
     if code is not None:
         return int(code)
 
-    # Try with KEY_ prefix
-    code = getattr(ecodes, f"KEY_{schema_name}", None)
+    # Try with KEY_ prefix (uppercase for letters)
+    key_name = normalized.upper() if normalized.isalpha() else normalized
+    code = getattr(ecodes, f"KEY_{key_name}", None)
     if code is not None:
         return int(code)
 
     # Try with BTN_ prefix
-    code = getattr(ecodes, f"BTN_{schema_name}", None)
+    code = getattr(ecodes, f"BTN_{normalized}", None)
     return int(code) if code is not None else None
 
 

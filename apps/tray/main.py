@@ -740,8 +740,7 @@ def main():
         QMessageBox.warning(
             None,
             "Already Running",
-            "Razer Tray is already running.\n\n"
-            "Check your system tray for the existing instance.",
+            "Razer Tray is already running.\n\nCheck your system tray for the existing instance.",
         )
         sys.exit(1)
 

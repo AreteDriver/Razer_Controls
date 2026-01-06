@@ -259,8 +259,14 @@ class BindingDialog(QDialog):
         if action_type in (ActionType.KEY, ActionType.CHORD):
             output_text = self.output_edit.text().strip()
             if output_text:
-                # Parse keys separated by +
-                output_keys = [k.strip() for k in output_text.split("+")]
+                # Parse keys separated by + and normalize to uppercase for single letters
+                output_keys = []
+                for k in output_text.split("+"):
+                    key = k.strip()
+                    # Normalize single letters to uppercase
+                    if len(key) == 1 and key.isalpha():
+                        key = key.upper()
+                    output_keys.append(key)
 
         if action_type == ActionType.MACRO:
             macro_id = self.macro_combo.currentData()

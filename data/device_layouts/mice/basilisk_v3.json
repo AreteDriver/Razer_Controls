@@ -1,10 +1,11 @@
 {
-  "id": "razer_basilisk_v3",
-  "name": "Razer Basilisk V3",
+  "id": "razer_basilisk",
+  "name": "Razer Basilisk V2/V3",
   "category": "mouse",
   "device_name_patterns": [
-    ".*basilisk.*v3.*",
-    ".*Basilisk V3.*"
+    ".*basilisk.*v[23].*",
+    ".*Basilisk V[23].*",
+    ".*Basilisk_V[23].*"
   ],
   "base_width": 220,
   "base_height": 420,
