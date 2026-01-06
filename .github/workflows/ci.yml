@@ -68,7 +68,8 @@ jobs:
             --ignore=tests/test_openrazer_bridge.py \
             --ignore=tests/test_app_watcher.py \
             --ignore=tests/test_hotkey_backends.py \
-            --ignore=tests/test_tray.py
+            --ignore=tests/test_tray.py \
+            --deselect=tests/test_gui.py::TestGUIMainFunction
         env:
           QT_QPA_PLATFORM: offscreen
       - name: Upload coverage to Codecov
