@@ -8,8 +8,9 @@
     ".*mamba.*wireless.*",
     ".*Mamba Wireless.*"
   ],
-  "base_width": 70,
-  "base_height": 125,
+  "base_width": 200,
+  "base_height": 400,
+  "image_path": "device_images/mice/mamba_elite.svg",
   "outline_path": [
     [0.5, 0.0],
     [0.78, 0.08],

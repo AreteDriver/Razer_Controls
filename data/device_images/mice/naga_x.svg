@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 420" width="240" height="420">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="50%" style="stop-color:#2d2d2d"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a3a"/>
+      <stop offset="100%" style="stop-color:#252525"/>
+    </linearGradient>
+    <linearGradient id="sideButtonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2a2a2a"/>
+      <stop offset="100%" style="stop-color:#3a3a3a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Mouse body - Naga ergonomic shape with wide thumb area -->
+  <path d="M130,10
+           C175,10 205,45 210,95
+           L215,190
+           C220,260 215,330 200,380
+           C185,410 155,420 130,420
+           C95,420 65,405 50,375
+           C35,330 30,260 35,190
+           L40,95
+           C45,45 85,10 130,10 Z"
+        fill="url(#bodyGradient)"
+        stroke="#444"
+        stroke-width="2"/>
+
+  <!-- Extended thumb panel area -->
+  <path d="M35,160
+           C15,170 5,200 5,250
+           C5,300 15,350 35,370
+           L35,160 Z"
+        fill="#222"
+        stroke="#444"
+        stroke-width="1"/>
+
+  <!-- Left click button -->
+  <path d="M55,22
+           C75,15 105,12 125,12
+           L125,150
+           C105,150 75,145 55,135
+           L55,22 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Right click button -->
+  <path d="M135,12
+           C165,12 185,15 200,22
+           L200,135
+           C185,145 165,150 135,150
+           L135,12 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Middle divider -->
+  <line x1="130" y1="12" x2="130" y2="155" stroke="#222" stroke-width="3"/>
+
+  <!-- Scroll wheel housing -->
+  <rect x="112" y="55" width="36" height="55" rx="10" fill="#1a1a1a" stroke="#333"/>
+
+  <!-- Scroll wheel -->
+  <rect x="118" y="60" width="24" height="45" rx="6" fill="#444" stroke="#555"/>
+  <!-- Scroll wheel texture -->
+  <line x1="120" y1="68" x2="140" y2="68" stroke="#333" stroke-width="1"/>
+  <line x1="120" y1="78" x2="140" y2="78" stroke="#333" stroke-width="1"/>
+  <line x1="120" y1="88" x2="140" y2="88" stroke="#333" stroke-width="1"/>
+  <line x1="120" y1="98" x2="140" y2="98" stroke="#333" stroke-width="1"/>
+
+  <!-- 12-button side grid (4 rows x 3 columns) -->
+  <!-- Row 1 -->
+  <rect x="8" y="175" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555"/>
+  <rect x="8" y="208" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555"/>
+  <rect x="8" y="241" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555"/>
+  <rect x="8" y="274" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555"/>
+
+  <!-- Row 2 (middle) - slightly inset -->
+  <rect x="18" y="175" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(12, 0)"/>
+  <rect x="18" y="208" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(12, 0)"/>
+  <rect x="18" y="241" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(12, 0)"/>
+  <rect x="18" y="274" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(12, 0)"/>
+
+  <!-- Row 3 (inner) -->
+  <rect x="28" y="175" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(24, 0)"/>
+  <rect x="28" y="208" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(24, 0)"/>
+  <rect x="28" y="241" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(24, 0)"/>
+  <rect x="28" y="274" width="22" height="28" rx="3" fill="url(#sideButtonGradient)" stroke="#555" transform="translate(24, 0)"/>
+
+  <!-- Button labels (1-12) -->
+  <text x="19" y="194" font-size="10" fill="#666" text-anchor="middle">1</text>
+  <text x="19" y="227" font-size="10" fill="#666" text-anchor="middle">4</text>
+  <text x="19" y="260" font-size="10" fill="#666" text-anchor="middle">7</text>
+  <text x="19" y="293" font-size="10" fill="#666" text-anchor="middle">10</text>
+
+  <text x="41" y="194" font-size="10" fill="#666" text-anchor="middle">2</text>
+  <text x="41" y="227" font-size="10" fill="#666" text-anchor="middle">5</text>
+  <text x="41" y="260" font-size="10" fill="#666" text-anchor="middle">8</text>
+  <text x="41" y="293" font-size="10" fill="#666" text-anchor="middle">11</text>
+
+  <text x="63" y="194" font-size="10" fill="#666" text-anchor="middle">3</text>
+  <text x="63" y="227" font-size="10" fill="#666" text-anchor="middle">6</text>
+  <text x="63" y="260" font-size="10" fill="#666" text-anchor="middle">9</text>
+  <text x="63" y="293" font-size="10" fill="#666" text-anchor="middle">12</text>
+
+  <!-- DPI buttons -->
+  <rect x="120" y="125" width="20" height="12" rx="3" fill="#2a2a2a" stroke="#444"/>
+  <rect x="120" y="140" width="20" height="12" rx="3" fill="#2a2a2a" stroke="#444"/>
+
+  <!-- Razer logo area -->
+  <ellipse cx="130" cy="340" rx="25" ry="16" fill="none" stroke="#2da05a" stroke-width="1" opacity="0.4"/>
+
+  <!-- RGB strip (bottom) -->
+  <path d="M70,395 Q130,415 190,395"
+        fill="none"
+        stroke="#2da05a"
+        stroke-width="3"
+        filter="url(#glow)"
+        opacity="0.7"/>
+
+  <!-- Texture lines -->
+  <path d="M60,320 C90,310 170,310 200,320" stroke="#333" stroke-width="0.5" fill="none" opacity="0.4"/>
+  <path d="M55,360 C85,350 175,350 205,360" stroke="#333" stroke-width="0.5" fill="none" opacity="0.4"/>
+</svg>

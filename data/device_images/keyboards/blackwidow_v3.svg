@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d2d2d"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="keyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#404040"/>
+      <stop offset="100%" style="stop-color:#2a2a2a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Keyboard body -->
+  <rect x="5" y="5" width="890" height="310" rx="8" fill="url(#bodyGradient)" stroke="#444" stroke-width="2"/>
+
+  <!-- Top bezel with media controls -->
+  <rect x="10" y="10" width="880" height="35" rx="4" fill="#252525"/>
+
+  <!-- Media keys -->
+  <circle cx="780" cy="27" r="12" fill="#333" stroke="#555"/>
+  <circle cx="810" cy="27" r="12" fill="#333" stroke="#555"/>
+  <circle cx="840" cy="27" r="12" fill="#333" stroke="#555"/>
+  <circle cx="870" cy="27" r="12" fill="#333" stroke="#555"/>
+
+  <!-- Volume roller -->
+  <rect x="720" y="18" width="40" height="18" rx="4" fill="#333" stroke="#555"/>
+
+  <!-- RGB underglow strip -->
+  <rect x="12" y="295" width="876" height="8" rx="2" fill="#2da05a" filter="url(#glow)" opacity="0.6"/>
+
+  <!-- Function row (F1-F12 + special) -->
+  <rect x="20" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <text x="36" y="74" font-size="9" fill="#888" text-anchor="middle">ESC</text>
+
+  <!-- F1-F4 -->
+  <rect x="68" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="104" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="140" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="176" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- F5-F8 -->
+  <rect x="224" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="260" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="296" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="332" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- F9-F12 -->
+  <rect x="380" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="416" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="452" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="488" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Print/Scroll/Pause -->
+  <rect x="540" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="576" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="612" y="55" width="32" height="28" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Number row -->
+  <rect x="20" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="56" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="92" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="128" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="164" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="200" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="236" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="272" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="308" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="344" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="380" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="416" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="452" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Backspace -->
+  <rect x="488" y="90" width="52" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Nav cluster -->
+  <rect x="556" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="592" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="628" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Numpad top row -->
+  <rect x="680" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="716" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="752" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="788" y="90" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- QWERTY row -->
+  <!-- Tab -->
+  <rect x="20" y="126" width="44" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="68" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="104" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="140" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="176" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="212" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="248" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="284" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="320" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="356" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="392" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="428" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="464" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Backslash -->
+  <rect x="500" y="126" width="40" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Nav cluster row 2 -->
+  <rect x="556" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="592" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="628" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Numpad 7-9 -->
+  <rect x="680" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="716" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="752" y="126" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="788" y="126" width="32" height="68" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Home row -->
+  <!-- Caps -->
+  <rect x="20" y="162" width="52" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="76" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="112" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="148" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="184" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="220" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="256" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="292" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="328" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="364" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="400" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="436" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Enter -->
+  <rect x="472" y="162" width="68" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Numpad 4-6 -->
+  <rect x="680" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="716" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="752" y="162" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Bottom letter row -->
+  <!-- Shift -->
+  <rect x="20" y="198" width="68" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="92" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="128" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="164" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="200" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="236" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="272" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="308" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="344" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="380" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="416" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Right Shift -->
+  <rect x="452" y="198" width="88" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Arrow up -->
+  <rect x="592" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Numpad 1-3 -->
+  <rect x="680" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="716" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="752" y="198" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Numpad Enter -->
+  <rect x="788" y="198" width="32" height="68" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Spacebar row -->
+  <!-- Ctrl -->
+  <rect x="20" y="234" width="44" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Win -->
+  <rect x="68" y="234" width="40" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Alt -->
+  <rect x="112" y="234" width="40" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Spacebar -->
+  <rect x="156" y="234" width="220" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <!-- Right modifiers -->
+  <rect x="380" y="234" width="40" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="424" y="234" width="36" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="464" y="234" width="36" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="504" y="234" width="36" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Arrow keys -->
+  <rect x="556" y="234" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="592" y="234" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="628" y="234" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Numpad 0 and . -->
+  <rect x="680" y="234" width="68" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="752" y="234" width="32" height="32" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Razer logo -->
+  <ellipse cx="35" cy="27" rx="18" ry="12" fill="none" stroke="#2da05a" stroke-width="1.5" filter="url(#glow)" opacity="0.6"/>
+</svg>

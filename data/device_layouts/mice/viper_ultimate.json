@@ -8,8 +8,9 @@
     ".*viper.*v2.*",
     ".*Viper V2.*"
   ],
-  "base_width": 66,
-  "base_height": 128,
+  "base_width": 200,
+  "base_height": 380,
+  "image_path": "device_images/mice/viper_ultimate.svg",
   "outline_path": [
     [0.5, 0.0],
     [0.80, 0.06],

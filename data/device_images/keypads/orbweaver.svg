@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 370" width="420" height="370">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a2a2a"/>
+      <stop offset="50%" style="stop-color:#222"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="keyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3d3d3d"/>
+      <stop offset="100%" style="stop-color:#282828"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main body - Orbweaver has more angular design -->
+  <path d="M40,60
+           L340,35
+           C375,32 395,50 398,85
+           L400,260
+           C400,300 380,330 340,340
+           L100,355
+           C55,355 30,330 25,290
+           L20,120
+           C18,80 25,60 40,60 Z"
+        fill="url(#bodyGradient)"
+        stroke="#444"
+        stroke-width="2"/>
+
+  <!-- Adjustable palm rest -->
+  <path d="M300,250
+           C330,245 365,260 375,290
+           C380,315 370,340 340,350
+           L300,355
+           C290,330 290,280 300,250 Z"
+        fill="#1d1d1d"
+        stroke="#333"
+        stroke-width="1"/>
+
+  <!-- Key grid (5 columns x 4 rows) - mechanical style keys -->
+  <!-- Row 1 -->
+  <rect x="55" y="65" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="98" y="65" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="141" y="65" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="184" y="65" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="227" y="65" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Row 2 (staggered) -->
+  <rect x="62" y="108" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="105" y="108" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="148" y="108" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="191" y="108" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="234" y="108" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Row 3 (staggered) -->
+  <rect x="69" y="151" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="112" y="151" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="155" y="151" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="198" y="151" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="241" y="151" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Row 4 (bottom row with spacebar) -->
+  <rect x="76" y="194" width="56" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="137" y="194" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="180" y="194" width="38" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+  <rect x="223" y="194" width="56" height="38" rx="3" fill="url(#keyGradient)" stroke="#555"/>
+
+  <!-- Key caps (raised effect) -->
+  <rect x="58" y="68" width="32" height="32" rx="2" fill="#454545" opacity="0.7"/>
+  <rect x="101" y="68" width="32" height="32" rx="2" fill="#454545" opacity="0.7"/>
+  <rect x="144" y="68" width="32" height="32" rx="2" fill="#454545" opacity="0.7"/>
+  <rect x="187" y="68" width="32" height="32" rx="2" fill="#454545" opacity="0.7"/>
+  <rect x="230" y="68" width="32" height="32" rx="2" fill="#454545" opacity="0.7"/>
+
+  <!-- Key labels -->
+  <text x="74" y="90" font-size="12" fill="#999" text-anchor="middle">1</text>
+  <text x="117" y="90" font-size="12" fill="#999" text-anchor="middle">2</text>
+  <text x="160" y="90" font-size="12" fill="#999" text-anchor="middle">3</text>
+  <text x="203" y="90" font-size="12" fill="#999" text-anchor="middle">4</text>
+  <text x="246" y="90" font-size="12" fill="#999" text-anchor="middle">5</text>
+
+  <text x="81" y="133" font-size="12" fill="#999" text-anchor="middle">Q</text>
+  <text x="124" y="133" font-size="12" fill="#999" text-anchor="middle">W</text>
+  <text x="167" y="133" font-size="12" fill="#999" text-anchor="middle">E</text>
+  <text x="210" y="133" font-size="12" fill="#999" text-anchor="middle">R</text>
+  <text x="253" y="133" font-size="12" fill="#999" text-anchor="middle">T</text>
+
+  <text x="88" y="176" font-size="12" fill="#999" text-anchor="middle">A</text>
+  <text x="131" y="176" font-size="12" fill="#999" text-anchor="middle">S</text>
+  <text x="174" y="176" font-size="12" fill="#999" text-anchor="middle">D</text>
+  <text x="217" y="176" font-size="12" fill="#999" text-anchor="middle">F</text>
+  <text x="260" y="176" font-size="12" fill="#999" text-anchor="middle">G</text>
+
+  <!-- Thumb module -->
+  <rect x="110" y="250" width="130" height="90" rx="12" fill="#1a1a1a" stroke="#333"/>
+
+  <!-- 8-way thumb stick -->
+  <circle cx="145" cy="295" r="30" fill="#252525" stroke="#444"/>
+  <circle cx="145" cy="295" r="20" fill="#353535" stroke="#555"/>
+
+  <!-- Thumb buttons -->
+  <rect x="185" y="260" width="40" height="30" rx="4" fill="#333" stroke="#444"/>
+  <rect x="185" y="300" width="40" height="30" rx="4" fill="#333" stroke="#444"/>
+
+  <!-- Thumb scroll / rocker -->
+  <rect x="115" y="255" width="25" height="15" rx="3" fill="#3a3a3a" stroke="#555"/>
+
+  <!-- RGB strip along front edge -->
+  <path d="M55,57 L260,42"
+        fill="none"
+        stroke="#2da05a"
+        stroke-width="3"
+        filter="url(#glow)"
+        opacity="0.6"/>
+
+  <!-- Adjustable wrist rest indicator -->
+  <line x1="300" y1="280" x2="370" y2="300" stroke="#333" stroke-width="1" opacity="0.5"/>
+  <line x1="300" y1="300" x2="370" y2="320" stroke="#333" stroke-width="1" opacity="0.5"/>
+
+  <!-- Razer logo on palm rest -->
+  <ellipse cx="335" cy="300" rx="18" ry="12" fill="none" stroke="#2da05a" stroke-width="1" opacity="0.4"/>
+</svg>

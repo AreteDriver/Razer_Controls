@@ -8,8 +8,9 @@
     ".*huntsman.*v2.*",
     ".*Huntsman V2.*"
   ],
-  "base_width": 480,
-  "base_height": 200,
+  "base_width": 900,
+  "base_height": 400,
+  "image_path": "device_images/keyboards/huntsman_elite.svg",
   "outline_path": [
     [0.0, 0.0],
     [1.0, 0.0],

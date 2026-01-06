@@ -6,8 +6,9 @@
     ".*basilisk.*v3.*",
     ".*Basilisk V3.*"
   ],
-  "base_width": 75,
-  "base_height": 130,
+  "base_width": 220,
+  "base_height": 420,
+  "image_path": "device_images/mice/basilisk_v3.svg",
   "outline_path": [
     [0.5, 0.0],
     [0.82, 0.10],

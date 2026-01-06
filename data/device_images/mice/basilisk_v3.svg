@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 420" width="220" height="420">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="50%" style="stop-color:#2d2d2d"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a3a"/>
+      <stop offset="100%" style="stop-color:#252525"/>
+    </linearGradient>
+    <linearGradient id="rgbGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff0000"/>
+      <stop offset="25%" style="stop-color:#ffaa00"/>
+      <stop offset="50%" style="stop-color:#00ff00"/>
+      <stop offset="75%" style="stop-color:#00aaff"/>
+      <stop offset="100%" style="stop-color:#ff00ff"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Mouse body - Basilisk ergonomic shape with thumb rest -->
+  <path d="M110,10
+           C155,10 185,45 190,90
+           L195,180
+           C200,250 195,320 180,370
+           C165,405 140,415 110,415
+           C80,415 55,405 40,370
+           C25,320 20,250 25,180
+           L30,90
+           C35,45 65,10 110,10 Z"
+        fill="url(#bodyGradient)"
+        stroke="#444"
+        stroke-width="2"/>
+
+  <!-- Extended thumb rest (left side) -->
+  <path d="M25,200
+           C10,210 5,250 8,290
+           C10,330 20,360 35,370
+           L35,200 Z"
+        fill="#252525"
+        stroke="#444"
+        stroke-width="1"/>
+
+  <!-- Left click button -->
+  <path d="M40,25
+           C55,18 80,15 105,15
+           L105,155
+           C80,155 55,150 40,140
+           L40,25 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Right click button -->
+  <path d="M115,15
+           C140,15 165,18 180,25
+           L180,140
+           C165,150 140,155 115,155
+           L115,15 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Middle divider -->
+  <line x1="110" y1="15" x2="110" y2="160" stroke="#222" stroke-width="3"/>
+
+  <!-- Scroll wheel housing -->
+  <rect x="92" y="55" width="36" height="60" rx="10" fill="#1a1a1a" stroke="#333"/>
+
+  <!-- Scroll wheel with RGB strip -->
+  <rect x="98" y="62" width="24" height="46" rx="6" fill="#333" stroke="#444"/>
+  <!-- RGB strip on scroll wheel -->
+  <rect x="107" y="65" width="6" height="40" rx="2" fill="#2da05a" filter="url(#glow)" opacity="0.8"/>
+  <!-- Scroll wheel texture -->
+  <line x1="100" y1="72" x2="120" y2="72" stroke="#222" stroke-width="1"/>
+  <line x1="100" y1="82" x2="120" y2="82" stroke="#222" stroke-width="1"/>
+  <line x1="100" y1="92" x2="120" y2="92" stroke="#222" stroke-width="1"/>
+  <line x1="100" y1="102" x2="120" y2="102" stroke="#222" stroke-width="1"/>
+
+  <!-- DPI buttons (stacked below scroll wheel) -->
+  <rect x="100" y="130" width="20" height="12" rx="3" fill="#2a2a2a" stroke="#444"/>
+  <rect x="100" y="145" width="20" height="12" rx="3" fill="#2a2a2a" stroke="#444"/>
+  <rect x="100" y="160" width="20" height="10" rx="3" fill="#2a2a2a" stroke="#444"/>
+
+  <!-- Side buttons (left side - forward/back) -->
+  <rect x="20" y="175" width="15" height="30" rx="4" fill="#3a3a3a" stroke="#555"/>
+  <rect x="20" y="210" width="15" height="30" rx="4" fill="#3a3a3a" stroke="#555"/>
+
+  <!-- DPI clutch paddle (lower left) -->
+  <rect x="15" y="260" width="20" height="45" rx="5" fill="#3a3a3a" stroke="#555"/>
+
+  <!-- Multi-function paddle (bottom left) -->
+  <rect x="25" y="320" width="25" height="20" rx="4" fill="#3a3a3a" stroke="#555"/>
+
+  <!-- Razer logo area -->
+  <ellipse cx="110" cy="290" rx="28" ry="18" fill="none" stroke="#2da05a" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- RGB underglow strip -->
+  <path d="M55,385 Q110,405 165,385"
+        fill="none"
+        stroke="url(#rgbGlow)"
+        stroke-width="6"
+        filter="url(#glow)"
+        opacity="0.8"/>
+
+  <!-- Subtle body texture -->
+  <path d="M50,260 C80,250 140,250 170,260" stroke="#333" stroke-width="0.5" fill="none" opacity="0.4"/>
+  <path d="M45,300 C75,290 145,290 175,300" stroke="#333" stroke-width="0.5" fill="none" opacity="0.4"/>
+  <path d="M45,340 C75,330 145,330 175,340" stroke="#333" stroke-width="0.5" fill="none" opacity="0.4"/>
+</svg>
