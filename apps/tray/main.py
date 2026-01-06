@@ -15,6 +15,21 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QFileSystemWatcher, QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMenu,
+    QMessageBox,
+    QSystemTrayIcon,
+)
+
+from crates.profile_schema import ProfileLoader, SettingsManager
+from services.openrazer_bridge import OpenRazerBridge
+
+from .hotkeys import HotkeyListener
+
 # Single-instance lock
 LOCK_FILE = Path.home() / ".cache" / "razer-tray.lock"
 _lock_file_handle = None
@@ -30,7 +45,7 @@ def acquire_instance_lock() -> bool:
         _lock_file_handle.write(str(os.getpid()))
         _lock_file_handle.flush()
         return True
-    except (IOError, OSError):
+    except OSError:
         if _lock_file_handle:
             _lock_file_handle.close()
             _lock_file_handle = None
@@ -44,24 +59,9 @@ def release_instance_lock():
         try:
             fcntl.flock(_lock_file_handle.fileno(), fcntl.LOCK_UN)
             _lock_file_handle.close()
-        except (IOError, OSError):
+        except OSError:
             pass
         _lock_file_handle = None
-
-from PySide6.QtCore import QFileSystemWatcher, QObject, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import (
-    QApplication,
-    QFileDialog,
-    QMenu,
-    QMessageBox,
-    QSystemTrayIcon,
-)
-
-from crates.profile_schema import ProfileLoader, SettingsManager
-from services.openrazer_bridge import OpenRazerBridge
-
-from .hotkeys import HotkeyListener
 
 
 class TraySignals(QObject):
