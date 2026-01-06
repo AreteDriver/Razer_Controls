@@ -7,10 +7,46 @@ Provides:
 - Desktop notifications
 """
 
+import atexit
+import fcntl
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# Single-instance lock
+LOCK_FILE = Path.home() / ".cache" / "razer-tray.lock"
+_lock_file_handle = None
+
+
+def acquire_instance_lock() -> bool:
+    """Try to acquire single-instance lock. Returns True if acquired."""
+    global _lock_file_handle
+    try:
+        LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _lock_file_handle = open(LOCK_FILE, "w")
+        fcntl.flock(_lock_file_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        _lock_file_handle.write(str(os.getpid()))
+        _lock_file_handle.flush()
+        return True
+    except (IOError, OSError):
+        if _lock_file_handle:
+            _lock_file_handle.close()
+            _lock_file_handle = None
+        return False
+
+
+def release_instance_lock():
+    """Release the single-instance lock."""
+    global _lock_file_handle
+    if _lock_file_handle:
+        try:
+            fcntl.flock(_lock_file_handle.fileno(), fcntl.LOCK_UN)
+            _lock_file_handle.close()
+        except (IOError, OSError):
+            pass
+        _lock_file_handle = None
 
 from PySide6.QtCore import QFileSystemWatcher, QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
@@ -698,6 +734,19 @@ class RazerTray(QSystemTrayIcon):
 
 def main():
     """Main entry point for the tray application."""
+    # Single-instance check
+    if not acquire_instance_lock():
+        app = QApplication(sys.argv)
+        QMessageBox.warning(
+            None,
+            "Already Running",
+            "Razer Tray is already running.\n\n"
+            "Check your system tray for the existing instance.",
+        )
+        sys.exit(1)
+
+    atexit.register(release_instance_lock)
+
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)  # Keep running in tray
 
