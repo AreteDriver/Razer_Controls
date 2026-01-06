@@ -1,6 +1,7 @@
 """Visual representation of Razer devices with interactive buttons."""
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
@@ -11,6 +12,7 @@ from PySide6.QtGui import (
     QMouseEvent,
     QPainter,
     QPen,
+    QPixmap,
     QPolygonF,
 )
 from PySide6.QtWidgets import (
@@ -27,6 +29,9 @@ from crates.device_layouts import (
     get_fallback_layout,
 )
 from crates.device_layouts.schema import ShapeType
+
+# Base path for device images
+_DATA_DIR = Path(__file__).parent.parent.parent.parent.parent / "data"
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +76,10 @@ class DeviceVisualWidget(QWidget):
         self._zone_colors: dict[str, QColor] = {}
         self._button_bindings: dict[str, str] = {}  # button_id -> key binding
 
+        # Device image support
+        self._device_image: QPixmap | None = None
+        self._image_cache: dict[str, QPixmap] = {}  # path -> pixmap cache
+
         # Enable mouse tracking for hover effects
         self.setMouseTracking(True)
 
@@ -106,6 +115,7 @@ class DeviceVisualWidget(QWidget):
         self._layout = layout
         self._hovered_button = None
         self._selected_button = None
+        self._load_device_image()
         self.update()
 
     def set_layout(self, layout: DeviceLayout) -> None:
@@ -113,7 +123,36 @@ class DeviceVisualWidget(QWidget):
         self._layout = layout
         self._hovered_button = None
         self._selected_button = None
+        self._load_device_image()
         self.update()
+
+    def _load_device_image(self) -> None:
+        """Load the device image if specified in layout."""
+        self._device_image = None
+
+        if not self._layout or not self._layout.image_path:
+            return
+
+        # Check cache first
+        if self._layout.image_path in self._image_cache:
+            self._device_image = self._image_cache[self._layout.image_path]
+            return
+
+        # Resolve image path (relative to data/ directory)
+        image_path = _DATA_DIR / self._layout.image_path
+
+        if not image_path.exists():
+            logger.warning(f"Device image not found: {image_path}")
+            return
+
+        pixmap = QPixmap(str(image_path))
+        if pixmap.isNull():
+            logger.warning(f"Failed to load device image: {image_path}")
+            return
+
+        self._device_image = pixmap
+        self._image_cache[self._layout.image_path] = pixmap
+        logger.info(f"Loaded device image: {image_path}")
 
     def set_zone_color(self, zone_id: str, color: QColor) -> None:
         """Set the color for an RGB zone."""
@@ -145,6 +184,7 @@ class DeviceVisualWidget(QWidget):
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
 
         # Calculate scaling to fit widget
         widget_rect = self.rect()
@@ -167,14 +207,33 @@ class DeviceVisualWidget(QWidget):
         offset_x = (widget_rect.width() - scale_width) / 2
         offset_y = (widget_rect.height() - scale_height) / 2
 
-        # Draw device outline
-        self._draw_outline(painter, offset_x, offset_y, scale_width, scale_height)
+        # Draw device image if available, otherwise draw outline
+        if self._device_image:
+            self._draw_device_image(painter, offset_x, offset_y, scale_width, scale_height)
+        else:
+            self._draw_outline(painter, offset_x, offset_y, scale_width, scale_height)
 
-        # Draw buttons and zones
+        # Draw buttons and zones as overlays
         for button in self._layout.buttons:
             self._draw_button(painter, button, offset_x, offset_y, scale_width, scale_height)
 
         painter.end()
+
+    def _draw_device_image(
+        self,
+        painter: QPainter,
+        offset_x: float,
+        offset_y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        """Draw the device background image."""
+        if not self._device_image:
+            return
+
+        # Scale image to fit the device area
+        target_rect = QRectF(offset_x, offset_y, width, height)
+        painter.drawPixmap(target_rect.toRect(), self._device_image)
 
     def _draw_outline(
         self,
@@ -223,6 +282,7 @@ class DeviceVisualWidget(QWidget):
         # Determine colors based on state
         is_hovered = button.id == self._hovered_button
         is_selected = button.id == self._selected_button
+        has_image = self._device_image is not None
 
         if button.is_zone:
             # RGB zone - use custom color if set
@@ -232,13 +292,20 @@ class DeviceVisualWidget(QWidget):
         else:
             # Physical button
             if is_selected:
-                fill_color = self.COLOR_BUTTON_SELECTED
+                fill_color = QColor(self.COLOR_BUTTON_SELECTED)
             elif is_hovered:
-                fill_color = self.COLOR_BUTTON_HOVER
+                fill_color = QColor(self.COLOR_BUTTON_HOVER)
             else:
-                fill_color = self.COLOR_BUTTON
+                fill_color = QColor(self.COLOR_BUTTON)
             outline_color = self.COLOR_BUTTON_SELECTED if is_selected else self.COLOR_BUTTON_OUTLINE
             outline_width = 2 if is_selected else 1
+
+            # Make buttons semi-transparent when image is present (except selected)
+            if has_image and not is_selected:
+                if is_hovered:
+                    fill_color.setAlpha(180)  # More visible on hover
+                else:
+                    fill_color.setAlpha(80)  # Subtle overlay to show hotspots
 
         painter.setBrush(QBrush(fill_color))
         painter.setPen(QPen(outline_color, outline_width))

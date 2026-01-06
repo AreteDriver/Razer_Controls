@@ -97,6 +97,7 @@ class DeviceLayout:
     base_height: float  # Design height
     outline_path: list[tuple[float, float]]  # Polygon outline (relative coords)
     buttons: list[ButtonShape] = field(default_factory=list)
+    image_path: str | None = None  # Optional path to device image (relative to data/)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "DeviceLayout":
@@ -116,11 +117,12 @@ class DeviceLayout:
             base_height=data.get("base_height", 200),
             outline_path=data.get("outline_path", []),
             buttons=buttons,
+            image_path=data.get("image_path"),
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for JSON serialization."""
-        return {
+        result = {
             "id": self.id,
             "name": self.name,
             "category": self.category.value,
@@ -130,6 +132,9 @@ class DeviceLayout:
             "outline_path": self.outline_path,
             "buttons": [b.to_dict() for b in self.buttons],
         }
+        if self.image_path:
+            result["image_path"] = self.image_path
+        return result
 
     def get_button(self, button_id: str) -> ButtonShape | None:
         """Get a button by ID."""

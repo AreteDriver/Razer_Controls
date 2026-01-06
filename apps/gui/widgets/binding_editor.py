@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QPushButton,
     QSpinBox,
+    QSplitter,
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
@@ -29,6 +30,8 @@ from crates.profile_schema import (
     MacroStepType,
     Profile,
 )
+from apps.gui.widgets.device_visual.device_visual_widget import DeviceVisualWidget
+from crates.device_layouts import DeviceLayoutRegistry
 
 # Common input buttons for quick selection
 COMMON_INPUTS = {
@@ -408,8 +411,17 @@ class BindingEditorWidget(QWidget):
         self.tabs.addTab(macros_widget, "Macros")
 
     def _setup_bindings_tab(self, widget):
-        """Set up the bindings tab."""
+        """Set up the bindings tab with device visual."""
         layout = QVBoxLayout(widget)
+
+        # Device selector at top
+        device_layout = QHBoxLayout()
+        device_layout.addWidget(QLabel("Device:"))
+        self.device_combo = QComboBox()
+        self._populate_device_combo()
+        self.device_combo.currentIndexChanged.connect(self._on_device_combo_changed)
+        device_layout.addWidget(self.device_combo, 1)
+        layout.addLayout(device_layout)
 
         # Layer selector
         layer_layout = QHBoxLayout()
@@ -439,10 +451,38 @@ class BindingEditorWidget(QWidget):
         self.layer_info_label.setStyleSheet("color: #44d72c; font-size: 11px; padding: 2px;")
         layout.addWidget(self.layer_info_label)
 
+        # Splitter: Device visual on left, bindings list on right
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # Left side: Device visual
+        device_panel = QWidget()
+        device_layout = QVBoxLayout(device_panel)
+        device_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Device info label
+        self.device_info_label = QLabel("Click a button to add/edit its binding")
+        self.device_info_label.setStyleSheet("color: #888; font-size: 11px;")
+        device_layout.addWidget(self.device_info_label)
+
+        # Device visual widget
+        self.device_visual = DeviceVisualWidget()
+        self.device_visual.button_clicked.connect(self._on_device_button_clicked)
+        self.device_visual.button_right_clicked.connect(self._on_device_button_right_clicked)
+        self.device_visual.setMinimumWidth(200)
+        device_layout.addWidget(self.device_visual, 1)
+
+        splitter.addWidget(device_panel)
+
+        # Right side: Bindings list
+        bindings_panel = QWidget()
+        bindings_layout = QVBoxLayout(bindings_panel)
+        bindings_layout.setContentsMargins(0, 0, 0, 0)
+
         # Bindings list
         self.bindings_list = QListWidget()
         self.bindings_list.itemDoubleClicked.connect(self._edit_binding)
-        layout.addWidget(self.bindings_list)
+        self.bindings_list.currentItemChanged.connect(self._on_binding_selected)
+        bindings_layout.addWidget(self.bindings_list)
 
         # Buttons
         btn_layout = QHBoxLayout()
@@ -460,7 +500,14 @@ class BindingEditorWidget(QWidget):
         btn_layout.addWidget(self.remove_binding_btn)
 
         btn_layout.addStretch()
-        layout.addLayout(btn_layout)
+        bindings_layout.addLayout(btn_layout)
+
+        splitter.addWidget(bindings_panel)
+
+        # Set splitter proportions (40% device, 60% bindings)
+        splitter.setSizes([400, 600])
+
+        layout.addWidget(splitter, 1)
 
     def _setup_macros_tab(self, widget):
         """Set up the macros tab."""
@@ -489,6 +536,59 @@ class BindingEditorWidget(QWidget):
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
+    def _populate_device_combo(self) -> None:
+        """Populate the device selector with available layouts."""
+        registry = DeviceLayoutRegistry()
+        registry.load_layouts()
+
+        self.device_combo.clear()
+        self.device_combo.addItem("-- Select Device --", None)
+
+        # Group by category
+        categories = {"mouse": [], "keyboard": [], "keypad": []}
+        for layout in registry._layouts.values():
+            cat = layout.category.value
+            if cat in categories:
+                categories[cat].append((layout.name, layout.id))
+
+        # Add mice
+        if categories["mouse"]:
+            self.device_combo.addItem("--- Mice ---", None)
+            for name, layout_id in sorted(categories["mouse"]):
+                self.device_combo.addItem(f"  {name}", layout_id)
+
+        # Add keyboards
+        if categories["keyboard"]:
+            self.device_combo.addItem("--- Keyboards ---", None)
+            for name, layout_id in sorted(categories["keyboard"]):
+                self.device_combo.addItem(f"  {name}", layout_id)
+
+        # Add keypads
+        if categories["keypad"]:
+            self.device_combo.addItem("--- Keypads ---", None)
+            for name, layout_id in sorted(categories["keypad"]):
+                self.device_combo.addItem(f"  {name}", layout_id)
+
+        # Default to DeathAdder V2 if available
+        for i in range(self.device_combo.count()):
+            if "deathadder" in (self.device_combo.itemData(i) or "").lower():
+                self.device_combo.setCurrentIndex(i)
+                break
+
+    def _on_device_combo_changed(self) -> None:
+        """Handle device selection from combo box."""
+        layout_id = self.device_combo.currentData()
+        if not layout_id or layout_id.startswith("---"):
+            return
+
+        # Get layout from registry
+        registry = DeviceLayoutRegistry()
+        registry.load_layouts()
+        layout = registry._layouts.get(layout_id)
+        if layout:
+            self.device_visual.set_layout(layout)
+            self._sync_device_button_bindings()
+
     def load_profile(self, profile: Profile):
         """Load a profile into the editor."""
         self.current_profile = profile
@@ -511,6 +611,106 @@ class BindingEditorWidget(QWidget):
         self.layer_combo.clear()
         self.bindings_list.clear()
         self.macros_list.clear()
+
+    def set_device(self, device_name: str, device_type: str | None = None) -> None:
+        """Set the device for the visual representation."""
+        self.device_visual.set_device(device_name, device_type)
+        self._sync_device_button_bindings()
+
+    def _on_device_button_clicked(self, button_id: str, input_code: str) -> None:
+        """Handle click on a device button - add or edit binding."""
+        layer = self._get_current_layer()
+        if not layer:
+            return
+
+        # Check if binding already exists for this input
+        existing_binding = None
+        for binding in layer.bindings:
+            if binding.input_code == input_code:
+                existing_binding = binding
+                break
+
+        if existing_binding:
+            # Edit existing binding
+            self._edit_binding_dialog(existing_binding)
+        else:
+            # Add new binding with this input pre-filled
+            self._add_binding_for_input(input_code)
+
+        self._sync_device_button_bindings()
+
+    def _on_device_button_right_clicked(self, button_id: str) -> None:
+        """Handle right-click on device button - show context menu."""
+        # The DeviceVisualWidget already shows a context menu
+        pass
+
+    def _on_binding_selected(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
+        """Highlight the corresponding button when a binding is selected."""
+        if not current:
+            self.device_visual.select_button(None)
+            return
+
+        binding = current.data(Qt.ItemDataRole.UserRole)
+        if not binding:
+            return
+
+        # Find button with matching input code
+        layout = self.device_visual.get_layout()
+        if layout:
+            for button in layout.buttons:
+                if button.input_code == binding.input_code:
+                    self.device_visual.select_button(button.id)
+                    return
+
+        self.device_visual.select_button(None)
+
+    def _add_binding_for_input(self, input_code: str) -> None:
+        """Add a new binding with pre-filled input code."""
+        layer = self._get_current_layer()
+        if not layer:
+            return
+
+        # Create a binding with just the input code
+        prefilled_binding = Binding(
+            input_code=input_code,
+            action_type=ActionType.KEY,
+            output_keys=[],
+        )
+
+        macros = self.current_profile.macros if self.current_profile else []
+        dialog = BindingDialog(binding=prefilled_binding, macros=macros, parent=self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            binding = dialog.get_binding()
+            if binding:
+                layer.bindings.append(binding)
+                self._refresh_bindings()
+                self.bindings_changed.emit()
+
+    def _sync_device_button_bindings(self) -> None:
+        """Update the device visual to show which buttons have bindings."""
+        layer = self._get_current_layer()
+        if not layer:
+            return
+
+        # Build dict of input_code -> binding display
+        bindings_map = {}
+        for binding in layer.bindings:
+            bindings_map[binding.input_code] = self._format_binding_short(binding)
+
+        self.device_visual.set_button_bindings(bindings_map)
+
+    def _format_binding_short(self, binding: Binding) -> str:
+        """Format a binding for short display on device."""
+        if binding.action_type == ActionType.KEY:
+            return binding.output_keys[0] if binding.output_keys else "?"
+        elif binding.action_type == ActionType.CHORD:
+            return "+".join(binding.output_keys[:2])  # First 2 keys
+        elif binding.action_type == ActionType.MACRO:
+            return "Macro"
+        elif binding.action_type == ActionType.PASSTHROUGH:
+            return "Pass"
+        else:
+            return "Off"
 
     def get_layers(self) -> list[Layer]:
         """Get the current layers."""
@@ -539,6 +739,7 @@ class BindingEditorWidget(QWidget):
         """Handle layer selection change."""
         self._refresh_bindings()
         self._update_layer_info()
+        self._sync_device_button_bindings()
 
     def _update_layer_info(self):
         """Update the layer info label."""

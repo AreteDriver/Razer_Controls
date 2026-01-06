@@ -443,7 +443,7 @@ class MainWindow(QMainWindow):
         )
 
     def _on_razer_device_selected(self, device):
-        """Handle Razer device selection - update DPI, zone, and visual editors."""
+        """Handle Razer device selection - update DPI, zone, binding, and visual editors."""
         self.dpi_editor.set_device(device)
         self.zone_editor.set_device(device)
 
@@ -456,6 +456,9 @@ class MainWindow(QMainWindow):
                 device.matrix_cols if hasattr(device, "matrix_cols") else None,
             )
             self.device_visual.clear_zone_colors()
+
+            # Update binding editor's device visual too
+            self.binding_editor.set_device(device.name, device.device_type)
 
     def _on_zone_config_changed(self):
         """Handle zone lighting config change."""

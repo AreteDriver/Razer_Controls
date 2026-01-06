@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="50%" style="stop-color:#2d2d2d"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a3a"/>
+      <stop offset="100%" style="stop-color:#252525"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Mouse body - DeathAdder ergonomic shape -->
+  <path d="M100,10
+           C140,10 170,40 175,80
+           L180,160
+           C185,220 180,280 170,340
+           C160,380 140,395 100,395
+           C60,395 40,380 30,340
+           C20,280 15,220 20,160
+           L25,80
+           C30,40 60,10 100,10 Z"
+        fill="url(#bodyGradient)"
+        stroke="#444"
+        stroke-width="2"/>
+
+  <!-- Left click button -->
+  <path d="M35,25
+           C50,18 70,15 95,15
+           L95,150
+           C70,150 50,145 35,135
+           L35,25 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Right click button -->
+  <path d="M105,15
+           C130,15 150,18 165,25
+           L165,135
+           C150,145 130,150 105,150
+           L105,15 Z"
+        fill="url(#buttonGradient)"
+        stroke="#555"
+        stroke-width="1"/>
+
+  <!-- Middle divider -->
+  <line x1="100" y1="15" x2="100" y2="150" stroke="#222" stroke-width="3"/>
+
+  <!-- Scroll wheel housing -->
+  <rect x="85" y="60" width="30" height="50" rx="8" fill="#1a1a1a" stroke="#333"/>
+
+  <!-- Scroll wheel -->
+  <rect x="90" y="65" width="20" height="40" rx="5" fill="#444" stroke="#555"/>
+  <!-- Scroll wheel texture -->
+  <line x1="92" y1="72" x2="108" y2="72" stroke="#333" stroke-width="1"/>
+  <line x1="92" y1="80" x2="108" y2="80" stroke="#333" stroke-width="1"/>
+  <line x1="92" y1="88" x2="108" y2="88" stroke="#333" stroke-width="1"/>
+  <line x1="92" y1="96" x2="108" y2="96" stroke="#333" stroke-width="1"/>
+
+  <!-- DPI button area (below scroll wheel) -->
+  <ellipse cx="100" cy="130" rx="12" ry="8" fill="#2a2a2a" stroke="#444"/>
+
+  <!-- Side buttons (left side) -->
+  <rect x="18" y="160" width="12" height="35" rx="3" fill="#3a3a3a" stroke="#555"/>
+  <rect x="18" y="200" width="12" height="35" rx="3" fill="#3a3a3a" stroke="#555"/>
+
+  <!-- Razer logo area (subtle) -->
+  <ellipse cx="100" cy="280" rx="25" ry="15" fill="none" stroke="#2da05a" stroke-width="1" opacity="0.4"/>
+
+  <!-- RGB strip (bottom glow) -->
+  <path d="M50,370 Q100,385 150,370"
+        fill="none"
+        stroke="#2da05a"
+        stroke-width="3"
+        filter="url(#glow)"
+        opacity="0.7"/>
+
+  <!-- Subtle texture lines -->
+  <path d="M40,250 C60,240 140,240 160,250" stroke="#333" stroke-width="0.5" fill="none" opacity="0.5"/>
+  <path d="M35,290 C55,280 145,280 165,290" stroke="#333" stroke-width="0.5" fill="none" opacity="0.5"/>
+  <path d="M35,330 C55,320 145,320 165,330" stroke="#333" stroke-width="0.5" fill="none" opacity="0.5"/>
+</svg>
