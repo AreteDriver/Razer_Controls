@@ -363,19 +363,21 @@ def schema_to_evdev_code(schema_name: str) -> int | None:
     """Convert a schema key name to evdev/uinput code.
 
     Args:
-        schema_name: Schema key name (e.g., 'A', 'CTRL', 'MOUSE_LEFT')
+        schema_name: Schema key name (e.g., 'A', 'CTRL', 'MOUSE_LEFT', 'F13')
 
     Returns:
         Integer evdev code, or None if not found
     """
-    # Normalize: single letters should be uppercase
-    normalized = schema_name
-    if len(schema_name) == 1 and schema_name.isalpha():
-        normalized = schema_name.upper()
+    # Normalize to uppercase for consistent lookup (handles f13 -> F13, ctrl -> CTRL)
+    normalized = schema_name.upper()
 
     # Direct lookup in our mapping
     if normalized in SCHEMA_TO_UINPUT:
         return SCHEMA_TO_UINPUT[normalized]
+
+    # Also try original case (some entries might be case-sensitive)
+    if schema_name in SCHEMA_TO_UINPUT:
+        return SCHEMA_TO_UINPUT[schema_name]
 
     # Try reverse lookup
     evdev_name = SCHEMA_TO_EVDEV.get(normalized, normalized)
@@ -383,9 +385,8 @@ def schema_to_evdev_code(schema_name: str) -> int | None:
     if code is not None:
         return int(code)
 
-    # Try with KEY_ prefix (uppercase for letters)
-    key_name = normalized.upper() if normalized.isalpha() else normalized
-    code = getattr(ecodes, f"KEY_{key_name}", None)
+    # Try with KEY_ prefix
+    code = getattr(ecodes, f"KEY_{normalized}", None)
     if code is not None:
         return int(code)
 

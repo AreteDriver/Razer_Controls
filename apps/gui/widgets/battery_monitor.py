@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
 
 from services.openrazer_bridge import OpenRazerBridge, RazerDevice
 
+from ..theme import RazerEffects
+
 
 class BatteryDeviceCard(QFrame):
     """Card displaying battery status for a single device."""
@@ -26,6 +28,7 @@ class BatteryDeviceCard(QFrame):
         self.device = device
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Raised)
+        self.setGraphicsEffect(RazerEffects.shadow_medium())
         self._setup_ui()
 
     def _setup_ui(self):

@@ -52,16 +52,17 @@ class DeviceVisualWidget(QWidget):
     button_right_clicked = Signal(str)  # button_id
     zone_clicked = Signal(str)  # zone_id
 
-    # Color scheme
+    # Color scheme - Razer-inspired gaming aesthetic
     COLOR_BODY = QColor(40, 40, 45)
     COLOR_BODY_OUTLINE = QColor(60, 60, 65)
     COLOR_BUTTON = QColor(55, 55, 60)
     COLOR_BUTTON_OUTLINE = QColor(80, 80, 85)
     COLOR_BUTTON_HOVER = QColor(70, 70, 75)
-    COLOR_BUTTON_SELECTED = QColor(0, 200, 100)
+    COLOR_BUTTON_SELECTED = QColor(45, 160, 90)  # Razer green
     COLOR_BUTTON_PRESSED = QColor(255, 200, 0)  # Bright yellow flash for physical press
-    COLOR_ZONE = QColor(0, 150, 80, 100)
-    COLOR_ZONE_OUTLINE = QColor(0, 200, 100)
+    COLOR_ZONE = QColor(45, 160, 90, 100)  # Razer green with alpha
+    COLOR_ZONE_OUTLINE = QColor(45, 160, 90)
+    COLOR_ZONE_GLOW = QColor(68, 255, 136, 60)  # Bright glow for zones
     COLOR_TEXT = QColor(180, 180, 180)
     COLOR_TEXT_HOVER = QColor(255, 255, 255)
 
@@ -335,9 +336,22 @@ class DeviceVisualWidget(QWidget):
 
         if button.is_zone:
             # RGB zone - use custom color if set
-            fill_color = self._zone_colors.get(button.id, self.COLOR_ZONE)
+            base_color = self._zone_colors.get(button.id, self.COLOR_ZONE)
+            fill_color = QColor(base_color)
             outline_color = self.COLOR_BUTTON_SELECTED if is_selected else self.COLOR_ZONE_OUTLINE
             outline_width = 3 if is_selected else 1
+
+            # Draw glow effect for hovered zones or zones with custom colors
+            if is_hovered or button.id in self._zone_colors:
+                glow_rect = rect.adjusted(-4, -4, 4, 4)
+                glow_color = QColor(base_color)
+                glow_color.setAlpha(80 if is_hovered else 50)
+                painter.setBrush(QBrush(glow_color))
+                painter.setPen(Qt.PenStyle.NoPen)
+                if button.shape_type == ShapeType.ELLIPSE:
+                    painter.drawEllipse(glow_rect)
+                else:
+                    painter.drawRoundedRect(glow_rect, 6, 6)
         else:
             # Physical button - pressed state takes priority
             if is_pressed:

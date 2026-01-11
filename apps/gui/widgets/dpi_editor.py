@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
 from crates.profile_schema import DPIConfig
 from services.openrazer_bridge import OpenRazerBridge, RazerDevice
 
+from ..theme import RazerEffects
+
 
 class DPIStageItem(QFrame):
     """Visual representation of a single DPI stage."""
@@ -29,6 +31,7 @@ class DPIStageItem(QFrame):
         self.index = index
         self.max_dpi = max_dpi
         self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setGraphicsEffect(RazerEffects.shadow_small())
         self._setup_ui(dpi)
 
     def _setup_ui(self, dpi: int):

@@ -1,8 +1,134 @@
-"""Dark theme for the GUI."""
+"""Dark theme for the GUI with Razer-authentic styling."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGraphicsDropShadowEffect
+
+
+class RazerColors:
+    """Centralized color palette for Razer-inspired theme."""
+
+    # Primary accent - Razer signature green
+    GREEN_PRIMARY = "#2da05a"
+    GREEN_LIGHT = "#3db76a"
+    GREEN_DARK = "#1a8040"
+    GREEN_GLOW = "#44ff88"
+
+    # Backgrounds - dark gradient
+    BG_DARKEST = "#0a0a0a"
+    BG_DARKER = "#141414"
+    BG_DARK = "#1e1e1e"
+    BG_MEDIUM = "#2d2d2d"
+    BG_LIGHT = "#3d3d3d"
+    BG_LIGHTER = "#4d4d4d"
+
+    # Text hierarchy
+    TEXT_PRIMARY = "#dcdcdc"
+    TEXT_SECONDARY = "#888888"
+    TEXT_DISABLED = "#555555"
+    TEXT_INVERSE = "#000000"
+
+    # Status colors
+    STATUS_SUCCESS = "#2ecc71"
+    STATUS_WARNING = "#f39c12"
+    STATUS_ERROR = "#e74c3c"
+    STATUS_INFO = "#3498db"
+
+    # Interactive states
+    HOVER_BORDER = "#2da05a"
+    FOCUS_BORDER = "#44ff88"
+    PRESSED_BG = "#2da05a"
+
+    @classmethod
+    def as_qcolor(cls, hex_color: str) -> QColor:
+        """Convert hex string to QColor."""
+        return QColor(hex_color)
+
+
+class RazerTypography:
+    """Font sizes and weights for consistent typography."""
+
+    # Size scale
+    SIZE_TITLE = 16
+    SIZE_HEADING = 14
+    SIZE_BODY = 12
+    SIZE_SMALL = 11
+    SIZE_TINY = 9
+
+    # Weights (for stylesheet strings)
+    WEIGHT_BOLD = "bold"
+    WEIGHT_NORMAL = "normal"
+
+    # Font family preference
+    FONT_FAMILY = "Segoe UI, Ubuntu, Helvetica, Arial, sans-serif"
+    FONT_MONO = "JetBrains Mono, Consolas, Monaco, monospace"
+
+
+class RazerSpacing:
+    """Consistent spacing values for layouts."""
+
+    XS = 4  # Tight spacing
+    SM = 8  # Standard spacing
+    MD = 12  # Medium spacing
+    LG = 16  # Large spacing
+    XL = 24  # Extra large spacing
+
+    # Specific use cases
+    BUTTON_PADDING_H = 16
+    BUTTON_PADDING_V = 6
+    CARD_PADDING = 12
+    CARD_MARGIN = 8
+
+
+class RazerEffects:
+    """Factory for visual effects like shadows and glows."""
+
+    @staticmethod
+    def shadow_small() -> QGraphicsDropShadowEffect:
+        """Subtle shadow for buttons and small elements."""
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(6)
+        effect.setOffset(0, 2)
+        effect.setColor(QColor(0, 0, 0, 80))
+        return effect
+
+    @staticmethod
+    def shadow_medium() -> QGraphicsDropShadowEffect:
+        """Medium shadow for cards and panels."""
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(12)
+        effect.setOffset(0, 4)
+        effect.setColor(QColor(0, 0, 0, 100))
+        return effect
+
+    @staticmethod
+    def shadow_large() -> QGraphicsDropShadowEffect:
+        """Large shadow for dialogs and overlays."""
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(24)
+        effect.setOffset(0, 8)
+        effect.setColor(QColor(0, 0, 0, 120))
+        return effect
+
+    @staticmethod
+    def glow(color: str = RazerColors.GREEN_GLOW) -> QGraphicsDropShadowEffect:
+        """Glow effect for selected/active elements."""
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(20)
+        effect.setOffset(0, 0)
+        effect.setColor(QColor(color))
+        return effect
+
+    @staticmethod
+    def glow_subtle(color: str = RazerColors.GREEN_PRIMARY) -> QGraphicsDropShadowEffect:
+        """Subtle glow for hover states."""
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(10)
+        effect.setOffset(0, 0)
+        c = QColor(color)
+        c.setAlpha(100)
+        effect.setColor(c)
+        return effect
 
 
 def apply_dark_theme(app: QApplication) -> None:

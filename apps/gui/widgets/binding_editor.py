@@ -259,12 +259,15 @@ class BindingDialog(QDialog):
         if action_type in (ActionType.KEY, ActionType.CHORD):
             output_text = self.output_edit.text().strip()
             if output_text:
-                # Parse keys separated by + and normalize to uppercase for single letters
+                # Parse keys separated by + and normalize to uppercase
                 output_keys = []
                 for k in output_text.split("+"):
                     key = k.strip()
-                    # Normalize single letters to uppercase
-                    if len(key) == 1 and key.isalpha():
+                    # Normalize all keys to uppercase (F13, CTRL, etc.)
+                    # but preserve KEY_ and BTN_ prefixes correctly
+                    if key.startswith(("KEY_", "BTN_")):
+                        key = key.upper()
+                    elif key.isalpha() or key.isalnum():
                         key = key.upper()
                     output_keys.append(key)
 

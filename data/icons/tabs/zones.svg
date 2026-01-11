@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dcdcdc" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+  <!-- RGB color zones/segments -->
+  <rect x="2" y="4" width="6" height="16" rx="1"/>
+  <rect x="9" y="4" width="6" height="16" rx="1"/>
+  <rect x="16" y="4" width="6" height="16" rx="1"/>
+  <!-- Color indicators -->
+  <circle cx="5" cy="8" r="1.5" fill="#ff4444" stroke="none"/>
+  <circle cx="12" cy="8" r="1.5" fill="#44ff44" stroke="none"/>
+  <circle cx="19" cy="8" r="1.5" fill="#4444ff" stroke="none"/>
+</svg>

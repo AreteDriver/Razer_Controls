@@ -26,6 +26,8 @@ from PySide6.QtWidgets import (
 
 from crates.profile_schema import Layer, Profile, ProfileLoader
 
+from ..icons import RazerIcons
+
 # Export format version
 EXPORT_VERSION = "1.0"
 
@@ -100,11 +102,11 @@ class ProfilePanel(QWidget):
         # Buttons row 1: New, Delete
         btn_layout = QHBoxLayout()
 
-        self.new_btn = QPushButton("New")
+        self.new_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_ADD), "New")
         self.new_btn.clicked.connect(self._create_profile)
         btn_layout.addWidget(self.new_btn)
 
-        self.delete_btn = QPushButton("Delete")
+        self.delete_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_DELETE), "Delete")
         self.delete_btn.clicked.connect(self._delete_profile)
         self.delete_btn.setEnabled(False)
         btn_layout.addWidget(self.delete_btn)
@@ -114,11 +116,11 @@ class ProfilePanel(QWidget):
         # Buttons row 2: Import, Export
         io_layout = QHBoxLayout()
 
-        self.import_btn = QPushButton("Import")
+        self.import_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_IMPORT), "Import")
         self.import_btn.clicked.connect(self._import_profile)
         io_layout.addWidget(self.import_btn)
 
-        self.export_btn = QPushButton("Export")
+        self.export_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_EXPORT), "Export")
         self.export_btn.clicked.connect(self._export_profile)
         self.export_btn.setEnabled(False)
         io_layout.addWidget(self.export_btn)
@@ -126,7 +128,7 @@ class ProfilePanel(QWidget):
         group_layout.addLayout(io_layout)
 
         # Activate button
-        self.activate_btn = QPushButton("Set as Active")
+        self.activate_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_APPLY), "Set as Active")
         self.activate_btn.clicked.connect(self._activate_profile)
         self.activate_btn.setEnabled(False)
         group_layout.addWidget(self.activate_btn)

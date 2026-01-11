@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dcdcdc" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+  <!-- Keyboard body -->
+  <rect x="2" y="6" width="20" height="12" rx="1"/>
+  <!-- Keys -->
+  <rect x="4" y="8" width="3" height="2"/>
+  <rect x="8" y="8" width="3" height="2"/>
+  <rect x="12" y="8" width="3" height="2"/>
+  <rect x="16" y="8" width="4" height="2"/>
+  <rect x="4" y="11" width="4" height="2"/>
+  <rect x="9" y="11" width="3" height="2"/>
+  <rect x="13" y="11" width="3" height="2"/>
+  <rect x="17" y="11" width="3" height="2"/>
+  <!-- Space bar -->
+  <rect x="6" y="14" width="12" height="2"/>
+</svg>

@@ -4,7 +4,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QTimer, Signal, QObject
+from PySide6.QtCore import QObject, QSize, QTimer, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QGridLayout,
@@ -24,6 +24,7 @@ from crates.device_registry import DeviceRegistry
 from crates.profile_schema import Profile, ProfileLoader
 from services.openrazer_bridge import OpenRazerBridge
 
+from .icons import RazerIcons
 from .widgets.app_matcher import AppMatcherWidget
 from .widgets.battery_monitor import BatteryMonitorWidget
 from .widgets.binding_editor import BindingEditorWidget
@@ -101,6 +102,10 @@ class MainWindow(QMainWindow):
         # Current state
         self.current_profile: Profile | None = None
 
+        # Input monitor for button highlighting in Device View (init early)
+        self.input_monitor = InputMonitor(self)
+        self.input_monitor.button_pressed.connect(self._on_physical_button_pressed)
+
         # Set up UI (statusbar first since daemon tab uses it)
         self._setup_statusbar()
         self._setup_ui()
@@ -112,10 +117,6 @@ class MainWindow(QMainWindow):
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self._refresh_device_status)
         self.refresh_timer.start(5000)  # Every 5 seconds
-
-        # Input monitor for button highlighting in Device View
-        self.input_monitor = InputMonitor(self)
-        self.input_monitor.button_pressed.connect(self._on_physical_button_pressed)
 
     def _setup_ui(self):
         """Set up the main UI."""
@@ -136,54 +137,59 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs, 3)
 
+        # Configure tab icon size
+        self.tabs.setIconSize(QSize(18, 18))
+
         # Devices tab
         self.devices_tab = QWidget()
         self._setup_devices_tab()
-        self.tabs.addTab(self.devices_tab, "Devices")
+        self.tabs.addTab(self.devices_tab, RazerIcons.get(RazerIcons.TAB_DEVICES), "Devices")
 
         # Bindings tab
         self.bindings_tab = QWidget()
         self._setup_bindings_tab()
-        self.tabs.addTab(self.bindings_tab, "Bindings")
+        self.tabs.addTab(self.bindings_tab, RazerIcons.get(RazerIcons.TAB_BINDINGS), "Bindings")
 
         # Macros tab
         self.macro_editor = MacroEditorWidget()
         self.macro_editor.macros_updated.connect(self._on_macros_changed)
-        self.tabs.addTab(self.macro_editor, "Macros")
+        self.tabs.addTab(self.macro_editor, RazerIcons.get(RazerIcons.TAB_MACROS), "Macros")
 
         # App Switching tab
         self.app_matcher = AppMatcherWidget()
         self.app_matcher.patterns_changed.connect(self._on_app_patterns_changed)
-        self.tabs.addTab(self.app_matcher, "App Switching")
+        self.tabs.addTab(self.app_matcher, RazerIcons.get(RazerIcons.TAB_APPS), "App Switching")
 
         # Razer tab (OpenRazer controls)
         self.razer_tab = RazerControlsWidget(self.openrazer)
         self.razer_tab.device_selected.connect(self._on_razer_device_selected)
-        self.tabs.addTab(self.razer_tab, "Lighting & DPI")
+        self.tabs.addTab(self.razer_tab, RazerIcons.get(RazerIcons.TAB_LIGHTING), "Lighting & DPI")
 
         # Device View tab (visual device layout)
         self.device_view_tab = QWidget()
         self._setup_device_view_tab()
-        self.tabs.addTab(self.device_view_tab, "Device View")
+        self.tabs.addTab(
+            self.device_view_tab, RazerIcons.get(RazerIcons.TAB_DEVICE_VIEW), "Device View"
+        )
 
         # Zone Lighting tab (per-key RGB)
         self.zone_editor = ZoneEditorWidget(self.openrazer)
         self.zone_editor.config_changed.connect(self._on_zone_config_changed)
-        self.tabs.addTab(self.zone_editor, "Zone Lighting")
+        self.tabs.addTab(self.zone_editor, RazerIcons.get(RazerIcons.TAB_ZONES), "Zone Lighting")
 
         # DPI Stages tab
         self.dpi_editor = DPIStageEditor(self.openrazer)
-        self.tabs.addTab(self.dpi_editor, "DPI Stages")
+        self.tabs.addTab(self.dpi_editor, RazerIcons.get(RazerIcons.TAB_DPI), "DPI Stages")
 
         # Battery tab
         self.battery_monitor = BatteryMonitorWidget(self.openrazer)
         self.battery_monitor.low_battery_warning.connect(self._on_low_battery)
-        self.tabs.addTab(self.battery_monitor, "Battery")
+        self.tabs.addTab(self.battery_monitor, RazerIcons.get(RazerIcons.TAB_BATTERY), "Battery")
 
         # Daemon tab
         self.daemon_tab = QWidget()
         self._setup_daemon_tab()
-        self.tabs.addTab(self.daemon_tab, "Daemon")
+        self.tabs.addTab(self.daemon_tab, RazerIcons.get(RazerIcons.TAB_DAEMON), "Daemon")
 
         # Menu bar
         self._setup_menu()
@@ -251,11 +257,13 @@ class MainWindow(QMainWindow):
 
         # Buttons
         btn_layout = QHBoxLayout()
-        self.refresh_devices_btn = QPushButton("Refresh Devices")
+        self.refresh_devices_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_REFRESH), "Refresh")
         self.refresh_devices_btn.clicked.connect(self._refresh_devices)
         btn_layout.addWidget(self.refresh_devices_btn)
 
-        self.apply_devices_btn = QPushButton("Apply to Profile")
+        self.apply_devices_btn = QPushButton(
+            RazerIcons.get(RazerIcons.ACTION_APPLY), "Apply to Profile"
+        )
         self.apply_devices_btn.clicked.connect(self._apply_device_selection)
         btn_layout.addWidget(self.apply_devices_btn)
         btn_layout.addStretch()
@@ -329,8 +337,8 @@ class MainWindow(QMainWindow):
     def _start_input_monitoring(self, device_name: str):
         """Find and monitor the evdev input device for button highlighting."""
         # Search device registry for matching device
-        self.device_registry.scan()
-        for dev_info in self.device_registry.devices:
+        devices = self.device_registry.scan_devices()
+        for dev_info in devices:
             # Match by name (partial match for Razer devices)
             if "razer" in dev_info.name.lower() and any(
                 part.lower() in dev_info.name.lower() for part in device_name.split()
@@ -419,15 +427,15 @@ class MainWindow(QMainWindow):
         ctrl_group = QGroupBox("Controls")
         ctrl_layout = QHBoxLayout(ctrl_group)
 
-        self.start_daemon_btn = QPushButton("Start Daemon")
+        self.start_daemon_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_PLAY), "Start")
         self.start_daemon_btn.clicked.connect(self._start_daemon)
         ctrl_layout.addWidget(self.start_daemon_btn)
 
-        self.stop_daemon_btn = QPushButton("Stop Daemon")
+        self.stop_daemon_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_STOP), "Stop")
         self.stop_daemon_btn.clicked.connect(self._stop_daemon)
         ctrl_layout.addWidget(self.stop_daemon_btn)
 
-        self.restart_daemon_btn = QPushButton("Restart Daemon")
+        self.restart_daemon_btn = QPushButton(RazerIcons.get(RazerIcons.ACTION_REFRESH), "Restart")
         self.restart_daemon_btn.clicked.connect(self._restart_daemon)
         ctrl_layout.addWidget(self.restart_daemon_btn)
 
