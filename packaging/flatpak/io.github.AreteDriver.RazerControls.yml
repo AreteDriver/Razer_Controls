@@ -1,4 +1,4 @@
-app-id: com.github.AreteDriver.RazerControls
+app-id: io.github.AreteDriver.RazerControls
 runtime: org.kde.Platform
 runtime-version: '6.9'
 sdk: org.kde.Sdk
@@ -18,18 +18,14 @@ finish-args:
   - --share=ipc
   - --socket=fallback-x11
   - --socket=wayland
-  # D-Bus for OpenRazer and system services
-  - --socket=session-bus
-  - --socket=system-bus
   # Device access for evdev input devices
   - --device=all
   # Home directory for config
   - --filesystem=~/.config/razer-control-center:create
-  # For systemd user services
-  - --filesystem=~/.config/systemd/user:create
-  - --filesystem=~/.local/bin:create
-  # Talk to OpenRazer daemon
+  # OpenRazer daemon communication (session bus)
   - --talk-name=org.razer
+  # OpenRazer device control (system bus)
+  - --system-talk-name=org.razer
 
 modules:
   # Python evdev
@@ -163,7 +159,7 @@ modules:
         url: https://files.pythonhosted.org/packages/88/ef/eb23f262cca3c0c4eb7ab1933c3b1f03d021f2c48f54763065b6f0e321be/packaging-24.2-py3-none-any.whl
         sha256: 09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759
 
-  # Main application (using pre-built wheel to avoid setuptools/packaging version conflicts)
+  # Main application from PyPI
   - name: razer-control-center
     buildsystem: simple
     build-commands:
@@ -171,18 +167,16 @@ modules:
         --prefix=${FLATPAK_DEST} razer_control_center --no-build-isolation --no-deps
       # Copy data directories for device layouts and images
       - cp -r data ${FLATPAK_DEST}/lib/python3.12/site-packages/
-      - install -Dm644 com.github.AreteDriver.RazerControls.metainfo.xml
-        ${FLATPAK_DEST}/share/metainfo/com.github.AreteDriver.RazerControls.metainfo.xml
-      - install -Dm644 com.github.AreteDriver.RazerControls.desktop
-        ${FLATPAK_DEST}/share/applications/com.github.AreteDriver.RazerControls.desktop
-      - install -Dm644 icons/hicolor/scalable/apps/com.github.AreteDriver.RazerControls.svg
-        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/com.github.AreteDriver.RazerControls.svg
+      - install -Dm644 packaging/flatpak/io.github.AreteDriver.RazerControls.metainfo.xml
+        ${FLATPAK_DEST}/share/metainfo/io.github.AreteDriver.RazerControls.metainfo.xml
+      - install -Dm644 packaging/flatpak/io.github.AreteDriver.RazerControls.desktop
+        ${FLATPAK_DEST}/share/applications/io.github.AreteDriver.RazerControls.desktop
+      - install -Dm644 packaging/flatpak/icons/hicolor/scalable/apps/io.github.AreteDriver.RazerControls.svg
+        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/io.github.AreteDriver.RazerControls.svg
     sources:
       - type: file
-        path: wheels/razer_control_center-1.9.8-py3-none-any.whl
-      - type: dir
-        path: .
-        dest: .
-      - type: dir
-        path: ../../data
-        dest: data
+        url: https://files.pythonhosted.org/packages/52/09/4a168c56d3ffb9d47f7cd0800b7ef8beb45a63b0f53a22ea3f679b65ef42/razer_control_center-1.9.8-py3-none-any.whl
+        sha256: 0bd3784454d319d9aa74ea595fd4cad96778732c8c7b743722b7860f7ad8bf73
+      - type: git
+        url: https://github.com/AreteDriver/RazerControls.git
+        tag: v1.9.8

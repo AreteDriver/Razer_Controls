@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.github.AreteDriver.RazerControls</id>
+  <id>io.github.AreteDriver.RazerControls</id>
   <name>Razer Control Center</name>
   <summary>Configure Razer devices on Linux</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <developer id="com.github.aretedriver">
+  <developer id="io.github.aretedriver">
     <name>AreteDriver</name>
   </developer>
 
@@ -26,11 +26,11 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">com.github.AreteDriver.RazerControls.desktop</launchable>
+  <launchable type="desktop-id">io.github.AreteDriver.RazerControls.desktop</launchable>
 
-  <url type="homepage">https://github.com/AreteDriver/Razer_Controls</url>
-  <url type="bugtracker">https://github.com/AreteDriver/Razer_Controls/issues</url>
-  <url type="vcs-browser">https://github.com/AreteDriver/Razer_Controls</url>
+  <url type="homepage">https://github.com/AreteDriver/RazerControls</url>
+  <url type="bugtracker">https://github.com/AreteDriver/RazerControls/issues</url>
+  <url type="vcs-browser">https://github.com/AreteDriver/RazerControls</url>
 
   <provides>
     <binary>razer-control-center</binary>
@@ -65,7 +65,7 @@
   <screenshots>
     <screenshot type="default">
       <caption>Main window with profile and binding configuration</caption>
-      <image>https://raw.githubusercontent.com/AreteDriver/Razer_Controls/main/docs/screenshots/main-window.png</image>
+      <image>https://raw.githubusercontent.com/AreteDriver/RazerControls/main/docs/screenshots/main-window.png</image>
     </screenshot>
   </screenshots>
 
