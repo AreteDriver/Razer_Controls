@@ -34,6 +34,9 @@ class RemapDaemon:
 
     def setup(self) -> bool:
         """Set up the daemon - load profile and create uinput."""
+        # Set all Razer devices to driver mode (disables onboard macros from Synapse)
+        self._set_devices_driver_mode()
+
         # Load active profile
         profile = self.profile_loader.load_active_profile()
         if not profile:
@@ -70,6 +73,30 @@ class RemapDaemon:
 
         # Grab configured devices
         return self._grab_devices(profile)
+
+    def _set_devices_driver_mode(self) -> None:
+        """Set all Razer devices to driver mode via OpenRazer.
+
+        This disables onboard macros/keybindings set via Razer Synapse,
+        allowing software-based remapping to work correctly.
+        """
+        try:
+            from services.openrazer_bridge import OpenRazerBridge
+
+            bridge = OpenRazerBridge()
+            if bridge.connect():
+                devices = bridge.discover_devices()
+                for device in devices:
+                    mode = bridge.get_device_mode(device.serial)
+                    if mode and mode != "0:0":
+                        logger.info(
+                            "Setting %s to driver mode (was %s)", device.name, mode
+                        )
+                        bridge.set_driver_mode(device.serial)
+                    else:
+                        logger.debug("%s already in driver mode", device.name)
+        except Exception as e:
+            logger.warning("Could not set driver mode: %s", e)
 
     def _create_default_profile(self) -> Profile:
         """Create a default profile with no bindings."""

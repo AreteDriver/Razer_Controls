@@ -740,6 +740,73 @@ class OpenRazerBridge:
             print(f"Error refreshing device: {e}")
             return None
 
+    def get_device_mode(self, serial: str) -> str | None:
+        """Get device mode (driver vs onboard memory).
+
+        Returns:
+            Mode string like "0:0" (driver) or "3:0" (onboard), or None on error
+        """
+        device = self.get_device(serial)
+        if not device:
+            return None
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            return dev.getDeviceMode()
+        except Exception as e:
+            print(f"Error getting device mode: {e}")
+            return None
+
+    def set_device_mode(self, serial: str, mode1: int = 0, mode2: int = 0) -> bool:
+        """Set device mode.
+
+        Args:
+            serial: Device serial number
+            mode1: First mode byte (0 = driver mode, 3 = onboard memory)
+            mode2: Second mode byte (usually 0)
+
+        Returns:
+            True if successful
+
+        Note:
+            Driver mode (0:0) allows software to control the device and disables
+            onboard macros/keybindings set via Razer Synapse.
+        """
+        device = self.get_device(serial)
+        if not device:
+            return False
+
+        try:
+            dev = self._bus.get(self.DBUS_INTERFACE, device.object_path)
+            dev.setDeviceMode(mode1, mode2)
+            return True
+        except Exception as e:
+            print(f"Error setting device mode: {e}")
+            return False
+
+    def set_driver_mode(self, serial: str) -> bool:
+        """Set device to driver mode, disabling onboard macros.
+
+        This is useful when Razer Synapse has configured button remappings
+        that interfere with software-based remapping.
+
+        Returns:
+            True if successful
+        """
+        return self.set_device_mode(serial, 0, 0)
+
+    def set_all_devices_driver_mode(self) -> int:
+        """Set all discovered devices to driver mode.
+
+        Returns:
+            Number of devices successfully set to driver mode
+        """
+        count = 0
+        for serial in self._devices:
+            if self.set_driver_mode(serial):
+                count += 1
+        return count
+
 
 def main():
     """Test OpenRazer discovery."""
