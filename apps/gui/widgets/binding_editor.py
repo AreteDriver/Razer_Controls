@@ -274,12 +274,18 @@ class BindingDialog(QDialog):
         if action_type == ActionType.MACRO:
             macro_id = self.macro_combo.currentData()
 
-        return Binding(
-            input_code=input_code,
-            action_type=action_type,
-            output_keys=output_keys,
-            macro_id=macro_id,
-        )
+        try:
+            return Binding(
+                input_code=input_code,
+                action_type=action_type,
+                output_keys=output_keys,
+                macro_id=macro_id,
+            )
+        except ValueError as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.warning(self, "Invalid Binding", str(e))
+            return None
 
 
 class MacroDialog(QDialog):
